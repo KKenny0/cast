@@ -12,8 +12,8 @@
       "dpr": 2,
       "width": 2160,
       "height": 2880,
-      "render_contract_sha256": "99534b7d168e00e23a12e2c37800a07dd2ae7191b4a0a866613b111b4ae9e281",
-      "png_sha256": "19a71020a6e0c07013833d9f3c7657b8a9546d7e1a2c2d95383bc03b316d015e"
+      "render_contract_sha256": "e01f1c7ef86fd6966d53e86f851e772b3e56082ec6dbfc64abe61940b37acac9",
+      "png_sha256": "5cc1be3621eeae605e6d8baa3de3e1b29ad68b6e01823b05603012001c8eafbb"
     },
     {
       "fixture": "evals/gallery/creative/infograph.json",
@@ -25,8 +25,8 @@
       "dpr": 2,
       "width": 2160,
       "height": 1600,
-      "render_contract_sha256": "fd1525ce38bf2e6e5cfeba4b730101e797b4e388c9d62a8d684880740b3642a4",
-      "png_sha256": "d814b12b719592a2947f6ecc30dbeef2180e3a151bad2f23e92fa712e42c6bdc"
+      "render_contract_sha256": "ede426103c686d2a81e1d2d9157973652e1f75c2a2280eae0c5186afcf0839d8",
+      "png_sha256": "e96c999f67ed1625ce0cc3214515ca3a52ba88bd51f08eb01b2eab7017c61f8d"
     },
     {
       "fixture": "evals/gallery/creative/sketchnote.json",
@@ -38,8 +38,8 @@
       "dpr": 2,
       "width": 2160,
       "height": 2834,
-      "render_contract_sha256": "5194bc61a19283a13f8a8a16af1f78f6ebe85c527c53c40f5e22390a304a633b",
-      "png_sha256": "86ef42b4d2c662afda5239ae7b0b3c52d324132fc5b79584eb228058fe11ae38"
+      "render_contract_sha256": "868caaa0d340ae45d3d0db942d9f2cdf216713e28a30292169152ce8ce32118a",
+      "png_sha256": "b847a1dfb49e00d406c9ca52ec9e4008ff6cc30bb896703dd9533943b2e345bf"
     },
     {
       "fixture": "evals/gallery/jobs/article-boundary-legacy.json",
@@ -51,8 +51,8 @@
       "dpr": 2,
       "width": 2160,
       "height": 1440,
-      "render_contract_sha256": "c841381682e09099a2c23d1b7cf238cd652d8cd6362eb0875b947ddd40cdc9df",
-      "png_sha256": "2a81b00c48864300bfceb90cd42d7d9744e86401b15fc482c7490d642f758a75"
+      "render_contract_sha256": "f95c9ef8f1b55435813521ee5815cab0b31f7b498c9ea5f43ebe92bfbd2b8732",
+      "png_sha256": "0688ff2ce886afc1b8c26d2c6375a9013fc1ef64e8277553047a4282127b5e12"
     },
     {
       "fixture": "evals/gallery/jobs/article-formula.json",
@@ -64,8 +64,8 @@
       "dpr": 2,
       "width": 2160,
       "height": 1080,
-      "render_contract_sha256": "6c797897b14f77991aa3e179e2b254e830c6afe05859b73378e55231fc5066fb",
-      "png_sha256": "203dcd98957bb6845714980ce1979d30fe6cd34094c33d5abd8d735b1156aa0d"
+      "render_contract_sha256": "3a424ca136a79354dc1f8a1915170af916a6ba6cd2d5f3db8b9eef71668e1147",
+      "png_sha256": "4745e6e65434613d13ce0e25493984e870166ae7ae062550c0319c7cf2549f7a"
     },
     {
       "fixture": "evals/gallery/jobs/big.json",
@@ -77,21 +77,21 @@
       "dpr": 2,
       "width": 2160,
       "height": 2880,
-      "render_contract_sha256": "bd88f74141b18c2d39206d0b5f1005e6e283eb071a58130cb26b5952becb2aef",
-      "png_sha256": "2d5b11c035c632628c22454c59a1e0ada113d6e686462d478e7577ab313eb449"
+      "render_contract_sha256": "86627fe4f66bc4b8509c4557b48877a47f99f90f839b8d5572238bd1d32f6ccb",
+      "png_sha256": "53531a293c763b6450c6feccbfa5479a967923cb3f9997d625188de4f9cc87ff"
     },
     {
       "fixture": "evals/gallery/jobs/editorial-wechat-cover.json",
       "output_basename": "editorial-wechat-cover.png",
       "mode": "editorial-image",
       "tier": "stable",
-      "design": "claude",
+      "design": "apple",
       "tone": "reflective",
       "dpr": 2,
       "width": 2160,
       "height": 920,
-      "render_contract_sha256": "382a98262d7b08e3b37e820da2c343f875cfde00fa9475ea16a1cbef013a7e80",
-      "png_sha256": "a2f49dd5888942b81fdf9fa5456df44aebc26be8763d511399628d9444ecde1c"
+      "render_contract_sha256": "729cf840d73174198921d35a7a3ba820fd21360ef36dbf04d086020bf09a813d",
+      "png_sha256": "003c6f9ddae4acfb7c87aedb55c7d7092ae26753dfd04ff74fd2f9c9e6185dea"
     },
     {
       "fixture": "evals/gallery/jobs/long.json",
@@ -102,9 +102,9 @@
       "tone": "warm",
       "dpr": 2,
       "width": 2160,
-      "height": 1812,
-      "render_contract_sha256": "f87ea4b7540c0c3d13f01c54ac76b009f0e38ae5b4e1eb6038040c780406e690",
-      "png_sha256": "a9adc6a45fc30c6de7cbbafcd435436209681fcededa86d8ee3e6ba49cbf3bc7"
+      "height": 2242,
+      "render_contract_sha256": "6e17e7dfe501e32016529b555520fc31bfc345ac1c2c06fa5513158c4acf5309",
+      "png_sha256": "1c9b9befc6c2d833504b6dc0073224b0e606bfc7226125cb172199f00c7ff835"
     },
     {
       "fixture": "evals/gallery/jobs/poster.json",
@@ -116,8 +116,8 @@
       "dpr": 2,
       "width": 2160,
       "height": 2880,
-      "render_contract_sha256": "059e5b1b8e1ba014017244987bc13d9a11d3298326c3e0d0c787f7a45c876d42",
-      "png_sha256": "6ac383a4d15f8ddb1bab6e0b694d7c0f0635115f6cbd0d8661da4dbb588593a5"
+      "render_contract_sha256": "41b27f9abc57bd27d90660c6ee92a5a5fbc69308c292b6f22c64b4ff758362e2",
+      "png_sha256": "6faf0cb275cd88134ec0723bf5ed2fc8c8260422686ab891adce3f2d658b78e9"
     },
     {
       "fixture": "evals/gallery/jobs/reading-notes.json",
@@ -129,8 +129,8 @@
       "dpr": 2,
       "width": 2160,
       "height": 2880,
-      "render_contract_sha256": "4812bdeb47e639fdb349b32b7d3cb23171eeff7a21b31053b0675b3e1157ed78",
-      "png_sha256": "9ac65332b938a6711adb2cf55562f619968ddc03798d1b807e177bedf3301740"
+      "render_contract_sha256": "925c5b330c495baa08873c5a11235e23a576a6e97044946b5c961f258f9f3b75",
+      "png_sha256": "10fa4bbad6cae147325ecc77975cf299e7299d4367cb53191a270c2cef8b7a29"
     },
     {
       "fixture": "evals/gallery/jobs/reading-report.json",
@@ -142,8 +142,8 @@
       "dpr": 2,
       "width": 2160,
       "height": 2880,
-      "render_contract_sha256": "706ba7e6297d534ee6e2ae1a8f951e84751c71bb7377cd06ab0ef79e2a3ce8dd",
-      "png_sha256": "8c14a8fe402537b98efc749e15f98d70e0ad52e557087cf069039185db975f8f"
+      "render_contract_sha256": "356cb16f25708e8d20f424c679ef1c6aae63406a44870af88254ad53599239e5",
+      "png_sha256": "b1a5e10104ec9bfe1a008d4334cc0339276e86767abe1a4cd5c04d2400c6c432"
     },
     {
       "fixture": "evals/gallery/jobs/whiteboard.json",
@@ -154,9 +154,9 @@
       "tone": "technical",
       "dpr": 2,
       "width": 2160,
-      "height": 880,
-      "render_contract_sha256": "81c6535cd80454292f40bb82b7b19c21e430d87936f0c1790596991483784501",
-      "png_sha256": "dd58c056c89d366305bed8badc532be34df4d781860022c763bd0ec968a052dd"
+      "height": 1468,
+      "render_contract_sha256": "18097005ab629f5d5e48dd054f3f496a0507c8e36257c4f5bbfdc69e85c1a979",
+      "png_sha256": "4af34b141a45e5eb8b6c2a37c0fc068488e10d2d1ef753f9c55bae451f6206fc"
     }
   ]
 }

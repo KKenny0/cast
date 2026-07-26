@@ -16,7 +16,7 @@
 
 ## 先看它能做什么
 
-同一套安静的纸面骨架，可以承载不同的发布任务：封面负责制造张力，社媒卡片负责拆解观点，白板负责把推理关系画清楚。
+同一套安静的纸面骨架，可以承载不同的发布任务：封面负责制造张力，社媒卡片负责拆解观点，白板负责把推理关系画清楚。下面的 Gallery 全部取材于杰夫·霍金斯的《千脑智能》：同一本书的不同关系，应该长成不同的画面，而不是换个模板重述一遍。
 
 <table>
 <tr>
@@ -209,30 +209,32 @@ pngquant --quality=80-95 --force --output card.png card.png
 <details>
 <summary>展开 gallery</summary>
 
+<p><sub>全部样张基于《千脑智能》（Jeff Hawkins）的概念转述；阅读笔记样张会明确标注为非原文划线。</sub></p>
+
 <table>
 <tr>
-<td width="50%"><img src="assets/gallery/editorial-wechat-cover.png" width="100%" alt="公众号头图示例"><br><strong>editorial-image</strong> · wechat cover</td>
-<td width="50%"><img src="assets/gallery/article-formula.png" width="100%" alt="正文公式卡示例"><br><strong>article-diagram</strong> · formula card</td>
+<td width="50%"><img src="assets/gallery/editorial-wechat-cover.png" width="100%" alt="《千脑智能》公众号头图"><br><strong>editorial-image</strong> · 千个模型，一个判断</td>
+<td width="50%"><img src="assets/gallery/article-formula.png" width="100%" alt="《千脑智能》公式卡"><br><strong>article-diagram</strong> · 感觉、运动与参考系</td>
 </tr>
 <tr>
-<td><img src="assets/gallery/big.png" width="100%" alt="一句话观点卡示例"><br><strong>big</strong></td>
-<td><img src="assets/gallery/poster.png" width="100%" alt="社媒卡片示例"><br><strong>poster</strong></td>
+<td><img src="assets/gallery/big.png" width="100%" alt="《千脑智能》一句话观点卡"><br><strong>big</strong> · 探索世界</td>
+<td><img src="assets/gallery/poster.png" width="100%" alt="《千脑智能》社媒卡片"><br><strong>poster</strong> · 三条线索</td>
 </tr>
 <tr>
-<td><img src="assets/gallery/long.png" width="100%" alt="长卡片示例"><br><strong>long</strong></td>
-<td><img src="assets/gallery/whiteboard.png" width="100%" alt="白板推演示例"><br><strong>whiteboard</strong></td>
+<td><img src="assets/gallery/long.png" width="100%" alt="《千脑智能》长卡片"><br><strong>long</strong> · 智能是建模</td>
+<td><img src="assets/gallery/whiteboard.png" width="100%" alt="《千脑智能》白板推演"><br><strong>whiteboard</strong> · 认识一个杯子</td>
 </tr>
 <tr>
-<td><img src="assets/gallery/article-boundary-legacy.png" width="100%" alt="正文边界模型示例"><br><strong>article-diagram</strong> · legacy boundary model</td>
-<td><img src="assets/gallery/reading-notes.png" width="100%" alt="阅读笔记示例"><br><strong>poster</strong> · reading notes</td>
+<td><img src="assets/gallery/article-boundary-legacy.png" width="100%" alt="《千脑智能》参考系边界模型"><br><strong>article-diagram</strong> · reference frame model</td>
+<td><img src="assets/gallery/reading-notes.png" width="100%" alt="《千脑智能》概念转述阅读笔记"><br><strong>poster</strong> · reading notes（概念转述）</td>
 </tr>
 <tr>
-<td><img src="assets/gallery/infograph.png" width="100%" alt="Studio 信息图示例"><br><strong>infograph</strong> · Studio composition</td>
-<td><img src="assets/gallery/comic.png" width="100%" alt="Studio 漫画示例"><br><strong>comic</strong> · Studio composition</td>
+<td><img src="assets/gallery/infograph.png" width="100%" alt="《千脑智能》信息图"><br><strong>infograph</strong> · 局部模型到共同判断</td>
+<td><img src="assets/gallery/comic.png" width="100%" alt="《千脑智能》漫画"><br><strong>comic</strong> · 摸到一条边以后</td>
 </tr>
 <tr>
-<td><img src="assets/gallery/sketchnote.png" width="100%" alt="Studio 视觉手记示例"><br><strong>sketchnote</strong> · Studio composition</td>
-<td><img src="assets/gallery/reading-report.png" width="100%" alt="阅读报告示例"><br><strong>poster</strong> · reading report</td>
+<td><img src="assets/gallery/sketchnote.png" width="100%" alt="《千脑智能》视觉手记"><br><strong>sketchnote</strong> · 感觉、定位与预测</td>
+<td><img src="assets/gallery/reading-report.png" width="100%" alt="《千脑智能》阅读导览"><br><strong>poster</strong> · reading guide</td>
 </tr>
 </table>
 
@@ -246,8 +248,8 @@ card-skill 可以和腾讯官方 [WeChatReading Skill](https://github.com/Tencen
 
 <table>
 <tr>
-<td width="50%"><img src="assets/gallery/reading-report.png" width="100%" alt="阅读报告示例"><br><strong>阅读报告</strong></td>
-<td width="50%"><img src="assets/gallery/reading-notes.png" width="100%" alt="个人划线卡组"><br><strong>个人划线卡组</strong></td>
+<td width="50%"><img src="assets/gallery/reading-report.png" width="100%" alt="《千脑智能》阅读导览示例"><br><strong>阅读导览</strong></td>
+<td width="50%"><img src="assets/gallery/reading-notes.png" width="100%" alt="《千脑智能》概念转述笔记"><br><strong>概念转述笔记</strong></td>
 </tr>
 </table>
 

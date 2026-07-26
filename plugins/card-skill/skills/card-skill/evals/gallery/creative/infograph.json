@@ -5,22 +5,22 @@
   "source": {
     "kind": "pasted-text",
     "language": "zh",
-    "label": "一次可靠发布的三个可验证阶段"
+    "label": "《千脑智能》：从局部模型到共同判断"
   },
   "source_units": [
     {
       "id": "stages",
-      "excerpt": "输入契约、确定性渲染、发布回执共同构成可复核的视觉生产链。"
+      "excerpt": "千脑理论将智能描述为许多皮层柱各自学习模型，再通过横向连接对同一物体达成共识。"
     }
   ],
   "decision": {
     "mode": "infograph",
     "tier": "studio",
     "tone": "technical",
-    "reason": "三个阶段有明确的顺序与证据关系，适合用信息图表达。",
-    "selection_summary": "用一条非对称流水线呈现输入、渲染和证据。",
+    "reason": "局部建模、横向投票与稳定判断有明确的关系，适合用信息图表达。",
+    "selection_summary": "用一条非对称关系链呈现局部模型如何成为共同判断。",
     "visual_risks": [
-      "流程过度装饰会削弱阶段关系"
+      "装饰不能压过局部模型与共同判断之间的关系"
     ]
   },
   "outputs": [
@@ -33,11 +33,11 @@
       "transformation": "visualize",
       "render_contract": {
         "mode": "infograph",
-        "title": "一张图不是一次交付",
-        "subtitle": "可靠视觉生产的三段证据链",
+        "title": "不是一座中枢，而是一群模型",
+        "subtitle": "《千脑智能》：局部学习如何成为共同判断",
         "composition_required": true,
         "tone": "technical",
-        "content_html": "<main class=\"evidence-flow\"><section class=\"lead\"><span class=\"index\">01</span><p class=\"eyebrow\">INPUT CONTRACT</p><h2>先把内容边界<br>写成可检查的输入</h2><p>来源、变换与输出名，在渲染前确定。</p></section><div class=\"spine\" aria-hidden=\"true\"><span></span><span></span></div><section class=\"steps\"><article><b>02</b><div><h3>确定性渲染</h3><p>同一契约进入同一截图链。</p></div></article><article><b>03</b><div><h3>真实回执</h3><p>尺寸、检查与字节哈希一起发布。</p></div></article><aside>能重建，才算能验证。</aside></section></main>",
+        "content_html": "<main class=\"evidence-flow\"><section class=\"lead\"><span class=\"index\">01</span><p class=\"eyebrow\">LOCAL MODELS</p><h2>每个皮层柱<br>都能学习一个物体</h2><p>它从感觉和运动中，建立自己的局部世界模型。</p></section><div class=\"spine\" aria-hidden=\"true\"><span></span><span></span></div><section class=\"steps\"><article><b>02</b><div><h3>横向投票</h3><p>不同模型交换它们对同一物体的证据。</p></div></article><article><b>03</b><div><h3>稳定共识</h3><p>判断不是上报给中心，而是在协作中收敛。</p></div></article><aside>智能，是许多模型共同看见世界。</aside></section></main>",
         "custom_css": ".page{min-height:800px;padding:72px 76px 66px;display:grid}.evidence-flow{display:grid;grid-template-columns:1.12fr 70px .88fr;gap:0;align-items:stretch}.lead{background:var(--ink);color:var(--bg);padding:54px 48px;display:flex;flex-direction:column;justify-content:flex-end;min-height:590px}.index{font:700 82px/1 var(--mono);color:var(--accent)}.eyebrow{font:700 24px/1 var(--mono);letter-spacing:.12em;margin:30px 0 18px}.lead h2{font:700 46px/1.15 var(--serif);margin:0 0 24px}.lead>p:last-child{font:500 36px/1.4 var(--sans);opacity:.72}.spine{display:grid;grid-template-rows:1fr 1fr;place-items:center}.spine span{width:100%;height:2px;background:var(--accent);position:relative}.spine span:after{content:'›';position:absolute;right:-4px;top:-20px;font:700 34px/1 var(--mono);color:var(--accent)}.steps{padding:44px 0 20px;display:flex;flex-direction:column;gap:18px}.steps article{border-top:2px solid var(--ink);padding:16px 0;display:grid;grid-template-columns:58px 1fr;gap:14px}.steps b{font:700 28px/1 var(--mono);color:var(--accent)}.steps h3{font:700 32px/1.1 var(--sans);margin:0 0 8px}.steps p{font:500 36px/1.3 var(--sans);margin:0;color:var(--ink-muted)}.steps aside{margin-top:auto;background:var(--accent);color:var(--bg);padding:18px 20px;font:700 28px/1.25 var(--serif)}"
       }
     }
