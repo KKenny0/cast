@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/KKenny0/card-skill/schemas/visual-job.json",
+  "title": "Card Skill Visual Job v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "job_id", "publish_target", "source", "source_units", "decision", "outputs"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "job_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{0,63}$" },
+    "publish_target": { "enum": ["wechat-cover", "blog-hero", "article-body", "social-single", "social-series", "reading-notes", "long-read", "whiteboard"] },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "language"],
+      "properties": {
+        "kind": { "enum": ["pasted-text", "url", "file", "normalized-adapter"] },
+        "label": { "type": "string", "maxLength": 160 },
+        "language": { "enum": ["zh", "en", "mixed"] },
+        "digest": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+      }
+    },
+    "source_units": {
+      "type": "array", "minItems": 1, "maxItems": 100,
+      "items": {
+        "type": "object", "additionalProperties": false, "required": ["id"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{0,63}$" },
+          "label": { "type": "string", "maxLength": 160 },
+          "digest": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+          "excerpt": { "type": "string", "maxLength": 500 }
+        }
+      }
+    },
+    "decision": {
+      "type": "object", "additionalProperties": false,
+      "required": ["mode", "tier", "reason"],
+      "properties": {
+        "mode": { "enum": ["big", "long", "whiteboard", "poster", "editorial-image", "article-diagram", "infograph", "comic", "sketchnote", "mixed"] },
+        "tier": { "enum": ["stable", "studio"] },
+        "reason": { "type": "string", "minLength": 1, "maxLength": 500 },
+        "tone": { "enum": ["reflective", "sharp", "warm", "technical"] },
+        "selection_summary": { "type": "string", "maxLength": 500 },
+        "visual_risks": { "type": "array", "maxItems": 10, "items": { "type": "string", "maxLength": 200 } }
+      }
+    },
+    "outputs": {
+      "type": "array", "minItems": 1, "maxItems": 20,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "basename", "source_unit_ids", "transformation", "render_contract"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{0,63}$" },
+          "basename": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*\\.png$" },
+          "source_unit_ids": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+          "transformation": { "enum": ["preserve", "compress", "rewrite", "visualize"] },
+          "section": { "type": "string", "maxLength": 160 },
+          "render_contract": { "type": "object" }
+        }
+      }
+    }
+  }
+}

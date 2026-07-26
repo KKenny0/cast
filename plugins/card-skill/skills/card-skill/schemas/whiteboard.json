@@ -3,6 +3,7 @@
   "title": "card-skill whiteboard mode input",
   "description": "Structured input for whiteboard mode CLI rendering. Whiteboard mode produces a reasoning chain card (1080px wide, auto height).",
   "type": "object",
+  "additionalProperties": false,
   "required": ["mode", "title", "steps"],
   "properties": {
     "mode": { "type": "string", "const": "whiteboard" },
@@ -11,6 +12,7 @@
       "description": "Design system name. Defaults to 'stripe'.",
       "default": "stripe"
     },
+    "tone": { "type": "string", "enum": ["reflective", "sharp", "warm", "technical"], "description": "Default-selection tone. Ignored when design is explicit." },
     "subtitle": {
       "type": "string",
       "description": "Subtitle / kicker line. Example: '推理链：从 API 调用到自主决策'",

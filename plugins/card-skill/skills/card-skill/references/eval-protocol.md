@@ -1,0 +1,7 @@
+# Fresh-context evaluation protocol
+
+`npm test` proves L0 only: fixture definitions, Visual Job validation, and output checks work. It does not call a model.
+
+Before a minor release, run `npm run eval:fresh -- --report evals/fresh-context-results.json`. The runner copies the generated package mirror into a temporary install root, runs `npm ci` there, verifies Playwright resolves inside that isolated root, and prepares the declared runtime. It then starts one ephemeral, read-only Codex process per case from that install, with no prior conversation or user configuration. It validates each produced Visual Job with `evals/check-job-assertions.mjs`, renders it through the installed `scripts/render-job.mjs`, and requires real passing receipts.
+
+Required source terms must survive into renderer-consumed semantic fields, not merely source excerpts, ignored fields, CSS, HTML comments, HTML attributes, or deterministically hidden HTML subtrees (`hidden`, inline `display:none` / `visibility:hidden`, `template`, `noscript`, `head`, `style`, `script`). Split and series cases bind source groups to distinct outputs/cards and may require those groups to remain mutually exclusive rather than repeating the whole source everywhere. This is still a static L1 text-node approximation, not proof of computed CSS visibility or visual meaning. A maintainer must inspect representative PNGs before marking L2 publication judgment true. L3 requires real user publication or reuse evidence; absence of L2/L3 must remain explicit in the report.

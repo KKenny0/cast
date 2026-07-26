@@ -13,6 +13,7 @@ const DRY_RUN = process.argv.includes('--dry-run');
 const OUTPUT_DIR = '/tmp/card_covers';
 const ASSETS = path.resolve(__dirname, '..', 'assets');
 const CAPTURE = path.join(ASSETS, 'capture4k.js');
+const LOCAL_FONT_CSS = `file://${path.join(ASSETS, 'fonts', 'local-fonts.css')}`;
 
 // Cover content
 const CONTENT = {
@@ -92,7 +93,7 @@ function generateHTML(design, name) {
 <head>
 <meta charset="UTF-8">
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600;700;800&display=swap');
+  @import url('${LOCAL_FONT_CSS}');
 
   :root {
     --bg: ${design.canvas};

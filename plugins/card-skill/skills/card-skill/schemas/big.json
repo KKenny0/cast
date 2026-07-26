@@ -3,6 +3,7 @@
   "title": "card-skill big mode input",
   "description": "Structured input for big mode CLI rendering. Big mode renders a large-text poster (1080x1440) with optional ghost watermark character.",
   "type": "object",
+  "additionalProperties": false,
   "required": ["mode", "phrase"],
   "properties": {
     "mode": { "type": "string", "const": "big" },
@@ -11,6 +12,7 @@
       "description": "Design system name. Defaults to 'vercel'. See scripts/lib/designs.js for full list.",
       "default": "vercel"
     },
+    "tone": { "type": "string", "enum": ["reflective", "sharp", "warm", "technical"], "description": "Default-selection tone. Ignored when design is explicit." },
     "phrase": {
       "type": "string",
       "description": "Main body text. Use <br> for line breaks and <span class=\"accent\">word</span> to highlight words. Example: '<span class=\"accent\">Agent</span> 不是<br>加了循环'",

@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "job_id": "gallery-sketchnote",
+  "publish_target": "long-read",
+  "source": {
+    "kind": "pasted-text",
+    "language": "zh",
+    "label": "从内容到读者能力"
+  },
+  "source_units": [
+    {
+      "id": "arc",
+      "excerpt": "好的卡片让读者在一次阅读后能复述结构、执行下一步并知道结论的边界。"
+    }
+  ],
+  "decision": {
+    "mode": "sketchnote",
+    "tier": "studio",
+    "tone": "warm",
+    "reason": "内容从理解到行动再到边界形成一条学习弧线，适合长幅手记。",
+    "selection_summary": "用三站式手记连接复述、行动和边界。",
+    "visual_risks": [
+      "装饰性涂鸦不能压过学习顺序"
+    ]
+  },
+  "outputs": [
+    {
+      "id": "sketchnote",
+      "basename": "sketchnote.png",
+      "source_unit_ids": [
+        "arc"
+      ],
+      "transformation": "visualize",
+      "render_contract": {
+        "mode": "sketchnote",
+        "title": "读完之后，读者会什么？",
+        "subtitle": "把视觉质量落到可迁移的能力上",
+        "composition_required": true,
+        "tone": "warm",
+        "content_html": "<header class=\"opening\"><span class=\"kicker\">READER OUTCOME / 01</span><h1>读完之后，<br>读者会什么？</h1><p>好看只是入口。真正的结果，是读者获得了可以带走的能力。</p></header><main class=\"journey\"><article class=\"station recall\"><b>01</b><div><span class=\"label\">RECONSTRUCT</span><h2>能复述结构</h2><p>不是记住一句金句，而是说清楚各部分为什么连在一起。</p></div><i>↘</i></article><article class=\"station act\"><b>02</b><div><span class=\"label\">OPERATE</span><h2>能执行下一步</h2><p>知道从哪里开始、要看什么信号，以及什么时候停下。</p></div><i>↙</i></article><article class=\"station bound\"><b>03</b><div><span class=\"label\">BOUND</span><h2>能指出边界</h2><p>知道结论在哪些条件下成立，也知道哪些证据仍然缺失。</p></div></article></main><footer><span>一张卡的完成条件</span><strong>复述 · 行动 · 边界</strong></footer>",
+        "custom_css": ".page{padding:78px 74px 64px;display:flex;flex-direction:column;gap:44px}.opening{border-left:12px solid var(--accent);padding:12px 0 18px 34px}.opening>span{font:700 24px/1 var(--mono);letter-spacing:.1em;color:var(--accent)}.opening h1{font:700 66px/1.05 var(--serif);margin:22px 0 24px}.opening p{font:500 36px/1.45 var(--sans);max-width:850px;color:var(--ink-muted)}.journey{display:flex;flex-direction:column;gap:24px;position:relative}.station{border:2px solid var(--ink);padding:28px 34px;display:grid;grid-template-columns:88px 1fr 80px;gap:22px;align-items:center;box-shadow:10px 10px 0 var(--surface-2);transform:rotate(-.7deg)}.station:nth-child(2){margin-left:96px;transform:rotate(.8deg);background:var(--surface-1)}.station:nth-child(3){margin-right:72px;background:var(--ink);color:var(--bg);transform:rotate(-.35deg)}.station>b{font:700 54px/1 var(--mono);color:var(--accent)}.label{display:block;font:700 24px/1 var(--mono);letter-spacing:.09em;margin:0 0 8px}.station h2{font:700 40px/1.1 var(--sans);margin:0 0 10px}.station div>p:last-child{font:500 36px/1.35 var(--sans);margin:0;opacity:.72}.station i{font:700 62px/1 var(--mono);color:var(--accent);font-style:normal}footer{margin-top:auto;border-top:3px solid var(--ink);padding-top:24px;display:flex;align-items:flex-end;justify-content:space-between}footer span{font:700 24px/1 var(--mono)}footer strong{font:700 38px/1 var(--serif);color:var(--accent)}"
+      }
+    }
+  ]
+}

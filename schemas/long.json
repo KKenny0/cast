@@ -3,6 +3,7 @@
   "title": "card-skill long mode input",
   "description": "Structured input for long mode CLI rendering. Long mode produces a reading-optimized card (1080px wide, auto height).",
   "type": "object",
+  "additionalProperties": false,
   "required": ["mode", "title", "body"],
   "properties": {
     "mode": { "type": "string", "const": "long" },
@@ -11,6 +12,7 @@
       "description": "Design system name. Defaults to 'claude'.",
       "default": "claude"
     },
+    "tone": { "type": "string", "enum": ["reflective", "sharp", "warm", "technical"], "description": "Default-selection tone. Ignored when design is explicit." },
     "kicker": {
       "type": "string",
       "description": "Top label / category tag. Example: 'Architecture Pattern'",

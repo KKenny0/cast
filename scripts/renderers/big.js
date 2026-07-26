@@ -7,29 +7,46 @@ const fs = require('fs');
 const path = require('path');
 const { pathToFileURL } = require('url');
 const { escapePhrase, escapeHtml } = require('../lib/escape');
-const { cssOverrides, getDesign } = require('../lib/designs');
+const { cssOverrides, getDesign, resolveDesignNameForInput } = require('../lib/designs');
 
 const TEMPLATE_PATH = path.resolve(__dirname, '../../assets/big_template.html');
 const FONT_DIR = path.resolve(__dirname, '../../assets/fonts');
 
 /**
- * Calculate font size from phrase character count.
- * Rules from references/mode-big.md:
- *   <=10 chars → 220px, 11-20 → 190px, 21+ → 160px
- * Count excludes HTML tags for accurate character measurement.
+ * Calculate font size from total phrase length and the longest explicit line.
+ * A short phrase can still overflow when a five-character CJK line is set at
+ * 220px, so the line-fit cap is part of the deterministic render contract.
  */
 function calcFontSize(phraseHtml) {
   const plain = phraseHtml.replace(/<[^>]+>/g, '');
   const len = plain.length;
-  if (len <= 10) return '220px';
-  if (len <= 20) return '190px';
-  return '160px';
+  const base = len <= 10 ? 220 : len <= 20 ? 190 : 160;
+  const lines = phraseHtml
+    .split(/<br\s*\/?>/i)
+    .map(line => line.replace(/<[^>]+>/g, ''));
+  const visualLength = value => [...value].reduce((sum, char) => {
+    if (/[\u3400-\u9fff]/.test(char)) return sum + 1;
+    if (/\s/.test(char)) return sum + 0.32;
+    return sum + 0.56;
+  }, 0);
+  const longestLine = Math.max(1, ...lines.map(visualLength));
+  const lineFit = Math.floor(880 / longestLine);
+  return `${Math.max(120, Math.min(base, lineFit))}px`;
 }
 
 function normalizeFontSize(value) {
   if (typeof value === 'number') return `${value}px`;
   if (typeof value === 'string' && /^\d+(?:\.\d+)?$/.test(value.trim())) return `${value.trim()}px`;
   return value;
+}
+
+function resolveFontSize(phraseHtml, requested) {
+  const automatic = parseFloat(calcFontSize(phraseHtml));
+  if (requested === undefined || requested === null) return `${automatic}px`;
+  const normalized = normalizeFontSize(requested);
+  const numeric = parseFloat(normalized);
+  if (!Number.isFinite(numeric)) return normalized;
+  return `${Math.min(numeric, automatic)}px`;
 }
 
 /**
@@ -71,13 +88,14 @@ function escapeRegex(str) {
  * @returns {object} - { htmlPath, captureWidth, captureHeight, fullpage }
  */
 function render(input, outputHtmlPath) {
-  const design = getDesign(input.design || 'vercel');
+  const designName = resolveDesignNameForInput(input, 'vercel');
+  const design = getDesign(designName);
   if (!design) throw new Error(`Design not found: ${input.design}`);
 
   let phraseHtml = escapePhrase(input.phrase);
   phraseHtml = applyAccentWords(phraseHtml, input.accent_words);
 
-  const fontSize = normalizeFontSize(input.font_size ?? calcFontSize(phraseHtml));
+  const fontSize = resolveFontSize(phraseHtml, input.font_size);
   const ghostChar = input.ghost_char || deriveGhostChar(input.phrase, input.accent_words);
   const attribution = input.attribution ? escapeHtml(input.attribution) : '';
 
@@ -92,7 +110,7 @@ function render(input, outputHtmlPath) {
   template = template.replace('class="dark"', `class="${theme}"`);
 
   // Inject design tokens
-  const overrides = cssOverrides(input.design || 'vercel');
+  const overrides = cssOverrides(designName);
   template = template.replace(/(:root\s*\{[^}]*\})/s, (match) => {
     return match.replace(/--bg:.*?;/, `--bg: ${design.canvas};`)
                .replace(/--accent:.*?;/, `--accent: ${design.accent};`)
@@ -130,4 +148,4 @@ function render(input, outputHtmlPath) {
   };
 }
 
-module.exports = { render, calcFontSize, normalizeFontSize };
+module.exports = { render, calcFontSize, normalizeFontSize, resolveFontSize };

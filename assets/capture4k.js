@@ -2,9 +2,21 @@
 
 const path = require('path');
 const { pathToFileURL } = require('url');
+const fs = require('fs');
+const { createFileAccessPolicy } = require('../scripts/lib/file-access');
 
 async function main() {
   const args = process.argv.slice(2);
+  const allowedFiles = [];
+  for (let index = args.length - 1; index >= 0; index--) {
+    if (args[index] !== '--allow-file') continue;
+    if (!args[index + 1]) {
+      console.error('--allow-file requires a path');
+      process.exit(1);
+    }
+    allowedFiles.unshift(args[index + 1]);
+    args.splice(index, 2);
+  }
   const measureIndex = args.indexOf('--measure');
   const measureMode = measureIndex >= 0;
   const htmlPath = args[0];
@@ -35,58 +47,78 @@ async function main() {
   }
 
   const browser = await chromium.launch();
-  const context = await browser.newContext({
-    viewport: { width, height: fullpage ? 5000 : height },
-    deviceScaleFactor: dpr
-  });
-  const page = await context.newPage();
+  try {
+    const context = await browser.newContext({
+      viewport: { width, height: fullpage ? 5000 : height },
+      deviceScaleFactor: dpr,
+      serviceWorkers: 'block',
+    });
+    const policy = createFileAccessPolicy({
+      htmlPath: resolvedHtml,
+      assetRoot: path.resolve(__dirname),
+      allowedFiles,
+    });
+    const blocked = [];
+    await context.route('**/*', async route => {
+      const url = route.request().url();
+      const decision = policy.inspect(url);
+      if (decision.allowed) return route.continue();
+      let host = 'local-file';
+      if (decision.scheme === 'remote') {
+        try { host = new URL(url).host || 'unknown'; } catch { host = 'unknown'; }
+      }
+      blocked.push({ resourceType: route.request().resourceType(), host, reason: decision.reason || 'remote-scheme' });
+      await route.abort('blockedbyclient');
+    });
+    const page = await context.newPage();
 
-  const fileUrl = pathToFileURL(resolvedHtml).href;
-  await page.goto(fileUrl, { waitUntil: 'networkidle' });
-  // Wait for web/local fonts to actually load before screenshotting.
-  // The old `waitForTimeout(800)` was a fixed guess; on slow disks the 23MB
-  // XiangcuiDengcusong TTF can still be mid-decode at 800ms, producing a
-  // silent fallback to system CJK fonts.
-  await page.evaluate(() => document.fonts.ready);
+    const fileUrl = pathToFileURL(resolvedHtml).href;
+    await page.goto(fileUrl, { waitUntil: 'networkidle' });
+    await page.evaluate(() => document.fonts.ready);
+    await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
 
-  if (measureMode) {
-    // For article-diagram two-pass layout: return rendered bbox of every
-    // [data-measure-id] element as JSON on stdout. Caller computes positions
-    // from these sizes and writes final HTML for the screenshot pass.
-    const bboxes = await page.evaluate(() => {
-      const result = {};
-      document.querySelectorAll('[data-measure-id]').forEach(el => {
-        const r = el.getBoundingClientRect();
-        result[el.dataset.measureId] = {
-          width: Math.round(r.width),
-          height: Math.round(r.height)
-        };
+    if (measureMode) {
+      const bboxes = await page.evaluate(() => {
+        const result = {};
+        document.querySelectorAll('[data-measure-id]').forEach(el => {
+          const r = el.getBoundingClientRect();
+          result[el.dataset.measureId] = {
+            width: Math.round(r.width),
+            height: Math.round(r.height)
+          };
+        });
+        return result;
       });
-      return result;
-    });
+      if (blocked.length) {
+        throw new Error(`safety.asset_blocked: ${blocked.map(item => `${item.resourceType}@${item.host}:${item.reason}`).join(', ')}`);
+      }
+      console.log(JSON.stringify(bboxes));
+      return;
+    }
+
+    if (fullpage) {
+      const bodyHeight = await page.evaluate(() => document.body.scrollHeight);
+      await page.screenshot({
+        path: path.resolve(outputPath),
+        type: 'png',
+        clip: { x: 0, y: 0, width, height: bodyHeight }
+      });
+    } else {
+      await page.screenshot({
+        path: path.resolve(outputPath),
+        type: 'png',
+        clip: { x: 0, y: 0, width, height }
+      });
+    }
+
+    if (blocked.length) {
+      fs.rmSync(path.resolve(outputPath), { force: true });
+      throw new Error(`safety.asset_blocked: ${blocked.map(item => `${item.resourceType}@${item.host}:${item.reason}`).join(', ')}`);
+    }
+    console.log('OK: ' + path.resolve(outputPath));
+  } finally {
     await browser.close();
-    console.log(JSON.stringify(bboxes));
-    return;
   }
-
-  if (fullpage) {
-    // Measure actual content height
-    const bodyHeight = await page.evaluate(() => document.body.scrollHeight);
-    await page.screenshot({
-      path: path.resolve(outputPath),
-      type: 'png',
-      clip: { x: 0, y: 0, width, height: bodyHeight }
-    });
-  } else {
-    await page.screenshot({
-      path: path.resolve(outputPath),
-      type: 'png',
-      clip: { x: 0, y: 0, width, height }
-    });
-  }
-
-  await browser.close();
-  console.log('OK: ' + path.resolve(outputPath));
 }
 
 main().catch(err => {

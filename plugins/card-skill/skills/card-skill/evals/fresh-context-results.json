@@ -1,0 +1,104 @@
+{
+  "schema_version": 1,
+  "level": "L1",
+  "installed_runtime": "isolated-temp-install",
+  "package_source": "plugins/card-skill/skills/card-skill",
+  "cases": [
+    {
+      "id": "wechat-cover",
+      "pass": true,
+      "tier": "stable",
+      "mode": "editorial-image",
+      "visual_job_outputs": 1,
+      "rendered_artifacts": 1,
+      "checker_pass": true,
+      "answer_normalized": false
+    },
+    {
+      "id": "blog-hero",
+      "pass": true,
+      "tier": "stable",
+      "mode": "editorial-image",
+      "visual_job_outputs": 1,
+      "rendered_artifacts": 1,
+      "checker_pass": true,
+      "answer_normalized": false
+    },
+    {
+      "id": "article-split",
+      "pass": true,
+      "tier": "stable",
+      "mode": "article-diagram",
+      "visual_job_outputs": 2,
+      "rendered_artifacts": 2,
+      "checker_pass": true,
+      "answer_normalized": false
+    },
+    {
+      "id": "social-big",
+      "pass": true,
+      "tier": "stable",
+      "mode": "big",
+      "visual_job_outputs": 1,
+      "rendered_artifacts": 1,
+      "checker_pass": true,
+      "answer_normalized": false
+    },
+    {
+      "id": "poster",
+      "pass": true,
+      "tier": "stable",
+      "mode": "poster",
+      "visual_job_outputs": 1,
+      "rendered_artifacts": 3,
+      "checker_pass": true,
+      "answer_normalized": false
+    },
+    {
+      "id": "long",
+      "pass": true,
+      "tier": "stable",
+      "mode": "long",
+      "visual_job_outputs": 1,
+      "rendered_artifacts": 1,
+      "checker_pass": true,
+      "answer_normalized": false
+    },
+    {
+      "id": "whiteboard",
+      "pass": true,
+      "tier": "stable",
+      "mode": "whiteboard",
+      "visual_job_outputs": 1,
+      "rendered_artifacts": 1,
+      "checker_pass": true,
+      "answer_normalized": false
+    },
+    {
+      "id": "reading-notes",
+      "pass": true,
+      "tier": "stable",
+      "mode": "poster",
+      "visual_job_outputs": 1,
+      "rendered_artifacts": 2,
+      "checker_pass": true,
+      "answer_normalized": false
+    },
+    {
+      "id": "studio-editorial-body",
+      "pass": true,
+      "tier": "studio",
+      "mode": "editorial-image",
+      "visual_job_outputs": 1,
+      "rendered_artifacts": 1,
+      "checker_pass": true,
+      "answer_normalized": false
+    }
+  ],
+  "summary": {
+    "passed": 9,
+    "failed": 0,
+    "l2_maintainer_judgment": false,
+    "l3_real_user_evidence": false
+  }
+}

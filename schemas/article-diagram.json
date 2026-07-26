@@ -3,6 +3,7 @@
   "title": "card-skill article-diagram mode input",
   "description": "Structured input for in-article compression formula cards. The default shape is a compression pack: formula, one sentence, and a supporting structure map. Legacy concept-map, process-flow, and boundary-model inputs are still accepted for compatibility. Visible text should follow the source article or requested language unless the user explicitly asks for translation or bilingual output.",
   "type": "object",
+  "additionalProperties": false,
   "required": ["mode", "title"],
   "oneOf": [
     {
@@ -37,6 +38,7 @@
       "type": "string",
       "description": "Optional Quiet Paper design system name. Defaults to stripe."
     },
+    "tone": { "type": "string", "enum": ["reflective", "sharp", "warm", "technical"], "description": "Default-selection tone. Ignored when design is explicit." },
     "title": {
       "type": "string",
       "description": "Short diagram title. It should name the relationship, not the output format. Use the source or requested language for visible text.",

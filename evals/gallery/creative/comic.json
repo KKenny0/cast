@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "job_id": "gallery-comic",
+  "publish_target": "social-single",
+  "source": {
+    "kind": "pasted-text",
+    "language": "zh",
+    "label": "验证不是最后一步"
+  },
+  "source_units": [
+    {
+      "id": "dialogue",
+      "excerpt": "渲染成功只说明程序跑完；输出检查和人工观看回答的是另外两个问题。"
+    }
+  ],
+  "decision": {
+    "mode": "comic",
+    "tier": "studio",
+    "tone": "sharp",
+    "reason": "一个常见误解和两次纠正适合用连续分镜表达。",
+    "selection_summary": "三格对话把程序成功、机器检查和视觉判断拆开。",
+    "visual_risks": [
+      "对白过多会破坏分镜节奏"
+    ]
+  },
+  "outputs": [
+    {
+      "id": "comic",
+      "basename": "comic.png",
+      "source_unit_ids": [
+        "dialogue"
+      ],
+      "transformation": "rewrite",
+      "render_contract": {
+        "mode": "comic",
+        "title": "“跑通了”之后",
+        "subtitle": "一次视觉交付的三次确认",
+        "composition_required": true,
+        "tone": "sharp",
+        "content_html": "<article class=\"panel panel-large scene-one\"><span class=\"beat\">01</span><div class=\"bubble\">PNG 出来了。<br><strong>完成？</strong></div><div class=\"terminal\">RENDER<br>EXIT 0</div></article><article class=\"panel panel-half scene-two\"><span class=\"beat\">02</span><h2>机器说</h2><p>没有溢出、裁切和资源越界。</p><div class=\"stamp\">CHECKED</div></article><article class=\"panel panel-half scene-three\"><span class=\"beat\">03</span><h2>人还要看</h2><p>层级、节奏和意义是否真的成立。</p><div class=\"eye\">◉</div></article>",
+        "custom_css": ".title-area{flex:.55;justify-content:flex-end;padding-bottom:48px}.panels{flex:1.45;grid-template-columns:1.15fr .85fr;grid-template-rows:1fr 1fr}.scene-one{grid-row:1/3;grid-column:1;background:var(--ink);color:var(--bg);display:flex;flex-direction:column;justify-content:space-between}.scene-two{grid-row:1;grid-column:2;background:var(--bg)}.scene-three{grid-row:2;grid-column:2;background:var(--accent);color:var(--bg)}.beat{font:700 24px/1 var(--mono);opacity:.55}.bubble{font:700 44px/1.24 var(--serif);border:3px solid currentColor;padding:30px;position:relative}.bubble:after{content:'';position:absolute;left:34px;bottom:-24px;border:12px solid transparent;border-top-color:currentColor}.terminal{font:700 54px/.95 var(--mono);letter-spacing:-.05em;color:var(--accent)}.scene-two h2,.scene-three h2{font:800 38px/1.1 var(--sans);margin-top:auto}.scene-two p,.scene-three p{font:600 36px/1.35 var(--sans)}.stamp{display:inline-block;border:4px solid var(--accent);color:var(--accent);padding:9px 13px;transform:rotate(-8deg);font:800 21px/1 var(--mono)}.eye{font:700 84px/1 var(--mono);text-align:right}"
+      }
+    }
+  ]
+}

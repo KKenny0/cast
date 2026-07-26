@@ -32,10 +32,10 @@ editorial-image 不是单一稳定性承诺。它的 3 个子场景按不同 tie
 | Sub-scenario | `use` | Tier | Renderer path |
 |--------------|-------|------|---------------|
 | 公众号封面 / 博客 hero | `cover` | Stable | CLI scaffold（kicker + title + subtitle + 确定性 `cover_motif`）足够 |
-| 正文氛围插图 | `in-article` | Creative | 必须由 AI 写 `content_html` + `custom_css`；scaffold 只用于验证 |
-| 概念隐喻图 | `metaphor` | Creative | 必须由 AI 写 `content_html` + `custom_css`；scaffold 不应作为最终产出 |
+| 正文氛围插图 | `in-article` | Studio | 必须由 AI 写 `content_html` + `custom_css`；scaffold 只用于验证 |
+| 概念隐喻图 | `metaphor` | Studio | 必须由 AI 写 `content_html` + `custom_css`；scaffold 不应作为最终产出 |
 
-判断规则：如果 scaffold 拿掉 `content_html` 也能撑住这张图，说明是 Stable 子场景；否则是 Creative 子场景。`use=cover` 默认 Stable，`use=in-article` / `metaphor` 默认 Creative。
+判断规则：如果 scaffold 拿掉 `content_html` 也能撑住这张图，说明是 Stable 子场景；否则是 Studio 子场景。`use=cover` 默认 Stable，`use=in-article` / `metaphor` 默认 Studio。
 
 ## Supported Outputs
 
@@ -274,7 +274,7 @@ Custom CSS should not create a separate visual universe. If the composition need
 
 - Text should usually take less than 20% of the image.
 - Visible text must belong to the artwork. It may be the article title, a section title, a real term, a short excerpt, a byline, or a label attached to a visual object.
-- For `use=in-article` and `metaphor` sub-scenarios (Creative), the final image must set `composition_required: true` and have one concrete dominant subject; the renderer rejects a scaffold fallback. For `use=cover` (Stable), the CLI scaffold pairs kicker, title, subtitle, and an article-specific `cover_motif`; use a custom composition only when that bounded object vocabulary cannot carry the selected direction.
+- For `use=in-article` and `metaphor` sub-scenarios (Studio), the final image must set `composition_required: true` and have one concrete dominant subject; the renderer rejects a scaffold fallback. For `use=cover` (Stable), the CLI scaffold pairs kicker, title, subtitle, and an article-specific `cover_motif`; use a custom composition only when that bounded object vocabulary cannot carry the selected direction.
 - Do not print generation notes, usage notes, or internal rationale into the artwork. Avoid sentences like `给这一节使用`, `用作正文配图`, `安静、低干扰`, `像文章中间的一次停顿`, or `visual pause`.
 - For in-article mood images, do not let readable text collide with cards, objects, diagrams, or illustration layers. Text-object overlap is a hard failure unless the requested style is explicitly collage/overprint and readability remains clean.
 - Headline line breaks are a hard quality standard, not a cosmetic preference. Fix bad wrapping before delivery.

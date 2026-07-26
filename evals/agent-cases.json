@@ -1,0 +1,116 @@
+{
+  "schema_version": 2,
+  "protocol": "references/eval-protocol.md",
+  "cases": [
+    {
+      "id": "wechat-cover",
+      "request": "把下面文章摘要做成一张公众号头图。只输出 Visual Job JSON。",
+      "source_text": "记忆不是仓库，而是一只抽屉：下一次任务能否找到旧工作，取决于我们有没有留下可检索的把手。",
+      "publish_target": "wechat-cover",
+      "tier": "stable",
+      "modes": ["editorial-image"],
+      "outputs": [1, 1],
+      "required_contract_fields": ["use", "aspect", "cover_motif"],
+      "required_terms": ["drawer"]
+    },
+    {
+      "id": "blog-hero",
+      "request": "为下面的英文博客摘要做一张 blog hero。只输出 Visual Job JSON。",
+      "source_text": "A reliable agent does not merely finish. It leaves a receipt that lets the next person reconstruct what happened.",
+      "publish_target": "blog-hero",
+      "tier": "stable",
+      "modes": ["editorial-image"],
+      "outputs": [1, 1],
+      "required_contract_fields": ["use", "aspect", "cover_motif"],
+      "required_terms": ["receipt"]
+    },
+    {
+      "id": "article-split",
+      "request": "为下面两个独立章节分别做正文解释图，不要把全文塞进一张图。只输出 Visual Job JSON。",
+      "source_text": "第一节：输入契约决定系统允许什么。第二节：发布回执证明系统实际做了什么。",
+      "publish_target": "article-body",
+      "tier": "stable",
+      "modes": ["article-diagram"],
+      "outputs": [2, 2],
+      "source_units": [2, 2],
+      "source_unit_assignment": "one-to-one",
+      "required_contract_fields": ["title"],
+      "required_source_contract_mappings": [
+        { "source_terms": ["输入", "契约"], "contract_terms": ["输入", "契约"] },
+        { "source_terms": ["发布", "回执"], "contract_terms": ["发布", "回执"] }
+      ],
+      "exclusive_source_contract_mappings": true
+    },
+    {
+      "id": "social-big",
+      "request": "把这句话做成一张单图社媒观点卡。只输出 Visual Job JSON。",
+      "source_text": "能重建，才算能验证。",
+      "publish_target": "social-single",
+      "tier": "stable",
+      "modes": ["big"],
+      "outputs": [1, 1],
+      "required_contract_fields": ["phrase"],
+      "required_terms": ["重建", "验证"]
+    },
+    {
+      "id": "poster",
+      "request": "把下面三点做成一个社媒系列卡组，每点一张。只输出 Visual Job JSON。",
+      "source_text": "一、先确认来源。二、再选择视觉结构。三、最后检查真实 PNG。",
+      "publish_target": "social-series",
+      "tier": "stable",
+      "modes": ["poster"],
+      "outputs": [1, 1],
+      "required_contract_fields": ["cards"],
+      "required_card_term_groups": [["来源"], ["视觉结构"], ["PNG"]],
+      "exclusive_card_term_groups": true,
+      "artifact_outputs": [3, 3]
+    },
+    {
+      "id": "long",
+      "request": "把下面短文做成一张长阅读卡，不要拆成系列。只输出 Visual Job JSON。",
+      "source_text": "工具的价值不在于替人完成一次动作，而在于把判断、执行和证据连成一条可复用的路径。判断让人知道为什么做，执行让结果发生，证据让后来者可以复核。",
+      "publish_target": "long-read",
+      "tier": "stable",
+      "modes": ["long"],
+      "outputs": [1, 1],
+      "required_contract_fields": ["title", "body"],
+      "required_terms": ["判断", "执行", "证据"]
+    },
+    {
+      "id": "whiteboard",
+      "request": "把下面决策关系做成一张 whiteboard 推演图。只输出 Visual Job JSON。",
+      "source_text": "事实先约束选择，选择决定动作，动作产生回执，回执再更新事实。",
+      "publish_target": "whiteboard",
+      "tier": "stable",
+      "modes": ["whiteboard"],
+      "outputs": [1, 1],
+      "required_contract_fields": ["title", "steps"],
+      "required_terms": ["事实", "选择", "动作", "回执"]
+    },
+    {
+      "id": "reading-notes",
+      "request": "把下面两条明确指定的个人划线做成 reading-notes 卡组，每条一张，不要补书中不存在的内容。只输出 Visual Job JSON。",
+      "source_text": "《示例书》划线一：边界让自由变得可持续。划线二：记录不是回顾，而是下一次行动的入口。",
+      "publish_target": "reading-notes",
+      "tier": "stable",
+      "modes": ["poster"],
+      "outputs": [1, 1],
+      "required_contract_fields": ["variant", "cards"],
+      "artifact_outputs": [2, 2],
+      "required_card_term_groups": [["边界", "自由"], ["记录", "行动"]],
+      "exclusive_card_term_groups": true,
+      "forbidden_terms": ["作者认为", "全书"]
+    },
+    {
+      "id": "studio-editorial-body",
+      "request": "为下面段落做一张正文概念隐喻图，不要做标题模板。只输出 Visual Job JSON。",
+      "source_text": "注意力像一束窄光：中心信息被照亮时，外围材料仍然存在，只是暂时退到暗处。",
+      "publish_target": "article-body",
+      "tier": "studio",
+      "modes": ["editorial-image"],
+      "outputs": [1, 1],
+      "required_contract_fields": ["use", "aspect", "composition_required", "content_html", "custom_css"],
+      "required_terms": ["注意力"]
+    }
+  ]
+}

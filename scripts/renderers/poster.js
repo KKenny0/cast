@@ -7,10 +7,20 @@ const fs = require('fs');
 const path = require('path');
 const { pathToFileURL } = require('url');
 const { escapeHtml } = require('../lib/escape');
-const { getDesign } = require('../lib/designs');
+const { getDesign, resolveDesignNameForInput } = require('../lib/designs');
 
 const TEMPLATE_PATH = path.resolve(__dirname, '../../assets/poster_template.html');
 const FONT_DIR = path.resolve(__dirname, '../../assets/fonts');
+
+function calcPosterTitleFontSize(title) {
+  const weight = [...String(title || '')].reduce((sum, char) => {
+    if (/[\u3400-\u9fff]/.test(char)) return sum + 1;
+    if (/\s/.test(char)) return sum + 0.3;
+    if (/[，。！？、,:;!?]/.test(char)) return sum + 0.5;
+    return sum + 0.56;
+  }, 0);
+  return Math.max(60, Math.min(92, Math.floor(820 / Math.max(1, weight))));
+}
 
 /**
  * Convert structured body elements into HTML for poster_template.
@@ -52,13 +62,23 @@ function renderCardBody(body) {
   }).join('\n\n');
 }
 
+function isSparsePosterCard(card) {
+  if (!Array.isArray(card.body) || card.body.length === 0 || card.body.length > 2) return false;
+  const visibleText = card.body.map(element => {
+    if (typeof element.text === 'string') return element.text;
+    if (Array.isArray(element.entries)) return element.entries.map(entry => `${entry.label || ''}${entry.text || ''}`).join('');
+    return '';
+  }).join('').replace(/\s+/g, '');
+  return visibleText.length > 0 && visibleText.length <= 28;
+}
+
 /**
  * Render poster mode from structured input.
  * Produces one HTML file per card.
  * @returns {Array<object>} - Array of { htmlPath, captureWidth, captureHeight, fullpage }
  */
 function render(input, outputDir) {
-  const design = getDesign(input.design || 'stripe');
+  const design = getDesign(resolveDesignNameForInput(input, 'stripe'));
   if (!design) throw new Error(`Design not found: ${input.design}`);
 
   // Poster template has no dark theme — reject dark-surface designs
@@ -91,7 +111,8 @@ function render(input, outputDir) {
     // Build title block (only for first card)
     let titleBlock = '';
     if (isFirst) {
-      titleBlock = `<div class="title-area"><h1>${escapeHtml(input.title)}</h1>${input.subtitle ? `<div class="subtitle">${escapeHtml(input.subtitle)}</div>` : ''}</div>`;
+      const titleFontSize = calcPosterTitleFontSize(input.title);
+      titleBlock = `<div class="title-area"><h1 style="font-size:${titleFontSize}px">${escapeHtml(input.title)}</h1>${input.subtitle ? `<div class="subtitle">${escapeHtml(input.subtitle)}</div>` : ''}</div>`;
     }
 
     // Build colophon block (only for last card)
@@ -121,7 +142,8 @@ function render(input, outputDir) {
       ? `<h2 class="reading-card-title">${escapeHtml(card.title)}</h2>`
       : '';
     const bodyHtml = Array.isArray(card.body) ? renderCardBody(card.body) : '';
-    html = html.replaceAll('{{CARD_CLASS}}', isReadingNotes ? ' reading-notes' : '');
+    const sparseClass = !isReadingNotes && isSparsePosterCard(card) ? ' sparse-poster' : '';
+    html = html.replaceAll('{{CARD_CLASS}}', `${isReadingNotes ? ' reading-notes' : ''}${sparseClass}`);
     html = html.replaceAll('{{BODY_HTML}}', `${cardTitle}${bodyHtml}`);
     html = html.replaceAll('{{COLOPHON_BLOCK}}', colophonBlock);
     html = html.replaceAll('{{LOGO}}', logoPath ? escapeHtml(pathToFileURL(logoPath).href) : '');
@@ -144,4 +166,4 @@ function render(input, outputDir) {
   return results;
 }
 
-module.exports = { render, renderCardBody };
+module.exports = { render, renderCardBody, calcPosterTitleFontSize, isSparsePosterCard };

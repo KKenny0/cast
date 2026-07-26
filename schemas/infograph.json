@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/KKenny0/card-skill/schemas/infograph.json",
+  "title": "Card Skill Studio Infograph Contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["mode", "title", "composition_required", "content_html", "custom_css"],
+  "properties": {
+    "mode": { "const": "infograph" },
+    "title": { "type": "string", "minLength": 1 },
+    "composition_required": { "const": true },
+    "content_html": { "type": "string", "minLength": 1 },
+    "custom_css": { "type": "string", "minLength": 1 },
+    "design": { "type": "string" },
+    "tone": { "enum": ["reflective", "sharp", "warm", "technical"] },
+    "subtitle": { "type": "string" },
+    "source": { "type": "string" },
+    "logo": { "type": "string" },
+    "brand_name": { "type": "string" }
+  }
+}

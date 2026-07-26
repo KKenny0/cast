@@ -1,0 +1,5 @@
+/* Offline font bundle for every capture path. Kept beside the binaries so
+   file: imports resolve equally in a source checkout and packaged skill. */
+@font-face { font-family: 'DM Sans'; src: url('DMSans-Variable.ttf') format('truetype'); font-weight: 100 1000; font-style: normal; font-display: block; }
+@font-face { font-family: 'DM Serif Display'; src: url('DMSerifDisplay-Regular.ttf') format('truetype'); font-weight: 400; font-style: normal; font-display: block; }
+@font-face { font-family: 'JetBrains Mono'; src: url('JetBrainsMono-Variable.ttf') format('truetype'); font-weight: 100 800; font-style: normal; font-display: block; }

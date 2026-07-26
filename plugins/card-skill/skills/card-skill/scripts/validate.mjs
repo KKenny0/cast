@@ -13,6 +13,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
 const { validate, EDITORIAL_COVER_MOTIFS } = require('./lib/schema');
 const { EDITORIAL_TONE_DESIGNS, listDesigns, resolveEditorialDesignName } = require('./lib/designs');
+const { validateVisualJob } = require('./lib/visual-job');
 
 const renderers = {
   big: require('./renderers/big'),
@@ -112,13 +113,23 @@ function assertPackagedSkill() {
     path.join(skillRoot, 'scripts', 'card.js'),
     path.join(skillRoot, 'scripts', 'check-update.mjs'),
     path.join(skillRoot, 'scripts', 'check-output.mjs'),
+    path.join(skillRoot, 'scripts', 'render-job.mjs'),
+    path.join(skillRoot, 'scripts', 'validate-visual-job.mjs'),
     path.join(skillRoot, 'evals', 'check-assertions.mjs'),
+    path.join(skillRoot, 'evals', 'run-fresh-context.mjs'),
     path.join(skillRoot, 'evals', 'evals.json'),
     path.join(skillRoot, 'scripts', 'renderers', 'article-diagram.js'),
+    path.join(skillRoot, 'scripts', 'renderers', 'article-diagram-styles.js'),
+    path.join(skillRoot, 'scripts', 'renderers', 'article-diagram-utils.js'),
+    path.join(skillRoot, 'scripts', 'renderers', 'studio-composition.js'),
     path.join(skillRoot, 'assets', 'big_template.html'),
     path.join(skillRoot, 'assets', 'fonts'),
     path.join(skillRoot, 'schemas', 'big.json'),
     path.join(skillRoot, 'schemas', 'article-diagram.json'),
+    path.join(skillRoot, 'schemas', 'infograph.json'),
+    path.join(skillRoot, 'schemas', 'comic.json'),
+    path.join(skillRoot, 'schemas', 'sketchnote.json'),
+    path.join(skillRoot, 'schemas', 'visual-job.json'),
     path.join(skillRoot, 'references', 'design-index.md'),
     path.join(skillRoot, 'references', 'codex-inline-preview.md'),
     path.join(skillRoot, 'references', 'mode-article-diagram.md'),
@@ -148,22 +159,40 @@ function assertPackagedSkill() {
     'scripts/card.js',
     'scripts/check-update.mjs',
     'scripts/check-output.mjs',
+    'scripts/render-job.mjs',
+    'scripts/gallery-jobs.mjs',
+    'scripts/validate-visual-job.mjs',
     'scripts/setup-runtime.mjs',
     'scripts/lib/update-state.js',
+    'scripts/lib/visual-job.js',
+    'scripts/lib/file-access.js',
+    'scripts/lib/publish-artifacts.js',
     'scripts/validate.mjs',
     'evals/check-assertions.mjs',
+    'evals/check-job-assertions.mjs',
+    'evals/run-fresh-context.mjs',
+    'evals/agent-cases.json',
     'evals/evals.json',
     'scripts/lib/schema.js',
     'scripts/renderers/poster.js',
     'scripts/renderers/article-diagram.js',
+    'scripts/renderers/article-diagram-styles.js',
+    'scripts/renderers/article-diagram-utils.js',
+    'scripts/renderers/studio-composition.js',
     'schemas/big.json',
     'schemas/poster.json',
     'schemas/editorial-image.json',
     'schemas/article-diagram.json',
+    'schemas/infograph.json',
+    'schemas/comic.json',
+    'schemas/sketchnote.json',
+    'schemas/visual-job.json',
     'references/design-index.md',
     'references/codex-inline-preview.md',
     'references/mode-article-diagram.md',
     'references/source-weread.md',
+    'references/visual-job.md',
+    'references/eval-protocol.md',
     'assets/capture4k.js',
     'assets/big_template.html',
     'assets/poster_template.html',
@@ -325,6 +354,25 @@ try {
   assertWereadSourceContract();
   assertCodexPreviewContract();
   assertProjectAgentContract();
+  assert.equal(renderers.big.calcFontSize('能重建<br>才算能验证'), '176px', 'big mode must fit the longest explicit CJK line');
+  assert.equal(renderers.big.resolveFontSize('能重建<br>才算能验证', 190), '176px', 'explicit big font size must not bypass the line-fit cap');
+  assert.equal(renderers.big.calcFontSize('Make<br>clear'), '220px', 'short Latin big phrases should keep the large display size');
+  assert.ok(renderers.poster.calcPosterTitleFontSize('先确认，再选择，最后检查') < 92, 'poster title must shrink before creating an orphan line');
+  assert.match(
+    validate({ ...inputs.big, hidden: 'renderer ignores this' }).errors.join('\n'),
+    /Unknown field for big: "hidden"/,
+    'runtime validation must reject renderer-ignored top-level fields',
+  );
+  assert.equal(
+    renderers.poster.isSparsePosterCard({ body: [{ type: 'heading', text: '二' }, { type: 'highlight', text: '再选择视觉结构' }] }),
+    true,
+    'short poster series cards must opt into the deliberate sparse composition',
+  );
+  assert.equal(
+    renderers.poster.isSparsePosterCard({ body: [{ type: 'paragraph', text: 'This paragraph is deliberately long enough to use the regular poster composition without sparse scaling.' }] }),
+    false,
+    'ordinary poster content must keep the regular composition',
+  );
 
   const measureViewportPath = path.join(tmpDir, 'capture-measure-viewport.html');
   fs.writeFileSync(measureViewportPath, '<!doctype html><style>*{box-sizing:border-box}html,body{margin:0}.probe{width:calc(100vw - 20px);height:10px}</style><div class="probe" data-measure-id="probe"></div>', 'utf8');
@@ -507,12 +555,27 @@ try {
     {
       label: 'title-only reading card',
       input: { mode: 'poster', variant: 'reading-notes', title: 'No content', cards: [{ body: [] }] },
-      pattern: /body must contain actual content/,
+      pattern: /body must contain actual visible content/,
     },
     {
       label: 'divider-only reading card',
       input: { mode: 'poster', variant: 'reading-notes', title: 'No content', cards: [{ body: [{ type: 'divider' }] }] },
-      pattern: /body must contain actual content/,
+      pattern: /body must contain actual visible content/,
+    },
+    {
+      label: 'empty ordinary card',
+      input: { mode: 'poster', title: 'No content', cards: [{ body: [] }] },
+      pattern: /body must contain actual visible content/,
+    },
+    {
+      label: 'divider-only ordinary card',
+      input: { mode: 'poster', title: 'No content', cards: [{ body: [{ type: 'divider' }] }] },
+      pattern: /body must contain actual visible content/,
+    },
+    {
+      label: 'empty items ordinary card',
+      input: { mode: 'poster', title: 'No content', cards: [{ body: [{ type: 'items', entries: [] }] }] },
+      pattern: /body must contain actual visible content/,
     },
     {
       label: 'reading batch over eight cards',
@@ -1404,6 +1467,23 @@ try {
     const template = stripComments(fs.readFileSync(path.join(ROOT, 'assets', templateName), 'utf8'));
     assert.doesNotMatch(template, /<span>\s*card\s*<\/span>/i, `${templateName} hard-codes the card brand`);
   }
+
+  const visualJob = {
+    schema_version: 1,
+    job_id: 'validation-job',
+    publish_target: 'social-single',
+    source: { kind: 'pasted-text', language: 'en', digest: 'a'.repeat(64) },
+    source_units: [{ id: 'claim', excerpt: 'Clarity is a visible decision.' }],
+    decision: { mode: 'big', tier: 'stable', reason: 'One claim deserves one high-contrast reading surface.', tone: 'sharp' },
+    outputs: [{ id: 'hero', basename: 'clarity.png', source_unit_ids: ['claim'], transformation: 'preserve', render_contract: { mode: 'big', phrase: 'Clarity is a decision' } }],
+  };
+  assert.equal(validateVisualJob(visualJob).valid, true, `valid Visual Job failed: ${validateVisualJob(visualJob).errors.join(', ')}`);
+  assert.equal(validateVisualJob({ ...visualJob, outputs: [{ ...visualJob.outputs[0], basename: '../escape.png' }] }).valid, false, 'path traversal Visual Job basename unexpectedly passed');
+  assert.equal(validateVisualJob({ ...visualJob, outputs: [{ ...visualJob.outputs[0], source_unit_ids: ['missing'] }] }).valid, false, 'unknown Visual Job source unit unexpectedly passed');
+  assert.equal(validateVisualJob({ ...visualJob, source: { ...visualJob.source, api_key: 'nope' } }).valid, false, 'sensitive Visual Job field unexpectedly passed');
+  const visualJobSchema = JSON.parse(fs.readFileSync(path.join(ROOT, 'schemas', 'visual-job.json'), 'utf8'));
+  assert.equal(visualJobSchema.properties.schema_version.const, 1, 'public Visual Job schema version drifted');
+  assert.deepEqual(visualJobSchema.properties.decision.properties.tier.enum, ['stable', 'studio'], 'public Visual Job tier contract drifted');
 
   assert.ok(listDesigns().length >= 1, 'Design registry is empty');
   assert.equal(validate({ mode: 'unknown' }).valid, false, 'Unknown mode unexpectedly passed validation');

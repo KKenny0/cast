@@ -8,7 +8,7 @@ const fs = require('fs');
 const path = require('path');
 const { pathToFileURL } = require('url');
 const { escapeHtml } = require('../lib/escape');
-const { getDesign } = require('../lib/designs');
+const { getDesign, resolveDesignNameForInput } = require('../lib/designs');
 
 const FONT_DIR = path.resolve(__dirname, '../../assets/fonts');
 
@@ -92,7 +92,7 @@ function escapeRegex(str) {
  * Render whiteboard mode from structured input.
  */
 function render(input, outputHtmlPath) {
-  const design = getDesign(input.design || 'stripe');
+  const design = getDesign(resolveDesignNameForInput(input, 'stripe'));
   if (!design) throw new Error(`Design not found: ${input.design}`);
 
   const templateFile = path.resolve(__dirname, '../../assets/whiteboard_template.html');

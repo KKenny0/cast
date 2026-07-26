@@ -3,6 +3,7 @@
   "title": "card-skill editorial-image mode input",
   "description": "Structured input for aspect-aware editorial images for WeChat/blog covers, concept metaphors, and quiet in-article mood illustrations. Use article-diagram for explanatory body diagrams.",
   "type": "object",
+  "additionalProperties": false,
   "required": ["mode", "title"],
   "properties": {
     "mode": { "type": "string", "const": "editorial-image" },

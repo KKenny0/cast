@@ -3,6 +3,7 @@
   "title": "card-skill poster mode input",
   "description": "Structured input for poster mode CLI rendering. Poster mode produces a series of cards (1080x1440 each) from structured content.",
   "type": "object",
+  "additionalProperties": false,
   "required": ["mode", "title", "cards"],
   "properties": {
     "mode": { "type": "string", "const": "poster" },
@@ -16,6 +17,7 @@
       "description": "Design system name. Defaults to 'stripe'. See scripts/lib/designs.js for full list.",
       "default": "stripe"
     },
+    "tone": { "type": "string", "enum": ["reflective", "sharp", "warm", "technical"], "description": "Default-selection tone. Ignored when design is explicit." },
     "title": {
       "type": "string",
       "description": "Overall title for the poster series, shown on the first card header.",
@@ -47,6 +49,49 @@
           "body": {
             "type": "array",
             "description": "Array of body elements for this card.",
+            "minItems": 1,
+            "contains": {
+              "anyOf": [
+                {
+                  "required": ["type", "quote"],
+                  "properties": {
+                    "type": { "const": "reading_unit" },
+                    "quote": { "type": "string", "pattern": "\\S" }
+                  }
+                },
+                {
+                  "required": ["type", "text"],
+                  "properties": {
+                    "type": { "enum": ["paragraph", "heading", "highlight"] },
+                    "text": { "type": "string", "pattern": "\\S" }
+                  }
+                },
+                {
+                  "required": ["type", "entries"],
+                  "properties": {
+                    "type": { "const": "items" },
+                    "entries": {
+                      "type": "array",
+                      "contains": {
+                        "required": ["label", "text"],
+                        "properties": {
+                          "label": { "type": "string", "pattern": "\\S" },
+                          "text": { "type": "string", "pattern": "\\S" }
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "required": ["type", "key", "value"],
+                  "properties": {
+                    "type": { "const": "data_row" },
+                    "key": { "type": "string", "pattern": "\\S" },
+                    "value": { "type": "string", "pattern": "\\S" }
+                  }
+                }
+              ]
+            },
             "items": {
               "type": "object",
               "required": ["type"],

@@ -5,9 +5,11 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
+import fileAccess from './lib/file-access.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
+const { createFileAccessPolicy } = fileAccess;
 
 function parseArgs(argv) {
   const opts = {
@@ -21,6 +23,7 @@ function parseArgs(argv) {
     skipPng: false,
     json: false,
     selfTest: false,
+    allowedFiles: [],
   };
 
   for (let i = 0; i < argv.length; i++) {
@@ -56,6 +59,10 @@ function parseArgs(argv) {
       case '--self-test':
         opts.selfTest = true;
         break;
+      case '--allow-file':
+        if (!argv[i + 1]) throw new Error('--allow-file requires a path');
+        opts.allowedFiles.push(argv[++i]);
+        break;
       case '--help':
       case '-h':
         printHelp();
@@ -85,6 +92,7 @@ Options:
   --fix           Apply low-risk HTML guards before checking
   --skip-png      Do not require a PNG file
   --json          Print JSON report
+  --allow-file     Permit one explicit local asset path (repeatable)
   --self-test     Verify safe placeholder fixes without launching a browser
 `);
 }
@@ -220,6 +228,49 @@ function checkPng(opts, issues) {
   }
 }
 
+async function inspectBitmap(opts, html, issues, sharedContext = null) {
+  if (opts.skipPng || !opts.png || !fs.existsSync(opts.png)) return;
+  const browser = sharedContext ? null : await chromium.launch();
+  try {
+    const context = sharedContext || await browser.newContext({ serviceWorkers: 'block' });
+    const page = await context.newPage();
+    // A data URL keeps this bitmap-only audit independent of Chromium's
+    // file-origin image policy while remaining fully offline.
+    const pngDataUrl = `data:image/png;base64,${fs.readFileSync(opts.png).toString('base64')}`;
+    await page.setContent(`<img id="image" src="${pngDataUrl}">`);
+    const metrics = await page.evaluate(async () => {
+      const image = document.getElementById('image');
+      await image.decode();
+      const canvas = document.createElement('canvas'); canvas.width = image.naturalWidth; canvas.height = image.naturalHeight;
+      const ctx = canvas.getContext('2d', { willReadFrequently: true }); ctx.drawImage(image, 0, 0);
+      const { width, height } = canvas; const pixels = ctx.getImageData(0, 0, width, height).data;
+      const point = (x, y) => { const i = (y * width + x) * 4; return [pixels[i], pixels[i + 1], pixels[i + 2]]; };
+      const corners = [point(0, 0), point(width - 1, 0), point(0, height - 1), point(width - 1, height - 1)];
+      const bg = corners.reduce((sum, color) => sum.map((value, i) => value + color[i] / corners.length), [0, 0, 0]);
+      const distance = color => Math.sqrt(color.reduce((sum, value, i) => sum + (value - bg[i]) ** 2, 0));
+      let sampled = 0; let foreground = 0; let minX = width; let minY = height; let maxX = -1; let maxY = -1;
+      const buckets = new Map(); const edge = { top: 0, right: 0, bottom: 0, left: 0, samples: 0 };
+      const stride = Math.max(1, Math.floor(Math.min(width, height) / 900));
+      for (let y = 0; y < height; y += stride) for (let x = 0; x < width; x += stride) {
+        const color = point(x, y); const isForeground = distance(color) > 18; sampled++;
+        const bucket = color.map(value => Math.floor(value / 16)).join(','); buckets.set(bucket, (buckets.get(bucket) || 0) + 1);
+        if (isForeground) { foreground++; minX = Math.min(minX, x); minY = Math.min(minY, y); maxX = Math.max(maxX, x); maxY = Math.max(maxY, y); }
+        if (x < 2 || x >= width - 2 || y < 2 || y >= height - 2) {
+          edge.samples++; if (y < 2 && isForeground) edge.top++; if (y >= height - 2 && isForeground) edge.bottom++; if (x < 2 && isForeground) edge.left++; if (x >= width - 2 && isForeground) edge.right++;
+        }
+      }
+      const foregroundRatio = foreground / sampled;
+      const dominantColorRatio = Math.max(...buckets.values()) / sampled;
+      const bboxAreaRatio = maxX < 0 ? 0 : ((maxX - minX + stride) * (maxY - minY + stride)) / (width * height);
+      return { foregroundRatio, dominantColorRatio, bboxAreaRatio, edge: Object.fromEntries(Object.entries(edge).filter(([key]) => key !== 'samples').map(([key, value]) => [key, edge.samples ? value / edge.samples : 0])) };
+    });
+    if (metrics.foregroundRatio < 0.005) issues.push(issue('error', 'bitmap_blank', 'PNG has less than 0.5% non-background pixels.', metrics));
+    if (metrics.dominantColorRatio > 0.995) issues.push(issue('error', 'bitmap_nearly_uniform', 'PNG is almost a single quantized color.', metrics));
+    if (Object.values(metrics.edge).some(value => value > 0.08)) issues.push(issue('warning', 'bitmap_edge_pressure', 'Non-background pixels are concentrated against an outer 2px edge.', metrics));
+    if (/data-composition-required="true"/.test(html) && metrics.bboxAreaRatio < 0.18) issues.push(issue('warning', 'bitmap_subject_too_small', 'Studio editorial composition has a small non-background bounding box.', metrics));
+  } finally { if (browser) await browser.close(); }
+}
+
 function checkPlaceholders(html, issues) {
   const activeHtml = stripHtmlComments(html);
   const matches = activeHtml.match(/\{\{[^}]+\}\}/g) || [];
@@ -231,16 +282,35 @@ function checkPlaceholders(html, issues) {
   }
 }
 
-async function inspectPage(opts, issues) {
+async function inspectPage(opts, html, issues) {
   const browser = await chromium.launch();
   try {
     const context = await browser.newContext({
       viewport: { width: opts.width, height: opts.fullpage ? 5000 : opts.height },
       deviceScaleFactor: opts.dpr,
+      serviceWorkers: 'block',
+    });
+    const policy = createFileAccessPolicy({
+      htmlPath: opts.html,
+      assetRoot: path.join(ROOT, 'assets'),
+      allowedFiles: opts.allowedFiles,
+    });
+    const blocked = [];
+    await context.route('**/*', async route => {
+      const url = route.request().url();
+      const decision = policy.inspect(url);
+      if (decision.allowed) return route.continue();
+      let host = 'local-file';
+      if (decision.scheme === 'remote') {
+        try { host = new URL(url).host || 'unknown'; } catch { host = 'unknown'; }
+      }
+      blocked.push({ resourceType: route.request().resourceType(), host, reason: decision.reason || 'remote-scheme' });
+      await route.abort('blockedbyclient');
     });
     const page = await context.newPage();
     await page.goto(fileUrl(opts.html), { waitUntil: 'networkidle' });
-    await page.waitForTimeout(300);
+    await page.evaluate(() => document.fonts.ready);
+    await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
 
     const report = await page.evaluate(async ({ width, height, fullpage }) => {
       const viewportWidth = width;
@@ -1238,6 +1308,10 @@ async function inspectPage(opts, issues) {
         })).slice(0, 10),
       }));
     }
+    await inspectBitmap(opts, html, issues, context);
+    if (blocked.length) {
+      issues.push(issue('error', 'safety.asset_blocked', 'Capture permits only approved local files and data: resources.', { resources: blocked.slice(0, 10) }));
+    }
   } finally {
     await browser.close();
   }
@@ -1282,7 +1356,7 @@ async function main() {
 
   checkPlaceholders(html, issues);
   checkPng(opts, issues);
-  await inspectPage(opts, issues);
+  await inspectPage(opts, html, issues);
 
   const report = {
     pass: !issues.some(item => item.severity === 'error'),

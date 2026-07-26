@@ -8,7 +8,7 @@ const fs = require('fs');
 const path = require('path');
 const { pathToFileURL } = require('url');
 const { escapeHtml, escapePhrase } = require('../lib/escape');
-const { getDesign } = require('../lib/designs');
+const { getDesign, resolveDesignNameForInput } = require('../lib/designs');
 
 const FONT_DIR = path.resolve(__dirname, '../../assets/fonts');
 
@@ -51,7 +51,7 @@ function renderBody(body) {
  * Render long mode from structured input.
  */
 function render(input, outputHtmlPath) {
-  const design = getDesign(input.design || 'claude');
+  const design = getDesign(resolveDesignNameForInput(input, 'claude'));
   if (!design) throw new Error(`Design not found: ${input.design}`);
 
   const templateFile = path.resolve(__dirname, '../../assets/long_template.html');

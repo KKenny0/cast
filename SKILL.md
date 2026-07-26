@@ -2,7 +2,7 @@
 name: card-skill
 description: "Render text content into a polished, shareable PNG visual. Use this skill whenever the user asks to turn words, notes, articles, quotes, arguments, stories, explicit WeChat Reading highlights/thoughts, or WeChat Reading personal statistics into an 信息图/infographic, 海报/poster, 卡片/card, 大字报, whiteboard, visual summary, comic, sketchnote, social card grid, 公众号头图, 博客封面, 正文配图, 正文解释图, 关系图, 流程图, 边界图, reading report, or non-summary editorial image for an essay. Trigger on phrases like 做成图, 渲染成图, 做张卡片, 卡片组, 做成漫画, 视觉笔记, 给文章配图, 微信读书划线做卡, 微信读书笔记, 微信读书阅读月报, article cover, blog hero, article diagram, concept map, process flow, and editorial image. Supports 9 modes: infographic, big-text poster, long-form reading card, whiteboard reasoning, multi-card poster, comic, sketchnote, editorial-image, and article-diagram. If the user mentions a restrained brand feel such as Apple, Stripe, Linear, Vercel, IBM, Notion, Claude, or similar, apply it as a visual style, not as a full brand redesign. Do not use for websites, UI components, Figma prototypes, logos/VI systems, chart-library plotting, photo editing, or plain file conversion."
 user_invocable: true
-version: "0.7.1"
+version: "0.8.0"
 ---
 
 # card-skill
@@ -27,7 +27,7 @@ For one-off use without installing, run `npx skills use KKenny0/card-skill/plugi
 
 **Runtime dependency check.** Before the first render, run `node scripts/setup-runtime.mjs --check` from this skill directory. If it reports a missing dependency, run `node scripts/setup-runtime.mjs` once and then repeat the check. This installs the declared npm packages in the skill directory and Playwright Chromium in the user's normal Playwright cache. Relay setup failures instead of bypassing the output checks.
 
-**Update check and automatic upgrade.** Before any card request, including Creative-tier requests and Codex direction preview, run `node scripts/check-update.mjs` once; if it prints a line, relay it to the user, then continue. After the current output is delivered, run `node scripts/check-update.mjs --auto-update` so this installed copy is upgraded to the exact commit resolved from the latest stable Release, version-read back, and prepared for the next use; this never changes the current render. Direct `scripts/card.js` rendering performs the check defensively and launches the post-render upgrade in the background. State and locks are isolated per installation, so concurrent renders or a second Codex/skills copy cannot suppress or race the update. The check only reads GitHub's public Release and commit APIs; installation downloads the matching commit through Codex or a pinned `skills` CLI and sends no card content. Failed installation or runtime preparation restores the previous copy. Set `CARD_SKILL_DISABLE_UPDATE_CHECK=1` to disable both checking and upgrading, or `CARD_SKILL_DISABLE_AUTO_UPDATE=1` to keep the check while disabling automatic upgrades.
+**Update check and automatic upgrade.** Before any card request, including Studio-tier requests and Codex direction preview, run `node scripts/check-update.mjs` once; if it prints a line, relay it to the user, then continue. After the current output is delivered, run `node scripts/check-update.mjs --auto-update` so this installed copy is upgraded to the exact commit resolved from the latest stable Release, version-read back, and prepared for the next use; this never changes the current render. Direct `scripts/card.js` rendering performs the check defensively and launches the post-render upgrade in the background. State and locks are isolated per installation, so concurrent renders or a second Codex/skills copy cannot suppress or race the update. The check only reads GitHub's public Release and commit APIs; installation downloads the matching commit through Codex or a pinned `skills` CLI and sends no card content. Failed installation or runtime preparation restores the previous copy. Set `CARD_SKILL_DISABLE_UPDATE_CHECK=1` to disable both checking and upgrading, or `CARD_SKILL_DISABLE_AUTO_UPDATE=1` to keep the check while disabling automatic upgrades.
 
 将内容铸成可见的形态。内容进去，PNG 出来。模具决定形状。
 
@@ -35,7 +35,7 @@ For one-off use without installing, run `npx skills use KKenny0/card-skill/plugi
 
 ## 默认原则
 
-默认直接产出可用 PNG，不要先让用户做选择题。除非用户明确要求“给我几个方向 / 换一批 / 先选风格”，否则自动选择最合适的 mode、design 和画面方向，并在验证通过后交付。
+默认直接产出可用 PNG，不要先让用户做选择题。除非用户明确要求“给我几个方向 / 换一批 / 先选风格”，否则自动选择最合适的 mode、四个 tone（`reflective` / `sharp` / `warm` / `technical`）和画面方向，并在验证通过后交付。26 个既有 design 仍是高级显式 override，用户指定时必须完全尊重。
 
 所有 mode 默认共享同一套 Quiet Paper 气质：纸面底色、香萃字系、低饱和墨色、细分隔线、小圆角、极少阴影。`editorial-image` 和 `article-diagram` 可以有不同用途，但不能另起一套封面模板、流程图或 dashboard 视觉语言；品牌 design 只改变气质温度，不改变这套纸面纪律。
 
@@ -80,12 +80,12 @@ For one-off use without installing, run `npx skills use KKenny0/card-skill/plugi
 card-skill 把 9 个 mode 分两层：
 
 - **Stable tier**（CLI-rendered）：`big`、`long`、`whiteboard`、`poster`、`article-diagram`，以及 `editorial-image` 的封面 / hero 子场景（`use=cover`）。走结构化 renderer，schema 校验失败直接报错；输出确定性高，是产品主体。
-- **Creative tier**（AI-rendered）：`infograph`、`comic`、`sketchnote`，以及 `editorial-image` 的正文氛围 / 概念隐喻子场景（`use=in-article` / `metaphor`）。Schema 只锁基本字段（title / aspect / use），实际产出靠 AI 写 `content_html` + `custom_css`；每次产物有差异，依赖人工审美兜底。
+- **Studio tier**（formal composition）：`infograph`、`comic`、`sketchnote`，以及 `editorial-image` 的正文氛围 / 概念隐喻子场景（`use=in-article` / `metaphor`）。必须保留完整 composition contract 并进入正式 capture/check 链，但仍需要人工视觉验收；Studio 不伪装成 Stable。
 
 判断当前内容能否走 Stable tier 的 CLI 路径：
 
 判断逻辑：
-1. 如果 mode 是 infograph / comic / sketchnote → 直接进入 Creative tier 的 AI 流程（Step 1）
+1. 如果 mode 是 infograph / comic / sketchnote → 进入 Studio tier（Step 1），先生成完整 `content_html` + `custom_css` composition contract，再交给正式 CLI renderer
 2. 如果 mode 是 article-diagram：
    - 先进入 Step 1.6，把文章片段压成统一三件套：`formula` / `sentence` / `structure`
    - 默认只输出公式卡：`formula` 是主视觉，`sentence` 是低权重解释脚注；暂不默认渲染结构图
@@ -97,7 +97,7 @@ card-skill 把 9 个 mode 分两层：
    - 先把自然语言用途映射成结构化字段：`use` 只表示编辑任务（`cover` / `in-article` / `metaphor`），`aspect` 只表示画布比例（`wechat-cover` / `blog-hero` / `body-3-2` / `body-4-3` / `cinematic` / `square`）
    - 按 `use` 分流 tier：
      - `use=cover` → Stable 子场景。CLI scaffold 由 kicker、title、subtitle 和确定性的 `cover_motif` 组成；文章型封面必须选择能承载核心张力的具体 motif，只有刻意的通用旧封面才省略它并回退 paper-stack
-     - `use=in-article` / `metaphor` → Creative 子场景。必须设置 `composition_required: true` 并由 AI 写 `content_html` + `custom_css`；CLI 会拒绝缺少完整构图的输入，不再渲染 scaffold
+     - `use=in-article` / `metaphor` → Studio 子场景。必须设置 `composition_required: true` 并由 AI 写 `content_html` + `custom_css`；CLI 会拒绝缺少完整构图的输入，不再渲染 scaffold
    - 如果已有具体画面结构（`content_html` + `custom_css`）→ CLI 路径，作为高质量最终图的首选
    - 如果还没有视觉方向 → 默认自动选择 1 个最强方向并继续渲染；只有用户明确要求候选时，才先产出 2-3 个方向等待选择
 4. 如果 mode 是 big / long / whiteboard / poster：
@@ -114,7 +114,7 @@ node scripts/card.js --input <system_temp>/card_input_{timestamp}.json --output 
 ```
 4. 无论成功或失败，都删除本次临时 JSON
 5. CLI 成功 → 脚本已完成预检、DPR 2 截图和脚本复查；实际查看 PNG 后进入 Step 8 交付
-6. CLI 失败 → 报告错误，降级到 AI 全流程（继续 Step 1）
+6. CLI 失败 → 按错误分类处理：`input_contract` 最多修正一次；只有 `content_fit` 可在同一 mode 内简化一次；`runtime`、`safety` 与 `quality_gate` 硬失败。任何修正都必须重新 validation、capture、check 和 PNG inspection，不能无声切换论点或旁路 checker。
 
 **JSON schema 结构**（每个 mode 的完整定义见 `schemas/` 目录）：
 
@@ -186,7 +186,7 @@ article-diagram: `{ mode, title, formula, sentence, structure: {nodes: [{id, lab
 
 当用户要求 `给文章配图` / `公众号头图` / `博客封面` / `article cover` / `blog hero` / `editorial image`，且目标是封面、氛围、隐喻或视觉立场时，进入 `editorial-image` 流程。
 
-**子场景 tier 提示**：封面 / hero 请求（`use=cover`）走 Stable CLI scaffold：标题区配一个确定性的 `cover_motif`，让右侧主视觉随文章张力变化且仍可重复渲染；正文氛围 / 概念隐喻请求（`use=in-article` / `metaphor`）走 Creative 流程，必须设置 `composition_required: true` 并提供 `content_html` + `custom_css`。详细区别见 `references/mode-editorial-image.md` 的 Tier Commitments 章节。
+**子场景 tier 提示**：封面 / hero 请求（`use=cover`）走 Stable CLI scaffold：标题区配一个确定性的 `cover_motif`，让右侧主视觉随文章张力变化且仍可重复渲染；正文氛围 / 概念隐喻请求（`use=in-article` / `metaphor`）走 Studio 流程，必须设置 `composition_required: true` 并提供 `content_html` + `custom_css`。详细区别见 `references/mode-editorial-image.md` 的 Tier Commitments 章节。
 
 如果用户要求的是 `正文解释图` / `关系图` / `流程图` / `边界图` / `权限边界` / `安全边界` / `article diagram` / `concept map` / `process flow`，或正文配图里明显出现节点、连线、嵌套框、步骤、区域、权限、信任边界，改走 Step 1.6 的 `article-diagram`，不要默认塞进 `editorial-image + body-3-2`。
 
@@ -205,7 +205,7 @@ article-diagram: `{ mode, title, formula, sentence, structure: {nodes: [{id, lab
 
 结构化字段负责约束：用途、比例、标题、视觉隐喻、`cover_motif`、裁切上下文。`cover_motif` 是可见的、受控的右侧对象；`visual_metaphor` 仍是选图语义，不能只停留在隐藏字段里。高质量配图在方向超出这个对象词表时使用 `content_html` + `custom_css` 做开放构图；默认 CLI renderer 适合稳定文章封面，不应当作为复杂文章配图的默认终点。
 
-`use=in-article` / `metaphor` 子场景（Creative）的正式配图必须设置 `composition_required: true`，并有一个具体主视觉对象或场景，例如桌面、抽屉、纸页、窗口、手势、路径、容器、仪表、地图、阴影关系等。不要只用纸片、线条、抽象框和留白来替代视觉隐喻；如果拿掉标题后画面与文章关系消失，就需要重做 `content_html` + `custom_css`。`use=cover` 子场景（Stable）必须为文章型封面选择 `cover_motif`：`drawer`、`window`、`lens`、`path`、`archive` 或 `layers`；`paper-stack` 只保留给刻意的通用旧封面。
+`use=in-article` / `metaphor` 子场景（Studio）的正式配图必须设置 `composition_required: true`，并有一个具体主视觉对象或场景，例如桌面、抽屉、纸页、窗口、手势、路径、容器、仪表、地图、阴影关系等。不要只用纸片、线条、抽象框和留白来替代视觉隐喻；如果拿掉标题后画面与文章关系消失，就需要重做 `content_html` + `custom_css`。`use=cover` 子场景（Stable）必须为文章型封面选择 `cover_motif`：`drawer`、`window`、`lens`、`path`、`archive` 或 `layers`；`paper-stack` 只保留给刻意的通用旧封面。
 
 `editorial-image` 支持 `design` 和 `editorial_tone` 字段。`design` 是显式设计系统，优先级最高；`editorial_tone` 是自动选择入口，只能是 `reflective` / `sharp` / `warm` / `technical`。设计系统只控制气质层：纸面颜色、墨色、accent、边框和整体温度；不决定视觉隐喻、构图对象或文章立场。用户未指定 `design` 时，必须根据文章情绪给出 `editorial_tone`，让 CLI 落到真实存在的 Quiet Paper design。
 
@@ -376,8 +376,8 @@ article-diagram: `{ mode, title, formula, sentence, structure: {nodes: [{id, lab
 6. 替换模板中的占位符（每个模板的占位符见模板文件顶部注释）
 7. 写入操作系统临时目录中的 `card_{name}.html`
 
-**Creative tier / 手工 HTML 交付约定**：
-- infograph / comic / sketchnote（Creative tier），以及 Stable tier CLI 失败后降级的手工 HTML，统一把 HTML 写到操作系统临时目录（macOS/Linux 使用系统 temp；Windows 使用 `%TEMP%`），不要在 repo 内创建 `tmp/`
+**Studio tier / 完整 composition 交付约定**：
+- infograph / comic / sketchnote（Studio tier）统一通过结构化 contract 调用 `scripts/card.js`；renderer 负责把 HTML 写到操作系统临时目录，不要在 repo 内创建 `tmp/`
 - PNG 输出到 `~/Downloads/`，文件名用内容主题或 mode 命名，避免只叫 `output.png`
 - 生成 HTML 后必须走 Step 5-7；不能只保存 HTML 或只报告“已完成”
 - 最终交付前必须实际查看 PNG，确认不是空白、裁切、文字重叠、主体太小或视觉关系不清
@@ -514,6 +514,6 @@ $output = Join-Path $env:TEMP 'smoke_big.png'
 
 | 脚本 | 用途 |
 |------|------|
-| `scripts/gallery_render.js` | 渲染所有 design×mode 组合，生成静态展示页 |
+| `scripts/gallery-jobs.mjs` | 通过正式 Visual Job 生产链重建并字节核验 README gallery |
 | `scripts/batch_render_covers.js` | 批量生成亮色封面截图 |
 | `scripts/batch_render_covers_dark.js` | 批量生成暗色封面截图 |

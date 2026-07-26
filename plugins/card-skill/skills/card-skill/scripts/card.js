@@ -10,7 +10,7 @@
  *   node scripts/card.js --list-designs
  *
  * CLI-eligible modes (Stable tier): big, long, whiteboard, poster, editorial-image, article-diagram
- * AI-only modes (Creative tier, not handled here): infograph, comic, sketchnote
+ * Studio modes require a complete composition contract and human visual review.
  */
 
 const fs = require('fs');
@@ -31,6 +31,8 @@ const CHECK_SCRIPT = path.join(ROOT, 'scripts', 'check-output.mjs');
 const SETUP_SCRIPT = path.join(ROOT, 'scripts', 'setup-runtime.mjs');
 const UPDATE_CHECK_SCRIPT = path.join(ROOT, 'scripts', 'check-update.mjs');
 const { beginRender } = require('./lib/update-state');
+const { publishArtifacts } = require('./lib/publish-artifacts');
+const { resolveDesignNameForInput } = require('./lib/designs');
 // ── Args ──
 
 const args = process.argv.slice(2);
@@ -54,11 +56,12 @@ Options:
   --stdin            Read JSON input from stdin
   --output <path>    Output PNG path (default: ~/Downloads/card_{mode}_{ts}.png)
   --dpr <number>     Device pixel ratio (default: 2)
+  --report <path>    Write a machine-readable artifact/checker report
   --list-designs     List all available design systems
   --help             Show this help
 
-CLI-eligible modes (Stable tier): big, long, whiteboard, poster, editorial-image, article-diagram
-AI-only modes (Creative tier): infograph, comic, sketchnote
+Stable modes: big, long, whiteboard, poster, editorial-image, article-diagram
+Studio modes: infograph, comic, sketchnote (complete composition contract required)
 `);
   process.exit(0);
 }
@@ -142,6 +145,7 @@ if (!result.valid) {
 
 const DPR = parseFloat(getArg('--dpr')) || 2;
 const outputArg = getArg('--output');
+const reportArg = getArg('--report');
 const ts = Date.now();
 const defaultOutputName = `card_${input.mode}_${ts}.png`;
 const outputPath = outputArg
@@ -155,11 +159,14 @@ const renderers = {
   poster: require('./renderers/poster'),
   'editorial-image': require('./renderers/editorial-image'),
   'article-diagram': require('./renderers/article-diagram'),
+  infograph: require('./renderers/studio-composition'),
+  comic: require('./renderers/studio-composition'),
+  sketchnote: require('./renderers/studio-composition'),
 };
 
 const renderer = renderers[input.mode];
 if (!renderer) {
-  console.error(`No CLI renderer for mode "${input.mode}". Use AI flow for: infograph, comic, sketchnote`);
+    console.error(`No renderer for mode "${input.mode}"`);
   process.exit(1);
 }
 
@@ -173,6 +180,7 @@ function runCapture(out, pngPath) {
     String(DPR),
   ];
   if (out.fullpage) args.push('fullpage');
+  if (input.logo) args.push('--allow-file', path.resolve(input.logo));
   execFileSync(process.execPath, args, { stdio: 'pipe' });
 }
 
@@ -187,6 +195,7 @@ function runOutputCheck(out, pngPath, options = {}) {
   ];
 
   if (out.fullpage) args.push('--fullpage');
+  if (input.logo) args.push('--allow-file', path.resolve(input.logo));
   if (options.fix) args.push('--fix');
   if (options.skipPng) {
     args.push('--skip-png');
@@ -221,11 +230,12 @@ function captureWithOutputCheck(out, pngPath) {
   runOutputCheck(out, pngPath, { fix: true, skipPng: true });
   runCapture(out, pngPath);
 
-  const report = runOutputCheck(out, pngPath, { fix: true });
+  let report = runOutputCheck(out, pngPath, { fix: true });
   if (report.fixed) {
     runCapture(out, pngPath);
-    runOutputCheck(out, pngPath);
+    report = runOutputCheck(out, pngPath);
   }
+  return report;
 }
 
 function issueCodes(error) {
@@ -361,7 +371,7 @@ function renderArticleDiagramEntries(baseInput, tmpDir) {
         };
       });
       for (const entry of entries) {
-        captureWithOutputCheck(entry.out, entry.stagedPath);
+        entry.checker = captureWithOutputCheck(entry.out, entry.stagedPath);
       }
       return entries;
     } catch (error) {
@@ -373,60 +383,42 @@ function renderArticleDiagramEntries(baseInput, tmpDir) {
   throw lastError;
 }
 
-function publishPngs(entries) {
-  const publishId = `${process.pid}-${Date.now()}`;
-  const committed = [];
-  const stagingPaths = [];
+function pngMetadata(pngPath) {
+  const data = fs.readFileSync(pngPath);
+  return {
+    width: data.readUInt32BE(16),
+    height: data.readUInt32BE(20),
+  };
+}
 
-  try {
-    for (const [index, entry] of entries.entries()) {
-      const finalPath = path.resolve(entry.finalPath);
-      const outputDir = path.dirname(finalPath);
-      fs.mkdirSync(outputDir, { recursive: true });
+function artifactReport(stagedPath, finalPath, checker, index) {
+  return {
+    index,
+    path: path.resolve(finalPath),
+    basename: path.basename(finalPath),
+    ...pngMetadata(stagedPath),
+    checker: {
+      pass: checker.pass,
+      issues: checker.issues,
+    },
+  };
+}
 
-      if (fs.existsSync(finalPath)) {
-        const stat = fs.lstatSync(finalPath);
-        if (!stat.isFile() && !stat.isSymbolicLink()) {
-          throw new Error(`Output path is not a file: ${finalPath}`);
-        }
-      }
-
-      const stagingPath = path.join(outputDir, `.${path.basename(finalPath)}.${publishId}-${index}.tmp`);
-      const backupPath = fs.existsSync(finalPath)
-        ? path.join(outputDir, `.${path.basename(finalPath)}.${publishId}-${index}.bak`)
-        : null;
-      stagingPaths.push(stagingPath);
-      fs.copyFileSync(entry.stagedPath, stagingPath);
-
-      if (backupPath) fs.renameSync(finalPath, backupPath);
-      try {
-        fs.renameSync(stagingPath, finalPath);
-      } catch (error) {
-        if (backupPath && fs.existsSync(backupPath)) fs.renameSync(backupPath, finalPath);
-        throw error;
-      }
-      committed.push({ finalPath, backupPath });
-    }
-
-    for (const { backupPath } of committed) {
-      if (!backupPath || !fs.existsSync(backupPath)) continue;
-      try {
-        fs.unlinkSync(backupPath);
-      } catch (cleanupError) {
-        console.error(`Warning: could not remove output backup ${backupPath}: ${cleanupError.message}`);
-      }
-    }
-  } catch (error) {
-    for (const { finalPath, backupPath } of committed.reverse()) {
-      if (fs.existsSync(finalPath)) fs.unlinkSync(finalPath);
-      if (backupPath && fs.existsSync(backupPath)) fs.renameSync(backupPath, finalPath);
-    }
-    throw error;
-  } finally {
-    for (const stagingPath of stagingPaths) {
-      if (fs.existsSync(stagingPath)) fs.unlinkSync(stagingPath);
-    }
+function publishCardArtifacts(entries, artifacts, tmpDir) {
+  const commitSet = [...entries];
+  if (reportArg) {
+    const stagedReport = path.join(tmpDir, 'card-report.json');
+    const report = {
+      schema_version: 1,
+      mode: input.mode,
+      tone: input.tone || input.editorial_tone || null,
+      resolved_design: resolveDesignNameForInput(input),
+      artifacts,
+    };
+    fs.writeFileSync(stagedReport, `${JSON.stringify(report, null, 2)}\n`, 'utf8');
+    commitSet.push({ stagedPath: stagedReport, finalPath: path.resolve(reportArg) });
   }
+  publishArtifacts(commitSet, { allowOverwrite: true });
 }
 
 let runTmpDir = null;
@@ -440,6 +432,7 @@ try {
     const outputs = renderer.render(input, runTmpDir);
     const pngPaths = [];
     const publishEntries = [];
+    const artifactReports = [];
 
     outputs.forEach((out, i) => {
       const pngName = outputs.length === 1
@@ -450,12 +443,13 @@ try {
         : path.join(path.dirname(outputPath), pngName);
       const stagedPath = path.join(runTmpDir, `card_${i + 1}.png`);
 
-      captureWithOutputCheck(out, stagedPath);
+      const checker = captureWithOutputCheck(out, stagedPath);
       pngPaths.push(pngPath);
       publishEntries.push({ stagedPath, finalPath: pngPath });
+      artifactReports.push(artifactReport(stagedPath, pngPath, checker, i + 1));
     });
 
-    publishPngs(publishEntries);
+    publishCardArtifacts(publishEntries, artifactReports, runTmpDir);
     pngPaths.forEach((pngPath, i) => console.error(`  Card ${i + 1}/${pngPaths.length}: ${pngPath}`));
     console.log(pngPaths.join('\n'));
   } else {
@@ -471,7 +465,13 @@ try {
         return path.join(path.dirname(outputPath), pngName);
       });
 
-      publishPngs(entries.map((entry, i) => ({ stagedPath: entry.stagedPath, finalPath: pngPaths[i] })));
+      const artifactReports = entries.map((entry, i) =>
+        artifactReport(entry.stagedPath, pngPaths[i], entry.checker, i + 1));
+      publishCardArtifacts(
+        entries.map((entry, i) => ({ stagedPath: entry.stagedPath, finalPath: pngPaths[i] })),
+        artifactReports,
+        runTmpDir,
+      );
       if (entries.length > 1) {
         pngPaths.forEach((pngPath, i) => console.error(`  Diagram ${i + 1}/${pngPaths.length}: ${pngPath}`));
       }
@@ -479,8 +479,12 @@ try {
     } else {
       const measureHtmlPath = path.join(runTmpDir, `card_${input.mode}_measure.html`);
       const out = renderSingleOutput(input, htmlPath, measureHtmlPath);
-      captureWithOutputCheck(out, stagedPath);
-      publishPngs([{ stagedPath, finalPath: outputPath }]);
+      const checker = captureWithOutputCheck(out, stagedPath);
+      publishCardArtifacts(
+        [{ stagedPath, finalPath: outputPath }],
+        [artifactReport(stagedPath, outputPath, checker, 1)],
+        runTmpDir,
+      );
       console.log(outputPath);
     }
   }

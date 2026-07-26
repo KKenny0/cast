@@ -1,6 +1,6 @@
 {
   "name": "card-skill",
-  "version": "0.7.1",
+  "version": "0.8.0",
   "private": true,
   "engines": {
     "node": ">=22"
@@ -8,9 +8,12 @@
   "scripts": {
     "check-output": "node scripts/check-output.mjs --help",
     "package-skill": "node scripts/package-skill.mjs",
-    "test": "node scripts/check-update.mjs --self-test && node evals/check-assertions.mjs --self-test && node scripts/check-output.mjs --self-test && node scripts/validate.mjs",
+    "test": "node scripts/check-update.mjs --self-test && node evals/check-assertions.mjs --self-test && node evals/check-job-assertions.mjs --self-test && node scripts/check-output.mjs --self-test && node scripts/validate-visual-job.mjs && node scripts/validate.mjs",
     "validate": "node scripts/validate.mjs",
-    "smoke": "node scripts/smoke.mjs"
+    "smoke": "node scripts/smoke.mjs",
+    "eval:fresh": "node evals/run-fresh-context.mjs",
+    "gallery:check": "node scripts/gallery-jobs.mjs",
+    "gallery:update": "node scripts/gallery-jobs.mjs --update"
   },
   "dependencies": {
     "playwright": "^1.60.0"

@@ -3,16 +3,23 @@
  * Each schema defines required fields, optional fields, and type checks.
  */
 
-const { EDITORIAL_TONES, isValidDesignName, listDesigns } = require('./designs');
+const {
+  EDITORIAL_TONES,
+  getDesign,
+  isValidDesignName,
+  listDesigns,
+  resolveDesignNameForInput,
+} = require('./designs');
 
 const SCHEMAS = {
   big: {
     required: ['mode', 'phrase'],
-    optional: ['design', 'accent_words', 'ghost_char', 'font_size', 'attribution', 'logo', 'brand_name'],
+    optional: ['design', 'tone', 'accent_words', 'ghost_char', 'font_size', 'attribution', 'logo', 'brand_name'],
     types: {
       mode: 'string',
       phrase: 'string',
       design: 'string',
+      tone: 'string',
       accent_words: 'array',
       ghost_char: 'string',
       font_size: 'number',
@@ -23,12 +30,13 @@ const SCHEMAS = {
   },
   long: {
     required: ['mode', 'title', 'body'],
-    optional: ['design', 'kicker', 'subtitle', 'theme', 'source', 'logo', 'brand_name'],
+    optional: ['design', 'tone', 'kicker', 'subtitle', 'theme', 'source', 'logo', 'brand_name'],
     types: {
       mode: 'string',
       title: 'string',
       body: 'array',
       design: 'string',
+      tone: 'string',
       kicker: 'string',
       subtitle: 'string',
       theme: 'string',
@@ -39,12 +47,13 @@ const SCHEMAS = {
   },
   whiteboard: {
     required: ['mode', 'title', 'steps'],
-    optional: ['design', 'subtitle', 'accent_words', 'logo', 'brand_name'],
+    optional: ['design', 'tone', 'subtitle', 'accent_words', 'logo', 'brand_name'],
     types: {
       mode: 'string',
       title: 'string',
       steps: 'array',
       design: 'string',
+      tone: 'string',
       subtitle: 'string',
       accent_words: 'array',
       logo: 'string',
@@ -53,13 +62,14 @@ const SCHEMAS = {
   },
   poster: {
     required: ['mode', 'title', 'cards'],
-    optional: ['variant', 'design', 'subtitle', 'source', 'logo', 'brand_name'],
+    optional: ['variant', 'design', 'tone', 'subtitle', 'source', 'logo', 'brand_name'],
     types: {
       mode: 'string',
       title: 'string',
       cards: 'array',
       variant: 'string',
       design: 'string',
+      tone: 'string',
       subtitle: 'string',
       source: 'string',
       logo: 'string',
@@ -111,6 +121,7 @@ const SCHEMAS = {
     required: ['mode', 'title'],
     optional: [
       'design',
+      'tone',
       'aspect',
       'family',
       'subtitle',
@@ -130,6 +141,7 @@ const SCHEMAS = {
       mode: 'string',
       family: 'string',
       design: 'string',
+      tone: 'string',
       aspect: 'string',
       title: 'string',
       subtitle: 'string',
@@ -141,6 +153,57 @@ const SCHEMAS = {
       nodes: 'array',
       links: 'array',
       zones: 'array',
+      source: 'string',
+      logo: 'string',
+      brand_name: 'string',
+    },
+  },
+  infograph: {
+    required: ['mode', 'title', 'composition_required', 'content_html', 'custom_css'],
+    optional: ['design', 'tone', 'subtitle', 'source', 'logo', 'brand_name'],
+    types: {
+      mode: 'string',
+      title: 'string',
+      composition_required: 'boolean',
+      content_html: 'string',
+      custom_css: 'string',
+      design: 'string',
+      tone: 'string',
+      subtitle: 'string',
+      source: 'string',
+      logo: 'string',
+      brand_name: 'string',
+    },
+  },
+  comic: {
+    required: ['mode', 'title', 'composition_required', 'content_html', 'custom_css'],
+    optional: ['design', 'tone', 'subtitle', 'source', 'logo', 'brand_name'],
+    types: {
+      mode: 'string',
+      title: 'string',
+      composition_required: 'boolean',
+      content_html: 'string',
+      custom_css: 'string',
+      design: 'string',
+      tone: 'string',
+      subtitle: 'string',
+      source: 'string',
+      logo: 'string',
+      brand_name: 'string',
+    },
+  },
+  sketchnote: {
+    required: ['mode', 'title', 'composition_required', 'content_html', 'custom_css'],
+    optional: ['design', 'tone', 'subtitle', 'source', 'logo', 'brand_name'],
+    types: {
+      mode: 'string',
+      title: 'string',
+      composition_required: 'boolean',
+      content_html: 'string',
+      custom_css: 'string',
+      design: 'string',
+      tone: 'string',
+      subtitle: 'string',
       source: 'string',
       logo: 'string',
       brand_name: 'string',
@@ -158,6 +221,7 @@ const EDITORIAL_COVER_MOTIFS = new Set(['paper-stack', 'drawer', 'window', 'lens
 const ARTICLE_DIAGRAM_FAMILIES = new Set(['concept-map', 'process-flow', 'boundary-model']);
 const ARTICLE_DIAGRAM_ASPECTS = new Set(['body-2-1', 'body-3-2', 'body-4-3']);
 const ARTICLE_DIAGRAM_RENDER_PLANS = new Set(['auto', 'summary', 'structure', 'split']);
+const STUDIO_MODES = new Set(['infograph', 'comic', 'sketchnote']);
 const DESIGN_NAMES = listDesigns().map(design => design.name);
 
 function hasPosterContent(body) {
@@ -186,7 +250,7 @@ function validate(input) {
 
   const schema = SCHEMAS[mode];
   if (!schema) {
-    return { valid: false, errors: [`Unknown mode: "${mode}". CLI-eligible modes (Stable tier): big, long, whiteboard, poster, editorial-image, article-diagram`] };
+    return { valid: false, errors: [`Unknown mode: "${mode}". Supported modes: big, long, whiteboard, poster, editorial-image, article-diagram, infograph, comic, sketchnote`] };
   }
 
   if (input.author !== undefined) {
@@ -194,6 +258,10 @@ function validate(input) {
   }
   if (input.photo !== undefined) {
     errors.push('Field "photo" is not supported. Use "logo" for an opt-in avatar or brand image path.');
+  }
+  const allowedFields = new Set([...schema.required, ...schema.optional]);
+  for (const field of Object.keys(input)) {
+    if (!allowedFields.has(field)) errors.push(`Unknown field for ${mode}: "${field}"`);
   }
 
   // Check required fields
@@ -214,6 +282,33 @@ function validate(input) {
 
   if (typeof input.design === 'string' && !isValidDesignName(input.design)) {
     errors.push(`design must be one of: ${DESIGN_NAMES.join(', ')}`);
+  }
+  if (input.tone !== undefined && !EDITORIAL_TONES.has(input.tone)) {
+    errors.push(`tone must be one of: ${[...EDITORIAL_TONES].join(', ')}`);
+  }
+
+  if (STUDIO_MODES.has(mode)) {
+    if (input.composition_required !== true) {
+      errors.push(`${mode} requires composition_required=true`);
+    }
+    if (typeof input.content_html !== 'string' || input.content_html.trim() === '') {
+      errors.push(`${mode} requires non-empty "content_html"`);
+    }
+    if (typeof input.custom_css !== 'string' || input.custom_css.trim() === '') {
+      errors.push(`${mode} requires non-empty "custom_css"`);
+    }
+    if (typeof input.content_html === 'string'
+        && /<(?:script|iframe|object|embed|link|base)\b|\son[a-z]+\s*=|javascript:/i.test(input.content_html)) {
+      errors.push(`${mode} content_html cannot contain executable or embedded-resource markup`);
+    }
+    if (typeof input.custom_css === 'string'
+        && /@import\b|url\s*\(\s*['"]?\s*file:/i.test(input.custom_css)) {
+      errors.push(`${mode} custom_css cannot import stylesheets or reference file: URLs`);
+    }
+    const resolvedDesign = getDesign(resolveDesignNameForInput(input, 'claude'));
+    if ((mode === 'infograph' || mode === 'sketchnote') && resolvedDesign?.surface === 'dark') {
+      errors.push(`${mode} requires a light-surface design`);
+    }
   }
 
   // Mode-specific body/step validation
@@ -253,8 +348,8 @@ function validate(input) {
       }
       if (!Array.isArray(card.body)) errors.push(`cards[${i}]: missing "body" array`);
       else {
-        if (input.variant === 'reading-notes' && !hasPosterContent(card.body)) {
-          errors.push(`cards[${i}].body must contain actual content for variant "reading-notes"`);
+        if (!hasPosterContent(card.body)) {
+          errors.push(`cards[${i}].body must contain actual visible content`);
         }
         card.body.forEach((el, j) => {
           if (!el.type) errors.push(`cards[${i}].body[${j}]: missing "type"`);

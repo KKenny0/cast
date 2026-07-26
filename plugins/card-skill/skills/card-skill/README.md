@@ -88,7 +88,7 @@ npx skills use KKenny0/card-skill/plugins/card-skill/skills/card-skill --skill c
 先给我 3 个公众号头图方向，用卡片展示每个方向的视觉隐喻、比例、适用理由和风险；我选定后再渲染 PNG。
 ```
 
-选择后仍由现有 Stable / Creative 流程渲染、截图、检查并返回 PNG。普通请求不会被强制插入选择步骤；Codex CLI、IDE 或其他 agent 会退回文字候选列表。
+选择后仍由现有 Stable / Studio 流程渲染、截图、检查并返回 PNG。普通请求不会被强制插入选择步骤；Codex CLI、IDE 或其他 agent 会退回文字候选列表。
 
 </details>
 
@@ -105,25 +105,25 @@ npx skills use KKenny0/card-skill/plugins/card-skill/skills/card-skill --skill c
 
 ## 9 种内容模具
 
-Stable 适合出版场景、批量生产和品牌一致性：走结构化 renderer、schema 校验和 `check-output`，输入正确时输出更确定。Creative 适合概念隐喻、叙事张力和个性化表达：布局更开放，需要人工审美兜底。
+Stable 适合出版场景、批量生产和品牌一致性。Studio 适合概念隐喻、叙事张力和个性化表达。两者都走正式 schema、renderer、截图和 `check-output`；Studio 额外要求完整 composition contract 与人工视觉验收。
 
 | Mode | Tier | 最适合 | 详细说明 |
 |---|---|---|---|
-| `editorial-image` | Stable / Creative | 公众号头图、博客 hero、正文氛围插图 | [mode-editorial-image](references/mode-editorial-image.md) |
+| `editorial-image` | Stable / Studio | 公众号头图、博客 hero、正文氛围插图 | [mode-editorial-image](references/mode-editorial-image.md) |
 | `article-diagram` | Stable | 正文公式卡、关系图、流程图、边界模型 | [mode-article-diagram](references/mode-article-diagram.md) |
 | `poster` | Stable | 社媒系列卡片、章节拆分 | [mode-poster](references/mode-poster.md) |
 | `whiteboard` | Stable | 论证、因果链、系统关系与技术决策 | [mode-whiteboard](references/mode-whiteboard.md) |
 | `long` | Stable | 文章型长卡片与沉浸阅读 | [mode-long](references/mode-long.md) |
 | `big` | Stable | 一句话观点、标题与宣言 | [mode-big](references/mode-big.md) |
-| `infograph` | Creative | 数据、比较、层级与高密度信息 | [mode-infograph](references/mode-infograph.md) |
-| `comic` | Creative | 冲突、转折或前后变化的叙事 | [mode-comic](references/mode-comic.md) |
-| `sketchnote` | Creative | 个人反思、经验与温暖叙事 | [mode-sketchnote](references/mode-sketchnote.md) |
+| `infograph` | Studio | 数据、比较、层级与高密度信息 | [mode-infograph](references/mode-infograph.md) |
+| `comic` | Studio | 冲突、转折或前后变化的叙事 | [mode-comic](references/mode-comic.md) |
+| `sketchnote` | Studio | 个人反思、经验与温暖叙事 | [mode-sketchnote](references/mode-sketchnote.md) |
 
 ## Quiet Paper 与输出原则
 
 所有模式共享同一套安静的纸面骨架：温暖纸色、克制墨色、细分隔线、小圆角、极少阴影。内容色调和品牌气质只改变表面温度、强调色和节奏，不把作品变成品牌皮肤拼盘。
 
-- 默认根据内容结构、密度、情绪和发布用途自动选择 mode、design 与画面方向。
+- 默认根据内容结构、密度、情绪和发布用途自动选择 mode、四个 tone（reflective / sharp / warm / technical）与画面方向；26 个 design 仍可作为显式高级 override。
 - `editorial-image` 会先判断 `reflective`、`sharp`、`warm` 或 `technical` 气质，再落到真实可渲染的 Quiet Paper design。
 - `article-diagram` 会先筛出值得压缩的章节，再为每个章节生成公式卡；不适合压缩的铺垫、情绪和结论章节会被跳过。
 - 默认署名、头像和来源字段为空；只有输入明确提供时才使用 `brand_name`、`logo`、`source`。
@@ -134,7 +134,7 @@ Stable 适合出版场景、批量生产和品牌一致性：走结构化 render
 2. 分析内容结构、密度、情绪与发布用途。
 3. 匹配 mode、Quiet Paper design 和画面方向。
 4. 使用结构化 renderer 或创意布局流程生成画面。
-5. 在截图前后检查占位符、溢出、裁切、坏图、可读性、标题换行、字体栈和视觉体系漂移。
+5. 在截图前后检查占位符、溢出、裁切、坏图、可读性、标题换行、字体栈、远程资源和视觉体系漂移；PNG 还会阻止空白与近乎纯色结果。
 6. 通过 Playwright 截图并输出 PNG；默认写入 `~/Downloads/`。
 
 <a id="advanced"></a>
@@ -150,7 +150,7 @@ npm install
 npx playwright install chromium
 ```
 
-字体随 skill 一起分发。`assets/fonts/` 包含 4 个 OFL 1.1 开源字体，共约 57MB；字体 license 见 [`assets/fonts/LICENSE-fonts.md`](assets/fonts/LICENSE-fonts.md) 与 [`assets/fonts/OFL-1.1.txt`](assets/fonts/OFL-1.1.txt)。预检脚本会验证字体是否真加载，避免静默 fallback 到系统中文字体。
+字体随 skill 一起分发，capture 只允许 `file:` 与 `data:` 资源，不依赖运行期网络。三套 Latin 字体的上游、许可和 SHA-256 见 [`assets/fonts/FONT_SOURCES.md`](assets/fonts/FONT_SOURCES.md)；预检脚本会验证字体是否真加载，避免静默 fallback 到系统字体。
 
 默认 `--dpr 2`。以常见的 1080 CSS 像素画布为例，导出的 PNG 宽度为 2160px；不同 mode 和比例会有不同高度，不应理解为固定的 4K 宽图。
 
@@ -183,7 +183,15 @@ node scripts/check-update.mjs --auto-update
 node scripts/card.js --input /path/to/input.json --output ~/Downloads/card.png
 ```
 
-支持的 CLI modes：`big`、`long`、`whiteboard`、`poster`、`editorial-image`、`article-diagram`。
+Stable CLI modes：`big`、`long`、`whiteboard`、`poster`、`editorial-image`、`article-diagram`。Studio CLI modes：`infograph`、`comic`、`sketchnote`；它们要求完整的 `content_html` + `custom_css` composition contract，并仍需人工视觉验收。
+
+需要记录一次多图任务如何从 source 变成成品时，可使用内部 Visual Job runner；它对普通自然语言使用保持透明：
+
+```bash
+node scripts/render-job.mjs --input visual-job.json --output-dir ./output
+```
+
+它只在全部输出经现有 CLI、capture 与 `check-output` 成功后发布 PNG 和去敏 receipt；说明见 [`references/visual-job.md`](references/visual-job.md)。
 
 `editorial-image` 的文章封面会用确定性的 `cover_motif` 把文章张力落到右侧主视觉；复杂头图、概念隐喻和正文配图仍优先使用 `content_html` + `custom_css`。`in-article` 与 `metaphor` 不会再静默回退到默认 scaffold。完整的 skill 行为与输入边界见 [`SKILL.md`](SKILL.md)。
 
@@ -203,20 +211,28 @@ pngquant --quality=80-95 --force --output card.png card.png
 
 <table>
 <tr>
-<td width="50%"><img src="assets/gallery/editorial-blog-hero.png" width="100%" alt="博客头图示例"><br><strong>editorial-image</strong> · blog hero</td>
-<td width="50%"><img src="assets/gallery/article-diagram-formula-card.png" width="100%" alt="正文公式卡示例"><br><strong>article-diagram</strong> · formula card</td>
+<td width="50%"><img src="assets/gallery/editorial-wechat-cover.png" width="100%" alt="公众号头图示例"><br><strong>editorial-image</strong> · wechat cover</td>
+<td width="50%"><img src="assets/gallery/article-formula.png" width="100%" alt="正文公式卡示例"><br><strong>article-diagram</strong> · formula card</td>
 </tr>
 <tr>
-<td><img src="assets/gallery/infograph.png" width="100%" alt="结构化信息图示例"><br><strong>infograph</strong></td>
 <td><img src="assets/gallery/big.png" width="100%" alt="一句话观点卡示例"><br><strong>big</strong></td>
+<td><img src="assets/gallery/poster.png" width="100%" alt="社媒卡片示例"><br><strong>poster</strong></td>
 </tr>
 <tr>
 <td><img src="assets/gallery/long.png" width="100%" alt="长卡片示例"><br><strong>long</strong></td>
-<td><img src="assets/gallery/sketchnote.png" width="100%" alt="手记卡片示例"><br><strong>sketchnote</strong></td>
+<td><img src="assets/gallery/whiteboard.png" width="100%" alt="白板推演示例"><br><strong>whiteboard</strong></td>
 </tr>
 <tr>
-<td><img src="assets/gallery/comic.png" width="100%" alt="叙事漫画卡片示例"><br><strong>comic</strong></td>
-<td><img src="assets/gallery/article-diagram-boundary.png" width="100%" alt="正文边界模型示例"><br><strong>article-diagram</strong> · boundary model</td>
+<td><img src="assets/gallery/article-boundary-legacy.png" width="100%" alt="正文边界模型示例"><br><strong>article-diagram</strong> · legacy boundary model</td>
+<td><img src="assets/gallery/reading-notes.png" width="100%" alt="阅读笔记示例"><br><strong>poster</strong> · reading notes</td>
+</tr>
+<tr>
+<td><img src="assets/gallery/infograph.png" width="100%" alt="Studio 信息图示例"><br><strong>infograph</strong> · Studio composition</td>
+<td><img src="assets/gallery/comic.png" width="100%" alt="Studio 漫画示例"><br><strong>comic</strong> · Studio composition</td>
+</tr>
+<tr>
+<td><img src="assets/gallery/sketchnote.png" width="100%" alt="Studio 视觉手记示例"><br><strong>sketchnote</strong> · Studio composition</td>
+<td><img src="assets/gallery/reading-report.png" width="100%" alt="阅读报告示例"><br><strong>poster</strong> · reading report</td>
 </tr>
 </table>
 
@@ -230,9 +246,8 @@ card-skill 可以和腾讯官方 [WeChatReading Skill](https://github.com/Tencen
 
 <table>
 <tr>
-<td width="33.33%"><img src="assets/gallery/weread-annual-report.png" width="100%" alt="微信读书年度阅读报告"><br><strong>年度阅读报告</strong></td>
-<td width="33.33%"><img src="assets/gallery/weread-reading-profile.png" width="100%" alt="微信读书总体阅读画像"><br><strong>总体阅读画像</strong></td>
-<td width="33.33%"><img src="assets/gallery/weread-personal-highlights_1.png" width="100%" alt="微信读书个人划线卡组"><br><strong>个人划线卡组</strong></td>
+<td width="50%"><img src="assets/gallery/reading-report.png" width="100%" alt="阅读报告示例"><br><strong>阅读报告</strong></td>
+<td width="50%"><img src="assets/gallery/reading-notes.png" width="100%" alt="个人划线卡组"><br><strong>个人划线卡组</strong></td>
 </tr>
 </table>
 

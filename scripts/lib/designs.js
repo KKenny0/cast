@@ -71,6 +71,59 @@ const EDITORIAL_TONE_DESIGNS = {
 };
 
 const EDITORIAL_TONES = new Set(Object.keys(EDITORIAL_TONE_DESIGNS));
+const TONE_DEFAULT_DESIGNS = {
+  reflective: 'claude',
+  sharp: 'linear',
+  warm: 'clay',
+  technical: 'stripe',
+};
+
+const MODE_TONE_DEFAULT_DESIGNS = {
+  big: TONE_DEFAULT_DESIGNS,
+  long: TONE_DEFAULT_DESIGNS,
+  whiteboard: {
+    reflective: 'notion',
+    sharp: 'ljg_ruili',
+    warm: 'clay',
+    technical: 'stripe',
+  },
+  poster: {
+    reflective: 'claude',
+    sharp: 'ljg_ruili',
+    warm: 'clay',
+    technical: 'stripe',
+  },
+  'article-diagram': {
+    reflective: 'notion',
+    sharp: 'ljg_ruili',
+    warm: 'clay',
+    technical: 'stripe',
+  },
+  infograph: {
+    reflective: 'notion',
+    sharp: 'ljg_ruili',
+    warm: 'clay',
+    technical: 'stripe',
+  },
+  comic: TONE_DEFAULT_DESIGNS,
+  sketchnote: {
+    reflective: 'notion',
+    sharp: 'ljg_ruili',
+    warm: 'clay',
+    technical: 'stripe',
+  },
+};
+
+const MODE_DEFAULT_DESIGNS = {
+  big: 'vercel',
+  long: 'claude',
+  whiteboard: 'stripe',
+  poster: 'stripe',
+  'article-diagram': 'stripe',
+  infograph: 'notion',
+  comic: 'claude',
+  sketchnote: 'notion',
+};
 
 function normalizeDesignName(name) {
   if (typeof name !== 'string') return '';
@@ -143,15 +196,40 @@ function resolveEditorialDesignName(input = {}) {
   return pool[stableIndex(seed, pool.length)];
 }
 
+function resolveDefaultDesignName(input = {}, fallback = 'claude') {
+  if (input.design) {
+    const explicit = normalizeDesignName(input.design);
+    return DESIGNS[explicit] ? explicit : null;
+  }
+  return input.tone && TONE_DEFAULT_DESIGNS[input.tone] ? TONE_DEFAULT_DESIGNS[input.tone] : fallback;
+}
+
+function resolveDesignNameForInput(input = {}, fallback = null) {
+  if (input.mode === 'editorial-image') return resolveEditorialDesignName(input);
+  if (input.design) {
+    const explicit = normalizeDesignName(input.design);
+    return DESIGNS[explicit] ? explicit : null;
+  }
+  const modeTones = MODE_TONE_DEFAULT_DESIGNS[input.mode] || TONE_DEFAULT_DESIGNS;
+  return input.tone && modeTones[input.tone]
+    ? modeTones[input.tone]
+    : (fallback || MODE_DEFAULT_DESIGNS[input.mode] || 'claude');
+}
+
 module.exports = {
   DESIGNS,
   DESIGN_ALIASES,
   EDITORIAL_TONE_DESIGNS,
   EDITORIAL_TONES,
+  TONE_DEFAULT_DESIGNS,
+  MODE_TONE_DEFAULT_DESIGNS,
+  MODE_DEFAULT_DESIGNS,
   normalizeDesignName,
   getDesign,
   isValidDesignName,
   listDesigns,
   cssOverrides,
   resolveEditorialDesignName,
+  resolveDefaultDesignName,
+  resolveDesignNameForInput,
 };

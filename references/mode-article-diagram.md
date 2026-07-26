@@ -18,7 +18,7 @@ The useful question is no longer "which family fits?" The useful question is:
 - What is the one sentence the reader should remember?
 - What structure makes that sentence true?
 
-If the image only sets mood, use `editorial-image`. If it compresses a whole article into many points, use `poster`, `whiteboard`, or a Creative tier mode instead.
+If the image only sets mood, use `editorial-image`. If it compresses a whole article into many points, use `poster`, `whiteboard`, or a Studio tier mode instead.
 
 ## Default Output
 
@@ -260,7 +260,7 @@ Legacy family inputs still use the existing bounded rescue retries for label col
 ## Known Limitations
 
 - Very long formulas can still overpower the card. Rewrite the formula into short terms plus a short result instead of shrinking text.
-- The default renderer intentionally does not solve open-ended structure diagrams. If the user needs a precise topology, use the legacy family path explicitly, a future structure-view design, or a custom Creative tier render.
+- The default renderer intentionally does not solve open-ended structure diagrams. If the user needs a precise topology, use the legacy family path explicitly, a future structure-view design, or a custom Studio tier render.
 
 ## Anti-Patterns
 

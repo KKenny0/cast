@@ -50,12 +50,8 @@
 <meta name="viewport" content="width=1080">
 <title>card-skill — Comic Mode</title>
 
-<!-- Google Fonts: DM Sans (narration) + Noto Serif SC fallback -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Noto+Serif+SC:wght@400;700;900&display=swap" rel="stylesheet">
-
 <style>
+  @import url('file://{{FONT_BASE}}/local-fonts.css');
   /* ── Font Face: XiangcuiDengcusong (local) ── */
   @font-face {
     font-family: 'XiangcuiDengcusong';
@@ -82,10 +78,10 @@
     --hairline:   #d7cec1;
 
     /* type system */
-    --marker:    'XiangcuiDazijiti', 'Noto Serif SC', serif;
+    --marker:    'XiangcuiDazijiti', 'XiangcuiDengcusong', serif;
     --sans:      'DM Sans', -apple-system, system-ui, sans-serif;
-    --zh-serif:  'XiangcuiDengcusong', 'Noto Serif SC', Georgia, serif;
-    --serif:     'Noto Serif SC', Georgia, serif;
+    --zh-serif:  'XiangcuiDengcusong', Georgia, serif;
+    --serif:     'XiangcuiDengcusong', Georgia, serif;
     --mono:      'DM Sans', monospace;
   }
 
@@ -643,6 +639,7 @@
     color: var(--gray-mid);
     letter-spacing: 0.1em;
   }
+  {{CUSTOM_CSS}}
 </style>
 </head>
 <body>

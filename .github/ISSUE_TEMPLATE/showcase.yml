@@ -29,6 +29,40 @@ body:
       placeholder: "Codex; card-skill v0.2.0"
     validations:
       required: true
+  - type: input
+    id: publish_target
+    attributes:
+      label: Publish target
+      description: Optional: e.g. wechat-cover, blog hero, article body, or social.
+  - type: dropdown
+    id: tier
+    attributes:
+      label: Mode maturity
+      options:
+        - Stable
+        - Studio
+        - Not sure
+  - type: dropdown
+    id: first_round
+    attributes:
+      label: First round usable?
+      options:
+        - Directly usable
+        - Needed one adjustment
+        - Needed two or more adjustments
+  - type: dropdown
+    id: adjustments
+    attributes:
+      label: Manual adjustment count
+      options:
+        - "0"
+        - "1"
+        - "2+"
+  - type: textarea
+    id: failure_point
+    attributes:
+      label: Largest failure point
+      description: Optional. Do not include private source material or account identifiers.
   - type: dropdown
     id: permission
     attributes:
