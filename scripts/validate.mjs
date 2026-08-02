@@ -103,10 +103,12 @@ function assertPackagedSkill() {
   const skillRoot = path.join(packageRoot, 'skills', 'card-skill');
   const pluginJsonPath = path.join(packageRoot, '.codex-plugin', 'plugin.json');
   const marketplacePath = path.join(ROOT, '.agents', 'plugins', 'marketplace.json');
+  const claudeMarketplacePath = path.join(ROOT, '.claude-plugin', 'marketplace.json');
 
   for (const requiredPath of [
     pluginJsonPath,
     marketplacePath,
+    claudeMarketplacePath,
     path.join(skillRoot, 'SKILL.md'),
     path.join(skillRoot, 'VERSION'),
     path.join(skillRoot, 'package.json'),
@@ -143,6 +145,8 @@ function assertPackagedSkill() {
   const pluginJson = JSON.parse(fs.readFileSync(pluginJsonPath, 'utf8'));
   const marketplaceJson = JSON.parse(fs.readFileSync(marketplacePath, 'utf8'));
   const marketplaceEntry = marketplaceJson.plugins?.find(plugin => plugin.name === 'card-skill');
+  const claudeMarketplaceJson = JSON.parse(fs.readFileSync(claudeMarketplacePath, 'utf8'));
+  const claudeMarketplaceEntry = claudeMarketplaceJson.plugins?.find(plugin => plugin.name === 'card-skill');
 
   assert.equal(packagedVersion, rootVersion, 'packaged VERSION does not match root VERSION');
   assert.equal(pluginJson.name, 'card-skill', 'plugin.json name is not card-skill');
@@ -150,6 +154,12 @@ function assertPackagedSkill() {
   assert.equal(pluginJson.skills, './skills/', 'plugin.json skills path must point at ./skills/');
   assert.ok(marketplaceEntry, 'marketplace.json is missing card-skill entry');
   assert.equal(marketplaceEntry.source?.path, './plugins/card-skill', 'marketplace entry must point at ./plugins/card-skill');
+  assert.equal(claudeMarketplaceJson.name, 'card-skill', 'Claude marketplace name is not card-skill');
+  assert.ok(claudeMarketplaceEntry, 'Claude marketplace is missing card-skill entry');
+  assert.equal(claudeMarketplaceEntry.version, rootVersion, 'Claude marketplace version does not match VERSION');
+  assert.equal(claudeMarketplaceEntry.source, './plugins/card-skill', 'Claude marketplace must reuse ./plugins/card-skill');
+  assert.deepEqual(claudeMarketplaceEntry.skills, ['./skills/'], 'Claude marketplace skills path must point at ./skills/');
+  assert.equal(claudeMarketplaceEntry.strict, false, 'Claude marketplace must define the plugin with strict: false');
 
   for (const relativePath of [
     'SKILL.md',

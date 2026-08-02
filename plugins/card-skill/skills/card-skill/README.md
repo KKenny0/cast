@@ -38,16 +38,21 @@
 <a id="quick-start"></a>
 ## 最快开始
 
-### Codex（推荐）
+### Claude Code / Codex（推荐）
 
 card-skill 是完整安装包，渲染脚本、模板、字体、schema 和检查器都在包内。不要裸装仓库根目录；请安装插件：
 
 ```bash
+# Claude Code
+claude plugin marketplace add KKenny0/card-skill
+claude plugin install card-skill@card-skill
+
+# Codex
 codex plugin marketplace add KKenny0/card-skill
 codex plugin add card-skill@card-skill
 ```
 
-Codex 插件安装器不会执行 npm 生命周期脚本。首次制图时，agent 会在已安装的 skill 目录执行一次 `node scripts/setup-runtime.mjs`，安装锁定的 npm 依赖和 Playwright Chromium；后续使用会复用现有运行时。
+插件安装器不会执行 npm 生命周期脚本。首次制图时，agent 会在已安装的 skill 目录执行一次 `node scripts/setup-runtime.mjs`，安装锁定的 npm 依赖和 Playwright Chromium；后续使用会复用现有运行时。
 
 ### 复制一段自然语言请求
 
@@ -164,9 +169,13 @@ npx --yes --package skills@1.5.19 -- skills add KKenny0/card-skill/plugins/card-
 
 # Codex 插件安装（脚本会校验 Release tag 对应的 commit）
 node scripts/check-update.mjs --auto-update
+
+# Claude Code 插件安装（由 Claude Code 原生 marketplace 更新）
+claude plugin marketplace update card-skill
+claude plugin update card-skill@card-skill
 ```
 
-版本检查只访问 GitHub Release API；实际升级还会通过已安装的 Codex CLI，或固定版本的 `skills` CLI，从 GitHub/npm 下载对应 Release。两条路径都不会上传文章、prompt、路径或图片。只有明确提出微信读书请求时才会访问个人数据；个人内容会进入当前 Agent / 模型上下文用于整理，PNG 渲染与检查由本地脚本完成，不会自动上传或发布成品。
+版本检查只访问 GitHub Release API；实际升级由已安装的 Codex CLI、固定版本的 `skills` CLI，或 Claude Code 原生 marketplace 从 GitHub/npm 下载。这些路径都不会上传文章、prompt、路径或图片。只有明确提出微信读书请求时才会访问个人数据；个人内容会进入当前 Agent / 模型上下文用于整理，PNG 渲染与检查由本地脚本完成，不会自动上传或发布成品。
 
 如需完全关闭检查和自动升级，设置 `CARD_SKILL_DISABLE_UPDATE_CHECK=1`。
 

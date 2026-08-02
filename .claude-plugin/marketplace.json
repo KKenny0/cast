@@ -1,0 +1,33 @@
+{
+  "name": "card-skill",
+  "description": "Turn articles, ideas, and arguments into publish-ready visual cards.",
+  "owner": {
+    "name": "KKenny0"
+  },
+  "plugins": [
+    {
+      "name": "card-skill",
+      "description": "Render text content into polished, shareable PNG visuals.",
+      "version": "0.8.1",
+      "author": {
+        "name": "KKenny0"
+      },
+      "homepage": "https://github.com/KKenny0/card-skill",
+      "repository": "https://github.com/KKenny0/card-skill",
+      "license": "MIT",
+      "keywords": [
+        "cards",
+        "poster",
+        "visualization",
+        "editorial-image",
+        "article-diagram"
+      ],
+      "category": "productivity",
+      "source": "./plugins/card-skill",
+      "skills": [
+        "./skills/"
+      ],
+      "strict": false
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 {
   "name": "card-skill",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "Render text content into polished, shareable PNG cards, posters, whiteboards, long-form reading cards, editorial images, and in-article diagrams, with an optional Codex direction preview before rendering.",
   "author": {
     "name": "KKenny0",

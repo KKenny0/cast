@@ -133,6 +133,7 @@ function updateCommands(releaseTag = '<release-tag>', releaseCommit = '<release-
   return {
     skills: `npx --yes --package skills@${SKILLS_CLI_VERSION} -- skills add ${SKILLS_SOURCE}#${releaseTag} --skill card-skill -g -y`,
     codex: `codex plugin marketplace upgrade card-skill && verify ${releaseTag} at ${releaseCommit} && codex plugin add card-skill@card-skill`,
+    claude: 'claude plugin marketplace update card-skill && claude plugin update card-skill@card-skill',
   };
 }
 
@@ -142,6 +143,7 @@ function formatUpdateMessage(release, currentVersion) {
     `card-skill v${release.version} is available (you have v${currentVersion}).`,
     `Exact npx skills update: ${commands.skills}`,
     `Codex installs update automatically from the matching ${release.tag} release.`,
+    `Claude Code update: ${commands.claude}`,
   ].join('\n');
 }
 
@@ -151,6 +153,19 @@ function normalizedPath(value) {
 
 function resolveInstaller(root = ROOT) {
   const value = normalizedPath(root);
+  const claudePluginRoots = [
+    process.env.CLAUDE_CODE_PLUGIN_CACHE_DIR,
+    process.env.CLAUDE_CONFIG_DIR && path.join(process.env.CLAUDE_CONFIG_DIR, 'plugins'),
+    path.join(os.homedir(), '.claude', 'plugins'),
+  ].filter(Boolean).map(normalizedPath);
+  const isClaudeCache = value.includes('/.claude/plugins/cache/')
+    || claudePluginRoots.some(candidate => value.startsWith(`${candidate}/cache/`));
+  if (
+    isClaudeCache
+    && /\/plugins\/cache\/card-skill\/card-skill\/[^/]+\/skills\/card-skill\/?$/i.test(value)
+  ) {
+    return 'claude';
+  }
   if (
     /\/plugins\/cache\/card-skill\/card-skill\/[^/]+\/skills\/card-skill\/?$/i.test(value)
     || /\/marketplaces\/card-skill\/(?:plugins\/card-skill\/)?skills\/card-skill\/?$/i.test(value)
@@ -581,7 +596,7 @@ function autoUpdate({
   if (disabled || isSourceCheckout(root) || isTemporaryPath(root)) return null;
   const installContext = resolveInstallContext(root);
   const { installer } = installContext;
-  if (!installer) return null;
+  if (!installer || installer === 'claude') return null;
 
   const lock = acquireUpdateLock(root, cachePath);
   if (!lock) return null;
@@ -676,7 +691,9 @@ async function selfTest() {
   assert.deepEqual(parseRelease(`{"tag_name":"v0.8.0","draft":false,"prerelease":false,"commit_sha":"${releaseCommit}"}`), { version: '0.8.0', tag: 'v0.8.0', commit: releaseCommit });
   assert.equal(parseRelease('{"tag_name":"v0.8.0","prerelease":true}'), null);
   assert.equal(resolveInstaller('/opt/codex-home/plugins/cache/card-skill/card-skill/0.7.0/skills/card-skill'), 'codex');
+  assert.equal(resolveInstaller('/Users/test/.claude/plugins/cache/card-skill/card-skill/0.8.0/skills/card-skill'), 'claude');
   assert.equal(resolveInstaller('/Users/test/project/.agents/skills/card-skill'), 'skills');
+  assert.deepEqual(resolveInstallContext('/Users/test/.claude/plugins/cache/card-skill/card-skill/0.8.0/skills/card-skill'), { installer: 'claude', scope: 'global', projectRoot: null });
   assert.deepEqual(resolveInstallContext(path.join(os.homedir(), '.agents', 'skills', 'card-skill')), { installer: 'skills', scope: 'global', projectRoot: null });
   assert.deepEqual(resolveInstallContext('/Users/test/project/.agents/skills/card-skill'), { installer: 'skills', scope: 'project', projectRoot: '/Users/test/project' });
   assert.notEqual(defaultCachePath('/Users/test/.agents/skills/card-skill'), defaultCachePath('/Users/test/codex/plugins/cache/card-skill/card-skill/0.7.0/skills/card-skill'));
@@ -690,6 +707,7 @@ async function selfTest() {
   );
   assert.match(updateCommands('v0.8.0', releaseCommit).skills, /skills@1\.5\.19/);
   assert.match(updateCommands('v0.8.0', releaseCommit).skills, /#v0\.8\.0 --skill card-skill/);
+  assert.match(updateCommands('v0.8.0', releaseCommit).claude, /claude plugin update card-skill@card-skill/);
   assert.equal(isSourceCheckout(ROOT), true);
 
   const testRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'card-skill-update-check-'));

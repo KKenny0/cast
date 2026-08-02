@@ -11,7 +11,7 @@
 - The repository root is the source of truth for `SKILL.md`, `README.md`, `VERSION`, `package.json`, `assets/`, `evals/`, `references/`, `schemas/`, and `scripts/`.
 - `plugins/card-skill/skills/card-skill/` is a generated installable mirror. Do not edit it independently.
 - After changing any packaged source, run `npm run package-skill`, then inspect the resulting mirror diff.
-- Keep `VERSION`, the root and packaged `package.json`, the root and packaged `SKILL.md` frontmatter, and `plugins/card-skill/.codex-plugin/plugin.json` synchronized.
+- Keep `VERSION`, the root and packaged `package.json`, the root and packaged `SKILL.md` frontmatter, `plugins/card-skill/.codex-plugin/plugin.json`, and the version in `.claude-plugin/marketplace.json` synchronized.
 
 ## Contract boundaries
 
