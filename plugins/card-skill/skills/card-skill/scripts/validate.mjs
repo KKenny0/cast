@@ -164,6 +164,7 @@ function assertPackagedSkill() {
   for (const relativePath of [
     'SKILL.md',
     'README.md',
+    'README.zh-CN.md',
     'package.json',
     'package-lock.json',
     'scripts/card.js',

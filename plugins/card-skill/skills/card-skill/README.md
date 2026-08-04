@@ -1,46 +1,76 @@
-<p align="center"><img src="assets/logo.png" alt="card-skill" width="112"></p>
+<p align="center"><img src="assets/logo.png" alt="card-skill logo" width="112"></p>
 
-# card-skill
+<h1 align="center">card-skill</h1>
 
-<p align="center"><strong>把文章、观点和论证，做成可以直接发布的图片。</strong><br>
-<sub>Turn articles, ideas, and arguments into publish-ready visual cards.</sub></p>
+<p align="center"><strong>Turn articles, ideas, and arguments into publish-ready visual cards.</strong></p>
 
 <p align="center">
-  <a href="#quick-start">最快开始</a> ·
-  <a href="#choose-a-format">选择模具</a> ·
-  <a href="#gallery">完整样张</a> ·
-  <a href="#advanced">高级说明</a>
+  <a href="README.zh-CN.md">中文文档</a> ·
+  <a href="#what-it-is">What it is</a> ·
+  <a href="#how-to-install-card-skill">Install</a> ·
+  <a href="#copy-paste-prompt-examples">Examples</a> ·
+  <a href="#which-format-for-which-job">Formats</a> ·
+  <a href="#faq">FAQ</a> ·
+  <a href="#full-gallery">Gallery</a>
 </p>
 
-给 Claude Code、Codex、OpenCode、Pi 等 coding agents 使用的内容制图 skill。输入文章、笔记、观点、URL，或你明确指定的微信读书数据；card-skill 会理解内容结构，自动选择版式与 Quiet Paper 气质，输出经过检查的 PNG。
+## What it is
 
-## 先看它能做什么
+**card-skill** is an open-source content-to-image skill for coding agents such as Claude Code, Codex, OpenCode, and Pi. Give it an article, notes, an argument, a URL, or explicitly requested WeChat Reading data. It reads structure, picks a layout and Quiet Paper tone, and returns a quality-checked PNG.
 
-同一套安静的纸面骨架，可以承载不同的发布任务：封面负责制造张力，社媒卡片负责拆解观点，白板负责把推理关系画清楚。下面的 Gallery 全部取材于杰夫·霍金斯的《千脑智能》：同一本书的不同关系，应该长成不同的画面，而不是换个模板重述一遍。
+It covers WeChat / blog covers, social card sets, whiteboards, in-article explanation diagrams (formula cards / relationship maps), infographics, comics, and sketchnotes. The complete package ships renderers, templates, fonts, schemas, and checkers. Capture and checks run locally by default; finished cards are not auto-uploaded.
+
+It is not a website builder, UI kit, logo system, chart library, or photo editor.
+
+## Good fit / poor fit
+
+| Good fit | Poor fit |
+|---|---|
+| WeChat covers, blog heroes, quiet in-article atmosphere images | Websites, landing pages, app / component UI |
+| Xiaohongshu / social opinion cards and series | Figma prototypes, logo / brand systems |
+| Argument whiteboards, system relations, technical decisions | Chart-library plotting (ECharts and similar) |
+| In-article diagrams: formula cards, relations, flows, boundaries | Generic photo editing or file conversion |
+| WeChat Reading highlight cards and monthly reports (explicit request only) | Scanning a whole reading account from a book title alone |
+| Repeatable PNGs with crop / overflow / blank-image checks | One-off chat illustrations with no quality gate |
+
+## See it in 30 seconds
+
+One quiet paper system carries different publishing jobs: covers create tension, social cards unpack an idea, whiteboards make reasoning visible. The gallery below is all drawn from Jeff Hawkins' *A Thousand Brains*: different relations from the same book should become different pictures, not the same template restated.
 
 <table>
 <tr>
 <td width="33.33%" valign="top">
-<img src="assets/gallery/editorial-wechat-cover.png" width="100%" alt="公众号头图示例"><br>
-<strong>公众号 / 博客头图</strong>
+<img src="assets/gallery/editorial-wechat-cover.png" width="100%" alt="A Thousand Brains WeChat cover: title block on the left, drawer motif carrying core tension on the right"><br>
+<strong>WeChat / blog cover</strong><br>
+<sub>editorial-image · tension and metaphor, not a bullet summary</sub>
 </td>
 <td width="33.33%" valign="top">
-<img src="assets/gallery/poster.png" width="100%" alt="社媒系列卡片示例"><br>
-<strong>小红书 / 社媒卡片</strong>
+<img src="assets/gallery/poster.png" width="100%" alt="A Thousand Brains social card series unpacking three threads"><br>
+<strong>Social cards</strong><br>
+<sub>poster · one claim to multi-card breakdown</sub>
 </td>
 <td width="33.33%" valign="top">
-<img src="assets/gallery/whiteboard.png" width="100%" alt="白板推演示例"><br>
-<strong>白板推演</strong>
+<img src="assets/gallery/whiteboard.png" width="100%" alt="A Thousand Brains whiteboard: reasoning steps for knowing a cup"><br>
+<strong>Whiteboard</strong><br>
+<sub>whiteboard · problem, constraints, and path</sub>
 </td>
 </tr>
 </table>
 
-<a id="quick-start"></a>
-## 最快开始
+| Publishing job | Default mode | What the image solves |
+|---|---|---|
+| WeChat or blog cover | `editorial-image` | Mood, core tension, visual metaphor—not a bullet summary card |
+| In-article explanation | `article-diagram` | Compress a local argument into a formula card or structural relation |
+| Social series | `poster` / `big` / `long` | One-line claim, multi-card set, or long reading card by density |
+| Argument, systems, technical decisions | `whiteboard` | Problem, constraints, paths, and trade-offs |
+| Data, narrative, or personal reflection | `infograph` / `comic` / `sketchnote` | Density, conflict-and-turn, or notebook feel |
+| WeChat Reading highlights / monthly report | `poster` (plus `big` / `long` when needed) | Keep real quotes and real stats; invent nothing |
 
-### Claude Code / Codex（推荐）
+## How to install card-skill
 
-card-skill 是完整安装包，渲染脚本、模板、字体、schema 和检查器都在包内。不要裸装仓库根目录；请安装插件：
+Install the **complete package**: render scripts, templates, fonts, schemas, and checkers. **Do not install only the repository-root `SKILL.md`.** A bare root install is missing the runtime and cannot render reliably.
+
+### Claude Code / Codex (recommended)
 
 ```bash
 # Claude Code
@@ -52,22 +82,11 @@ codex plugin marketplace add KKenny0/card-skill
 codex plugin add card-skill@card-skill
 ```
 
-插件安装器不会执行 npm 生命周期脚本。首次制图时，agent 会在已安装的 skill 目录执行一次 `node scripts/setup-runtime.mjs`，安装锁定的 npm 依赖和 Playwright Chromium；后续使用会复用现有运行时。
+Plugin installers do not run npm lifecycle scripts. On first render, the agent runs `node scripts/setup-runtime.mjs` once inside the installed skill directory to install locked npm deps and Playwright Chromium. Later runs reuse that runtime.
 
-### 复制一段自然语言请求
+### Other agents or one-off use
 
-```text
-把下面这篇文章做成一张公众号头图。不要复述摘要，提炼文章的核心张力，用安静的纸张质感呈现，完成后检查裁切、换行和可读性：
-
-[在这里粘贴文章或 URL]
-```
-
-不需要 slash command；中文、英文自然语言都可以触发。默认不会先让你挑风格，也不会自动加入作者名或头像。
-
-<details>
-<summary>其他 agent 或临时使用</summary>
-
-普通 agent 可以安装完整 skill 包；将 `-a codex` 换成对应 agent ID：
+Install the full skill package (swap `-a codex` for your agent ID):
 
 ```bash
 npx skills add KKenny0/card-skill/plugins/card-skill/skills/card-skill -a codex -g -y
@@ -76,135 +95,187 @@ npm install
 npx playwright install chromium
 ```
 
-只想临时使用一次：
+One-off use without a permanent install:
 
 ```bash
 npx skills use KKenny0/card-skill/plugins/card-skill/skills/card-skill --skill card-skill
 ```
 
-</details>
+**Runtime:** Node.js 22+ and npm. PNG capture needs Playwright Chromium. Fonts ship with the skill; capture allows only `file:` and `data:` resources and does not depend on runtime network access.
 
 <details>
-<summary>可选：在 Codex 对话中先看方向</summary>
+<summary>Optional: preview directions in a Codex desktop session</summary>
 
-在支持对话内交互卡片的 Codex 桌面会话中，可以明确要求先看方向，再决定是否出图：
+In Codex desktop sessions that support in-chat interactive cards, you can ask for directions before rendering:
 
 ```text
-先给我 3 个公众号头图方向，用卡片展示每个方向的视觉隐喻、比例、适用理由和风险；我选定后再渲染 PNG。
+Give me 3 WeChat cover directions first. Show each direction's visual metaphor, aspect ratio, why it fits, and risks on cards. Render the PNG only after I pick one.
 ```
 
-选择后仍由现有 Stable / Studio 流程渲染、截图、检查并返回 PNG。普通请求不会被强制插入选择步骤；Codex CLI、IDE 或其他 agent 会退回文字候选列表。
+After selection, the normal Stable / Studio pipeline still renders, captures, checks, and returns PNG. Ordinary requests are not forced through a choice step. Codex CLI, IDE, and other agents fall back to a text candidate list.
 
 </details>
 
-<a id="choose-a-format"></a>
-## 按任务选择模具
+## Copy-paste prompt examples
 
-| 你要做什么 | 推荐 mode | 结果 |
+No slash command required. Natural language in Chinese or English both work. By default the skill does not make you pick a style first, and it does not inject author names or avatars.
+
+**WeChat / editorial cover**
+
+```text
+Turn the article below into a WeChat cover image. Do not restate it as a summary. Extract the core tension, render it with a quiet paper feel, and check crop, line breaks, and readability before delivery:
+
+[paste article or URL]
+```
+
+**In-article diagram / formula card**
+
+```text
+Turn the compressible sections of this article into in-article explanation diagrams. Keep only the core relational formula and one judgment per card. Skip pure setup and pure mood sections.
+```
+
+**Social series**
+
+```text
+Split the argument below into a social card series. Card 1 is the main judgment; each later card covers one supporting point. Keep the tone restrained—no marketing voice.
+```
+
+**Whiteboard**
+
+```text
+Draw this technical decision as a whiteboard card: state the problem, constraints, option paths, and final trade-off so someone who missed the discussion can follow it.
+```
+
+**WeChat Reading highlights / monthly report**
+
+```text
+Turn my personal highlights and thoughts from *A Thousand Brains* into a card set. Keep the source quotes unedited. Place my thoughts under the matching highlight when the pairing is clear; keep unpaired thoughts separate; label the source.
+
+Turn this month's WeChat Reading stats into a monthly reading report. Use only real duration, day counts, finished-book counts, and preferences from the response. Omit missing modules. Do not invent insights.
+```
+
+## Which format for which job
+
+Prefer the publishing task first, then map to an internal mode. You do not need to memorize mode names. If structure clearly fits another mode better, the skill should switch.
+
+| Job | Recommended mode | Result |
 |---|---|---|
-| 公众号或博客头图 | `editorial-image` | 提炼情绪、核心张力和视觉隐喻，不把文章改写成 bullet points。 |
-| 正文中的解释图 | `article-diagram` | 把局部论点压成公式卡、关系图、流程图或边界模型。 |
-| 小红书或社媒系列 | `poster` / `big` / `long` | 从一句观点到多卡拆解，按内容密度选择画布。 |
-| 论证、系统关系、技术决策 | `whiteboard` | 把问题、约束、路径和决策关系画清楚。 |
-| 数据、叙事或个人反思 | `infograph` / `comic` / `sketchnote` | 在信息密度、冲突转折和手记感之间选择表达方式。 |
+| WeChat or blog cover | `editorial-image` | Mood, tension, and metaphor—not bullet points restating the article |
+| In-article explanation | `article-diagram` | Formula cards, relation maps, process flows, or boundary models |
+| Social series | `poster` / `big` / `long` | One claim through multi-card breakdown by content density |
+| Argument, systems, technical decisions | `whiteboard` | Problem, constraints, path, and decision relations |
+| Data, narrative, personal reflection | `infograph` / `comic` / `sketchnote` | Density, conflict-and-turn, or notebook warmth |
 
-## 9 种内容模具
+## Which visual formats does card-skill support?
 
-Stable 适合出版场景、批量生产和品牌一致性。Studio 适合概念隐喻、叙事张力和个性化表达。两者都走正式 schema、renderer、截图和 `check-output`；Studio 额外要求完整 composition contract 与人工视觉验收。
+**Stable** is for publishing, batch work, and consistency. **Studio** is for conceptual metaphor, narrative tension, and more personal expression. Both go through formal schema, renderer, capture, and `check-output`. Studio also requires a full composition contract and human visual review.
 
-| Mode | Tier | 最适合 | 详细说明 |
+| Mode | Tier | Best for | Details |
 |---|---|---|---|
-| `editorial-image` | Stable / Studio | 公众号头图、博客 hero、正文氛围插图 | [mode-editorial-image](references/mode-editorial-image.md) |
-| `article-diagram` | Stable | 正文公式卡、关系图、流程图、边界模型 | [mode-article-diagram](references/mode-article-diagram.md) |
-| `poster` | Stable | 社媒系列卡片、章节拆分 | [mode-poster](references/mode-poster.md) |
-| `whiteboard` | Stable | 论证、因果链、系统关系与技术决策 | [mode-whiteboard](references/mode-whiteboard.md) |
-| `long` | Stable | 文章型长卡片与沉浸阅读 | [mode-long](references/mode-long.md) |
-| `big` | Stable | 一句话观点、标题与宣言 | [mode-big](references/mode-big.md) |
-| `infograph` | Studio | 数据、比较、层级与高密度信息 | [mode-infograph](references/mode-infograph.md) |
-| `comic` | Studio | 冲突、转折或前后变化的叙事 | [mode-comic](references/mode-comic.md) |
-| `sketchnote` | Studio | 个人反思、经验与温暖叙事 | [mode-sketchnote](references/mode-sketchnote.md) |
+| `editorial-image` | Stable / Studio | WeChat covers, blog heroes, in-article atmosphere | [mode-editorial-image](references/mode-editorial-image.md) |
+| `article-diagram` | Stable | Formula cards, relations, flows, boundaries | [mode-article-diagram](references/mode-article-diagram.md) |
+| `poster` | Stable | Social series, chapter splits | [mode-poster](references/mode-poster.md) |
+| `whiteboard` | Stable | Argument, causal chains, systems, decisions | [mode-whiteboard](references/mode-whiteboard.md) |
+| `long` | Stable | Long reading cards | [mode-long](references/mode-long.md) |
+| `big` | Stable | One-line claims, titles, statements | [mode-big](references/mode-big.md) |
+| `infograph` | Studio | Data, comparison, hierarchy, dense information | [mode-infograph](references/mode-infograph.md) |
+| `comic` | Studio | Conflict, turn, before/after narrative | [mode-comic](references/mode-comic.md) |
+| `sketchnote` | Studio | Personal reflection and warm narrative | [mode-sketchnote](references/mode-sketchnote.md) |
 
-## Quiet Paper 与输出原则
+## Key capabilities
 
-所有模式共享同一套安静的纸面骨架：温暖纸色、克制墨色、细分隔线、小圆角、极少阴影。内容色调和品牌气质只改变表面温度、强调色和节奏，不把作品变成品牌皮肤拼盘。
+- **9 modes:** `editorial-image`, `article-diagram`, `poster`, `big`, `long`, `whiteboard`, `infograph`, `comic`, `sketchnote`
+- **Two delivery tiers:** Stable (deterministic CLI render) and Studio (full composition contract + human visual review)
+- **Shared look:** Quiet Paper—warm paper, restrained ink, hairline rules, small radii, almost no shadow
+- **Four default tones:** `reflective` / `sharp` / `warm` / `technical`; 26 designs remain explicit advanced overrides
+- **Default output:** DPR 2 PNG; a common 1080 CSS-wide canvas exports at about 2160px wide (height varies by mode and aspect)
+- **Quality gates:** pre/post capture checks for placeholders, overflow, crop, broken images, readability, title breaks, font stack, remote resources, and near-blank results
+- **Runtime:** Node.js 22+, Playwright Chromium; fonts ship with the package and are load-checked
+- **Privacy default:** PNG render and checks are local; version checks only read the GitHub Release API and do not upload articles, prompts, or images
+- **Optional source:** pairs with Tencent's official [WeChatReading Skill](https://github.com/Tencent/WeChatReading) only when the user explicitly asks for personal highlights or stats
 
-- 默认根据内容结构、密度、情绪和发布用途自动选择 mode、四个 tone（reflective / sharp / warm / technical）与画面方向；26 个 design 仍可作为显式高级 override。
-- `editorial-image` 会先判断 `reflective`、`sharp`、`warm` 或 `technical` 气质，再落到真实可渲染的 Quiet Paper design。
-- `article-diagram` 会先筛出值得压缩的章节，再为每个章节生成公式卡；不适合压缩的铺垫、情绪和结论章节会被跳过。
-- 默认署名、头像和来源字段为空；只有输入明确提供时才使用 `brand_name`、`logo`、`source`。
+## Why the output looks like paper, not a webpage screenshot
 
-## 它怎样工作
+Every mode shares the Quiet Paper skeleton. Content mood and brand feel only change temperature, accent, and rhythm. They do not turn the work into a brand-skin collage.
 
-1. 读取 URL、粘贴文本、微信读书返回的数据或本地文件。
-2. 分析内容结构、密度、情绪与发布用途。
-3. 匹配 mode、Quiet Paper design 和画面方向。
-4. 使用结构化 renderer 或创意布局流程生成画面。
-5. 在截图前后检查占位符、溢出、裁切、坏图、可读性、标题换行、字体栈、远程资源和视觉体系漂移；PNG 还会阻止空白与近乎纯色结果。
-6. 通过 Playwright 截图并输出 PNG；默认写入 `~/Downloads/`。
+- Mode, tone, and direction are chosen from structure, density, mood, and publishing job by default.
+- `editorial-image` first picks `reflective`, `sharp`, `warm`, or `technical`, then lands on a real Quiet Paper design.
+- `article-diagram` first filters compressible sections, then emits a formula card per section; pure setup, mood, or conclusion sections are skipped.
+- By default `brand_name`, `logo`, and `source` are empty; they appear only when the input provides them.
 
-<a id="advanced"></a>
+## From text to PNG
+
+1. Read a URL, pasted text, WeChat Reading payload, or local file.
+2. Analyze structure, density, mood, and publishing job.
+3. Match mode, Quiet Paper design, and visual direction.
+4. Generate the frame with a structured renderer or composition flow.
+5. Check placeholders, overflow, crop, broken images, readability, title breaks, fonts, remote resources, and visual-system drift; PNG output also blocks blank / near-solid results.
+6. Capture with Playwright and write a PNG, defaulting to `~/Downloads/`.
+
+Unlike a one-shot chat image, card-skill uses structured input, controlled renderers, Playwright capture, and `check-output` so the result is a repeatable publish-ready PNG.
+
 <details>
-<summary>高级：运行环境、更新与隐私</summary>
+<summary>Advanced: runtime, updates, and privacy</summary>
 
-### 运行环境
+### Runtime
 
-安装 skill 需要 Node.js 22+ 与 npm。PNG 截图依赖 Playwright 和 Chromium；如果首次渲染提示缺少依赖，请在 skill 安装目录运行：
+If first render reports missing deps, run this in the installed skill directory:
 
 ```bash
 npm install
 npx playwright install chromium
 ```
 
-字体随 skill 一起分发，capture 只允许 `file:` 与 `data:` 资源，不依赖运行期网络。三套 Latin 字体的上游、许可和 SHA-256 见 [`assets/fonts/FONT_SOURCES.md`](assets/fonts/FONT_SOURCES.md)；预检脚本会验证字体是否真加载，避免静默 fallback 到系统字体。
+Latin font sources, licenses, and SHA-256 digests live in [`assets/fonts/FONT_SOURCES.md`](assets/fonts/FONT_SOURCES.md). Preflight verifies fonts actually load so silent system-font fallback is less likely.
 
-默认 `--dpr 2`。以常见的 1080 CSS 像素画布为例，导出的 PNG 宽度为 2160px；不同 mode 和比例会有不同高度，不应理解为固定的 4K 宽图。
+Default is `--dpr 2`. Height varies by mode and aspect; do not treat every export as a fixed 4K-wide frame.
 
-### 更新提醒与隐私
+### Update checks and privacy
 
-每次 agent 开始使用 card-skill 时，会先检查 GitHub 上最新的正式 Release；Stable CLI 渲染入口也会自动再做一次防守式检查。当前输出完成后，CLI 会在后台把已安装副本升级到该 Release 解析出的固定 commit，完成版本回读与运行时准备后，下一次使用生效；当前渲染不会切换版本。检查按安装副本分别缓存，一天最多一次；并发渲染和升级会通过安装锁错开。升级失败会恢复旧副本，不改变本次出图结果，后续请求会重试。手动更新入口如下：
+When an agent starts using card-skill, it checks GitHub for the latest stable Release. Stable CLI entry points also check defensively. After the current output is delivered, the CLI upgrades the installed copy in the background to the commit resolved from that Release, then version-reads and prepares runtime for the next use. The current render never switches mid-job. Checks are cached per install, at most once a day; concurrent renders and upgrades are serialized with install locks. Failed upgrades restore the previous copy and leave the current render unchanged. Manual update paths:
 
 ```bash
-# npx skills 安装（将 <tag> 替换为更新提示中的 Release tag）
+# npx skills install (replace <tag> with the Release tag from the update notice)
 npx --yes --package skills@1.5.19 -- skills add KKenny0/card-skill/plugins/card-skill/skills/card-skill#<tag> --skill card-skill -g -y
 
-# Codex 插件安装（脚本会校验 Release tag 对应的 commit）
+# Codex plugin install (script verifies the Release tag commit)
 node scripts/check-update.mjs --auto-update
 
-# Claude Code 插件安装（由 Claude Code 原生 marketplace 更新）
+# Claude Code plugin install (native marketplace update)
 claude plugin marketplace update card-skill
 claude plugin update card-skill@card-skill
 ```
 
-版本检查只访问 GitHub Release API；实际升级由已安装的 Codex CLI、固定版本的 `skills` CLI，或 Claude Code 原生 marketplace 从 GitHub/npm 下载。这些路径都不会上传文章、prompt、路径或图片。只有明确提出微信读书请求时才会访问个人数据；个人内容会进入当前 Agent / 模型上下文用于整理，PNG 渲染与检查由本地脚本完成，不会自动上传或发布成品。
+Version checks only hit the GitHub Release API. Actual upgrades download the matching Release through installed Codex CLI, a pinned `skills` CLI, or Claude Code's native marketplace. These paths do not upload articles, prompts, paths, or images. Personal WeChat Reading data is touched only on explicit request; personal content enters the current agent/model context for organizing, while PNG render and checks stay local and do not auto-publish.
 
-如需完全关闭检查和自动升级，设置 `CARD_SKILL_DISABLE_UPDATE_CHECK=1`。
+Disable both check and auto-upgrade with `CARD_SKILL_DISABLE_UPDATE_CHECK=1`.
 
-如需保留检查但关闭自动升级，设置 `CARD_SKILL_DISABLE_AUTO_UPDATE=1`。
+Keep the check but disable auto-upgrade with `CARD_SKILL_DISABLE_AUTO_UPDATE=1`.
 
 </details>
 
 <details>
-<summary>高级：CLI、自定义布局与 PNG 体积</summary>
+<summary>Advanced: CLI, custom layout, and PNG size</summary>
 
-结构化 CLI 可以单独使用：
+Structured CLI can run alone:
 
 ```bash
 node scripts/card.js --input /path/to/input.json --output ~/Downloads/card.png
 ```
 
-Stable CLI modes：`big`、`long`、`whiteboard`、`poster`、`editorial-image`、`article-diagram`。Studio CLI modes：`infograph`、`comic`、`sketchnote`；它们要求完整的 `content_html` + `custom_css` composition contract，并仍需人工视觉验收。
+Stable CLI modes: `big`, `long`, `whiteboard`, `poster`, `editorial-image`, `article-diagram`. Studio CLI modes: `infograph`, `comic`, `sketchnote`; they require a full `content_html` + `custom_css` composition contract and still need human visual review.
 
-需要记录一次多图任务如何从 source 变成成品时，可使用内部 Visual Job runner；它对普通自然语言使用保持透明：
+To record how a multi-image job went from source to artifacts, use the internal Visual Job runner (transparent to ordinary natural-language use):
 
 ```bash
 node scripts/render-job.mjs --input visual-job.json --output-dir ./output
 ```
 
-它只在全部输出经现有 CLI、capture 与 `check-output` 成功后发布 PNG 和去敏 receipt；说明见 [`references/visual-job.md`](references/visual-job.md)。
+It publishes PNGs and a redacted receipt only after CLI, capture, and `check-output` all succeed. See [`references/visual-job.md`](references/visual-job.md).
 
-`editorial-image` 的文章封面会用确定性的 `cover_motif` 把文章张力落到右侧主视觉；复杂头图、概念隐喻和正文配图仍优先使用 `content_html` + `custom_css`。`in-article` 与 `metaphor` 不会再静默回退到默认 scaffold。完整的 skill 行为与输入边界见 [`SKILL.md`](SKILL.md)。
+For `editorial-image` article covers, a deterministic `cover_motif` places tension in the right-side motif. Complex covers, metaphors, and in-article images still prefer `content_html` + `custom_css`. `in-article` and `metaphor` no longer silently fall back to the default scaffold. Full skill behavior and input boundaries are in [`SKILL.md`](SKILL.md).
 
-默认 PNG 无损，长文卡可能达到 10–17MB。如需更小体积，可以单独使用 `pngquant`：
+Default PNG is lossless; long cards may reach 10–17MB. For smaller files, run `pngquant` separately:
 
 ```bash
 pngquant --quality=80-95 --force --output card.png card.png
@@ -212,84 +283,151 @@ pngquant --quality=80-95 --force --output card.png card.png
 
 </details>
 
-<a id="gallery"></a>
-## 完整样张
+## FAQ
+
+### What is card-skill?
+
+card-skill is an open-source content-to-image skill for coding agents. It turns articles, notes, arguments, or explicitly authorized WeChat Reading data into quality-checked PNGs for covers, social cards, whiteboards, and in-article diagrams.
+
+### Do I need design skills or hand-written HTML?
+
+Usually no. Describe the publishing job in natural language; the agent chooses a mode, builds structured input, and renders. Studio modes (complex metaphor, infograph, comic) may involve a full composition written by the agent, still under the same capture and check chain.
+
+### Which agents are supported?
+
+Environments that can install agent skills: Claude Code, Codex, OpenCode, Pi, and similar. Claude Code and Codex should use the plugin marketplace install path. Other agents can install the full package with `npx skills add`.
+
+### Does it add my name or avatar by default?
+
+No. `brand_name`, `logo`, and `source` are written only when you provide them. Otherwise those regions stay empty and hidden.
+
+### How is this different from asking an AI to draw one image?
+
+card-skill uses structured schemas, controlled renderers, Playwright capture, and `check-output` gates that block crop, overflow, broken images, and near-blank results. The goal is a repeatable publish-ready PNG, not a one-off chat illustration.
+
+### When should I use a cover vs an in-article diagram?
+
+Use `editorial-image` for cover tension, mood, and metaphor. Use `article-diagram` to compress an argument into formula, relation, flow, or boundary. The first is not a summary card; the second is not decorative filler.
+
+### Does it upload my article or images?
+
+Not by default. Render and checks are local. Version checks only read the GitHub Release API. Personal WeChat Reading data is read only through the official WeChatReading Skill when you explicitly ask.
+
+### What happens if I install only the repo root?
+
+You get an incomplete install missing `scripts/`, `assets/`, `schemas/`, and other runtime pieces. Install the plugin package or the full path `plugins/card-skill/skills/card-skill`.
+
+### What is the difference between Stable and Studio?
+
+Stable modes (`big`, `poster`, `whiteboard`, most covers) use CLI structured rendering for batch work and consistency. Studio modes (`infograph`, `comic`, `sketchnote`, and complex body metaphors) require a full composition contract and still need a human look at the PNG.
+
+### What permissions does WeChat Reading need?
+
+Install Tencent's official WeChatReading Skill separately and set `WEREAD_API_KEY` per its docs. Do not paste the key into chat, card inputs, or repo files. card-skill will not scan an account from a book title alone.
+
+## Full gallery
 
 <details>
-<summary>展开 gallery</summary>
+<summary>Expand gallery</summary>
 
-<p><sub>全部样张基于《千脑智能》（Jeff Hawkins）的概念转述；阅读笔记样张会明确标注为非原文划线。</sub></p>
+<p><sub>All samples are conceptual retellings of *A Thousand Brains* (Jeff Hawkins). Reading-note samples are labeled as non-account highlights.</sub></p>
+
+| Job | mode | What the image solves |
+|---|---|---|
+| WeChat cover | `editorial-image` | Many models, one judgment—right-side motif carries tension |
+| Formula card | `article-diagram` | Sensation, movement, and reference frames compressed |
+| One-line claim | `big` | Explore the world |
+| Social series | `poster` | Three threads as cards |
+| Long reading card | `long` | Intelligence as modeling |
+| Whiteboard | `whiteboard` | Knowing a cup |
+| Boundary model (legacy sample) | `article-diagram` | reference frame model |
+| Reading notes (conceptual) | `poster` | Highlight-style knowledge cards, not live account data |
+| Infograph | `infograph` | Local models to shared judgment |
+| Comic | `comic` | After touching one edge |
+| Sketchnote | `sketchnote` | Sensation, location, prediction |
+| Reading guide | `poster` | reading guide |
 
 <table>
 <tr>
-<td width="50%"><img src="assets/gallery/editorial-wechat-cover.png" width="100%" alt="《千脑智能》公众号头图"><br><strong>editorial-image</strong> · 千个模型，一个判断</td>
-<td width="50%"><img src="assets/gallery/article-formula.png" width="100%" alt="《千脑智能》公式卡"><br><strong>article-diagram</strong> · 感觉、运动与参考系</td>
+<td width="50%"><img src="assets/gallery/editorial-wechat-cover.png" width="100%" alt="A Thousand Brains WeChat cover: many models, one judgment"><br><strong>editorial-image</strong> · many models, one judgment</td>
+<td width="50%"><img src="assets/gallery/article-formula.png" width="100%" alt="A Thousand Brains formula card: sensation, movement, reference frames"><br><strong>article-diagram</strong> · sensation, movement, reference frames</td>
 </tr>
 <tr>
-<td><img src="assets/gallery/big.png" width="100%" alt="《千脑智能》一句话观点卡"><br><strong>big</strong> · 探索世界</td>
-<td><img src="assets/gallery/poster.png" width="100%" alt="《千脑智能》社媒卡片"><br><strong>poster</strong> · 三条线索</td>
+<td><img src="assets/gallery/big.png" width="100%" alt="A Thousand Brains one-line card: explore the world"><br><strong>big</strong> · explore the world</td>
+<td><img src="assets/gallery/poster.png" width="100%" alt="A Thousand Brains social cards: three threads"><br><strong>poster</strong> · three threads</td>
 </tr>
 <tr>
-<td><img src="assets/gallery/long.png" width="100%" alt="《千脑智能》长卡片"><br><strong>long</strong> · 智能是建模</td>
-<td><img src="assets/gallery/whiteboard.png" width="100%" alt="《千脑智能》白板推演"><br><strong>whiteboard</strong> · 认识一个杯子</td>
+<td><img src="assets/gallery/long.png" width="100%" alt="A Thousand Brains long card: intelligence is modeling"><br><strong>long</strong> · intelligence is modeling</td>
+<td><img src="assets/gallery/whiteboard.png" width="100%" alt="A Thousand Brains whiteboard: knowing a cup"><br><strong>whiteboard</strong> · knowing a cup</td>
 </tr>
 <tr>
-<td><img src="assets/gallery/article-boundary-legacy.png" width="100%" alt="《千脑智能》参考系边界模型"><br><strong>article-diagram</strong> · reference frame model</td>
-<td><img src="assets/gallery/reading-notes.png" width="100%" alt="《千脑智能》概念转述阅读笔记"><br><strong>poster</strong> · reading notes（概念转述）</td>
+<td><img src="assets/gallery/article-boundary-legacy.png" width="100%" alt="A Thousand Brains legacy boundary-model sample"><br><strong>article-diagram</strong> · reference frame model</td>
+<td><img src="assets/gallery/reading-notes.png" width="100%" alt="A Thousand Brains conceptual reading-notes card, not live account highlights"><br><strong>poster</strong> · reading notes (conceptual)</td>
 </tr>
 <tr>
-<td><img src="assets/gallery/infograph.png" width="100%" alt="《千脑智能》信息图"><br><strong>infograph</strong> · 局部模型到共同判断</td>
-<td><img src="assets/gallery/comic.png" width="100%" alt="《千脑智能》漫画"><br><strong>comic</strong> · 摸到一条边以后</td>
+<td><img src="assets/gallery/infograph.png" width="100%" alt="A Thousand Brains infograph: local models to shared judgment"><br><strong>infograph</strong> · local models to shared judgment</td>
+<td><img src="assets/gallery/comic.png" width="100%" alt="A Thousand Brains comic: after touching one edge"><br><strong>comic</strong> · after touching one edge</td>
 </tr>
 <tr>
-<td><img src="assets/gallery/sketchnote.png" width="100%" alt="《千脑智能》视觉手记"><br><strong>sketchnote</strong> · 感觉、定位与预测</td>
-<td><img src="assets/gallery/reading-report.png" width="100%" alt="《千脑智能》阅读导览"><br><strong>poster</strong> · reading guide</td>
+<td><img src="assets/gallery/sketchnote.png" width="100%" alt="A Thousand Brains sketchnote: sensation, location, prediction"><br><strong>sketchnote</strong> · sensation, location, prediction</td>
+<td><img src="assets/gallery/reading-report.png" width="100%" alt="A Thousand Brains reading guide card"><br><strong>poster</strong> · reading guide</td>
 </tr>
 </table>
 
 </details>
 
-## 微信读书（可选）
+## How to turn WeChat Reading highlights into cards
 
-card-skill 可以和腾讯官方 [WeChatReading Skill](https://github.com/Tencent/WeChatReading) 组合使用，把你明确指定的一本书里的个人划线与想法做成卡组，或把个人阅读统计做成月报 / 年报。
+card-skill can pair with Tencent's official [WeChatReading Skill](https://github.com/Tencent/WeChatReading) to turn personal highlights and thoughts from a book you explicitly name into a card set, or personal reading stats into a monthly / yearly report.
 
-它不读取任意章节正文，也不会因为只看到一本书名就扫描账号。腾讯 Skill 负责认证和读取；card-skill 只整理当前任务需要的数据，并在本地完成 PNG 渲染与检查。
+It does not read arbitrary chapter text, and it will not scan an account from a book title alone. The Tencent skill owns auth and fetch. card-skill only organizes the data needed for the current job, then renders and checks PNGs locally.
 
 <table>
 <tr>
-<td width="50%"><img src="assets/gallery/reading-report.png" width="100%" alt="《千脑智能》阅读导览示例"><br><strong>阅读导览</strong></td>
-<td width="50%"><img src="assets/gallery/reading-notes.png" width="100%" alt="《千脑智能》概念转述笔记"><br><strong>概念转述笔记</strong></td>
+<td width="50%"><img src="assets/gallery/reading-report.png" width="100%" alt="Reading guide sample built from real reading structure"><br><strong>Reading guide</strong></td>
+<td width="50%"><img src="assets/gallery/reading-notes.png" width="100%" alt="Conceptual notes sample with highlight and thought pairing"><br><strong>Conceptual notes</strong></td>
 </tr>
 </table>
 
-先单独安装官方来源 Skill，再按官方说明设置 `WEREAD_API_KEY`；不要把 API Key 粘贴到对话、卡片输入或仓库文件中：
+Install the official source skill first, then set `WEREAD_API_KEY` per its docs. Do not paste the API key into chat, card inputs, or repository files:
 
 ```bash
 npx skills add Tencent/WeChatReading -g
 ```
 
 ```text
-把我在《千脑智能》里的个人划线和想法做成一组卡片。原文不要改写，把我的想法放在对应划线下面；没有明确对应关系的想法单独放，最后标明来源。
+Turn my personal highlights and thoughts from *A Thousand Brains* into a card set. Keep the source quotes unedited. Place my thoughts under the matching highlight when the pairing is clear; keep unpaired thoughts separate; label the source.
 
-把我这个月的微信读书数据做成阅读月报。只使用真实返回的时长、天数、读完数量和偏好；缺少的模块直接省略，不要补造洞察。
+Turn this month's WeChat Reading stats into a monthly reading report. Use only real duration, day counts, finished-book counts, and preferences from the response. Omit missing modules. Do not invent insights.
 ```
 
-## 分享案例与维护
+## Author, cases, and maintenance
 
-如果 card-skill 帮你做出了值得发布的图，欢迎在 [GitHub Issues](https://github.com/KKenny0/card-skill/issues) 分享：最终图片或公开发布链接、使用的 prompt（敏感内容可删减）、mode 与 agent，以及仍需要手工调整的地方。
+**card-skill** is maintained by [Kenny Wu (@KKenny0)](https://github.com/KKenny0) under the [MIT](LICENSE) license. It is a content-to-image skill for coding agents, not a general design SaaS.
 
-真实案例会帮助我们判断下一步该优化哪种发布任务；经作者同意后，优秀案例也可能进入 gallery，并保留来源署名。
+If card-skill helped you ship something worth publishing, share it in [GitHub Issues](https://github.com/KKenny0/card-skill/issues):
 
-你也可以通过 [Support](https://kkenny0.github.io/support/) 支持后续维护。支持会帮助我继续维护字体、浏览器渲染、图片压缩、模具质量和跨 agent 兼容性。
+- final image or public post link
+- prompt used (redact sensitive bits)
+- mode and agent
+- anything you still had to fix by hand
+
+Real cases help decide which publishing jobs to improve next. With author permission, strong cases may enter the gallery with credit.
+
+You can also support maintenance via [Support](https://kkenny0.github.io/support/). Support helps keep fonts, browser capture, image compression, mold quality, and cross-agent compatibility moving.
+
+### Suggested GitHub topics
+
+For discovery, consider topics such as: `agent-skills`, `claude-code`, `codex`, `infographic`, `poster`, `wechat`, `png`, `editorial`, `whiteboard`, `openai-codex`.
 
 ## Credits
 
-card-skill 受到以下项目与实践启发：
+card-skill is informed by:
 
-- [awesome-design-md](https://github.com/VoltAgent/awesome-design-md) by VoltAgent — 品牌设计参考库。
-- [ljg-card](https://github.com/lijigang/ljg-skills/tree/master/skills/ljg-card) by lijigang — 内容制图与早期品味规则。
-- [Kami](https://github.com/tw93/kami) by tw93 — Quiet Paper 的纸面、墨色与节奏约束。
-- [The New Yorker cover practice](https://www.newyorker.com/culture/video-dept/the-art-of-the-new-yorker-cover) 与 [GOV.UK image guidance](https://guidance.publishing.service.gov.uk/formatting-content/images/) — editorial image 的用途与克制原则。
+- [awesome-design-md](https://github.com/VoltAgent/awesome-design-md) by VoltAgent — brand design reference library
+- [ljg-card](https://github.com/lijigang/ljg-skills/tree/master/skills/ljg-card) by lijigang — content-to-image practice and early taste rules
+- [Kami](https://github.com/tw93/kami) by tw93 — Quiet Paper constraints on paper, ink, and rhythm
+- [The New Yorker cover practice](https://www.newyorker.com/culture/video-dept/the-art-of-the-new-yorker-cover) and [GOV.UK image guidance](https://guidance.publishing.service.gov.uk/formatting-content/images/) — editorial purpose and restraint
 
 ## License
 

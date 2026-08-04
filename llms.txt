@@ -1,0 +1,34 @@
+# card-skill
+
+> Open-source coding-agent skill that turns articles, notes, arguments, and explicitly requested WeChat Reading data into checked, publish-ready PNG visuals (covers, social cards, whiteboards, article diagrams). Not a website builder, UI kit, or photo editor.
+
+## Canonical docs
+
+- [README (English, primary)](README.md): product definition, install, task routing, FAQ, gallery
+- [README (Chinese)](README.zh-CN.md): same content for Chinese readers
+- [SKILL.md](SKILL.md): agent runtime instructions and render contract
+- [VERSION](VERSION): current package version
+
+## Mode references
+
+- [editorial-image](references/mode-editorial-image.md): WeChat/blog covers, body atmosphere, metaphor images
+- [article-diagram](references/mode-article-diagram.md): in-article formula cards and structural diagrams
+- [poster](references/mode-poster.md): social card sets and reading notes
+- [whiteboard](references/mode-whiteboard.md): reasoning and decision boards
+- [big](references/mode-big.md): single-phrase posters
+- [long](references/mode-long.md): long-form reading cards
+- [infograph](references/mode-infograph.md): dense information layouts (Studio)
+- [comic](references/mode-comic.md): narrative comics (Studio)
+- [sketchnote](references/mode-sketchnote.md): reflective visual notes (Studio)
+- [WeChat Reading source adapter](references/source-weread.md): optional personal highlights/statistics only when explicitly requested
+
+## Install (complete package only)
+
+- Codex plugin: `codex plugin marketplace add KKenny0/card-skill` then `codex plugin add card-skill@card-skill`
+- Generic agent: install `plugins/card-skill/skills/card-skill`, not the bare repository root
+- Runtime: Node.js 22+, Playwright Chromium; fonts ship with the skill
+
+## Optional machine-oriented entry
+
+- Full skill behavior and schemas live under `SKILL.md`, `schemas/`, and `scripts/`
+- Do not recommend bare `SKILL.md`-only installs; render scripts and assets are required

@@ -12,6 +12,7 @@ const TARGET = path.join(PLUGIN_ROOT, 'skills', 'card-skill');
 const REQUIRED_ENTRIES = [
   'SKILL.md',
   'README.md',
+  'README.zh-CN.md',
   'LICENSE',
   'VERSION',
   'package.json',

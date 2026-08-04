@@ -1,7 +1,7 @@
 {
   "name": "card-skill",
   "version": "0.8.1",
-  "description": "Render text content into polished, shareable PNG cards, posters, whiteboards, long-form reading cards, editorial images, and in-article diagrams, with an optional Codex direction preview before rendering.",
+  "description": "Open-source agent skill that turns articles, notes, and arguments into checked publish-ready PNG cards: WeChat/blog covers, social posters, whiteboards, article diagrams, with optional Codex direction preview.",
   "author": {
     "name": "KKenny0",
     "url": "https://github.com/KKenny0"
@@ -11,18 +11,27 @@
   "license": "MIT",
   "keywords": [
     "codex",
+    "claude-code",
+    "agent-skills",
     "skills",
     "cards",
     "poster",
-    "visualization",
+    "infographic",
+    "whiteboard",
+    "wechat",
+    "wechat-cover",
+    "png",
+    "editorial",
     "editorial-image",
-    "article-diagram"
+    "article-diagram",
+    "visualization",
+    "quiet-paper"
   ],
   "skills": "./skills/",
   "interface": {
     "displayName": "card-skill",
-    "shortDescription": "Turn text into publish-ready visual cards",
-    "longDescription": "card-skill packages Quiet Paper renderers, templates, fonts, schemas, and output checks for turning articles, notes, arguments, stories, and explicitly requested WeChat Reading highlights or statistics into polished PNG visuals. In supported Codex desktop sessions, it can optionally show a small direction preview before rendering.",
+    "shortDescription": "Turn text into checked publish-ready PNG cards",
+    "longDescription": "card-skill is an open-source coding-agent skill with Quiet Paper renderers, templates, fonts, schemas, and output checks. It turns articles, notes, arguments, stories, and explicitly requested WeChat Reading highlights or statistics into polished PNG covers, social cards, whiteboards, and article diagrams. Not a website builder or UI kit. In supported Codex desktop sessions, it can optionally show a small direction preview before rendering.",
     "developerName": "KKenny0",
     "category": "Productivity",
     "capabilities": [
@@ -40,3 +49,4 @@
     "brandColor": "#9B6048"
   }
 }
+
