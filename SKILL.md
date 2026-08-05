@@ -2,7 +2,7 @@
 name: card-skill
 description: "Render text content into a polished, shareable PNG visual. Use this skill whenever the user asks to turn words, notes, articles, quotes, arguments, stories, explicit WeChat Reading highlights/thoughts, or WeChat Reading personal statistics into an 信息图/infographic, 海报/poster, 卡片/card, 大字报, whiteboard, visual summary, comic, sketchnote, social card grid, 公众号头图, 博客封面, 正文配图, 正文解释图, 关系图, 流程图, 边界图, reading report, or non-summary editorial image for an essay. Trigger on phrases like 做成图, 渲染成图, 做张卡片, 卡片组, 做成漫画, 视觉笔记, 给文章配图, 微信读书划线做卡, 微信读书笔记, 微信读书阅读月报, article cover, blog hero, article diagram, concept map, process flow, and editorial image. Supports 9 modes: infographic, big-text poster, long-form reading card, whiteboard reasoning, multi-card poster, comic, sketchnote, editorial-image, and article-diagram. If the user mentions a restrained brand feel such as Apple, Stripe, Linear, Vercel, IBM, Notion, Claude, or similar, apply it as a visual style, not as a full brand redesign. Do not use for websites, UI components, Figma prototypes, logos/VI systems, chart-library plotting, photo editing, or plain file conversion."
 user_invocable: true
-version: "0.8.1"
+version: "0.9.0"
 ---
 
 # card-skill
@@ -62,6 +62,25 @@ For one-off use without installing, run `npx skills use KKenny0/card-skill/plugi
 
 这些只是入口映射；内容结构明显更适合其他现有 mode 时，自动改走更合适的路线。
 
+## Agent Operating Principles
+
+自然语言出图默认使用 Visual Job v2。`scripts/card.js` 只是兼容旧输入和开发者调试的底层 renderer，不代表完整 Agent 流程。
+
+出图前：
+
+1. 理解来源，按独立语义拆成 `source_units`。
+2. 为每个输出写 `visual_plan`：核心判断、内容类型、论证结构、具体隐喻或 `null`、布局策略、阅读层级和禁忌。
+3. 读取 `references/visual-taxonomy.md`；Agent 自动规划使用 `decision.selection_source: "taxonomy"`，由 taxonomy 决定 mode。只有用户明确点名 mode 才使用 `user-override`。
+4. 把计划落成已有 mode 的 `render_contract`，再进入 schema、renderer、截图和 checker。
+
+出图后：
+
+5. 必须实际查看每张候选 PNG，并按 `references/visual-review.md` 输出哈希绑定的 Visual Review。
+6. 总分达到 8.0 且没有 blocker 才发布。首次不通过时，只修改 `visual_plan` 与对应 `render_contract`，完整重跑一次；第二次仍不通过则停止，不把失败候选当成成品。
+7. 通过 `scripts/publish-reviewed-job.mjs` 原子发布 PNG、receipt 和 review。
+
+`references/design-memory.json` 是只读、版本化经验库。只有维护者批准的 CardBench 模式可以进入；普通任务不得写入用户内容、路径或运行记录。
+
 ## 参数
 
 | 参数 | 说明 | 默认值 |
@@ -111,16 +130,22 @@ card-skill 把 9 个 mode 分两层：
    - 内容结构清晰（有标题、段落分明、推理链线性）→ CLI 路径
    - 内容过于复杂（嵌套引用、多栏对比、特殊排版需求、不确定能 fit）→ 降级到 AI 路径
 
-**CLI 路径**：
-1. 从内容中提取结构化 JSON，符合对应 mode 的 schema
-2. 将 JSON 写入操作系统临时目录，不要写进 repo
-3. 调用：
+**自然语言 Agent 路径**：
+1. 生成符合 `schemas/visual-job.json` 的 Visual Job v2；每个 output 同时包含 `visual_plan` 与现有 mode 的 `render_contract`
+2. 将 Visual Job 写入操作系统临时目录，不要写进 repo
+3. 以候选模式调用：
 ```bash
-node scripts/card.js --input <system_temp>/card_input_{timestamp}.json --output ~/Downloads/{name}.png
+node scripts/render-job.mjs --input <system_temp>/visual-job.json --output-dir <system_temp>/candidate --candidate --json
 ```
-4. 无论成功或失败，都删除本次临时 JSON
-5. CLI 成功 → 脚本已完成预检、DPR 2 截图和脚本复查；实际查看 PNG 后进入 Step 8 交付
-6. CLI 失败 → 按错误分类处理：`input_contract` 最多修正一次；只有 `content_fit` 可在同一 mode 内简化一次；`runtime`、`safety` 与 `quality_gate` 硬失败。任何修正都必须重新 validation、capture、check 和 PNG inspection，不能无声切换论点或旁路 checker。
+4. renderer 成功 → 候选已完成预检、DPR 2 截图、脚本复查，并生成 receipt、封存的 checked HTML 与闭合集合 manifest；实际查看每张 PNG，按 receipt 的 `metaphor_required` 写入同 basename 的 `.review.json`
+5. Review 通过后调用：
+```bash
+node scripts/publish-reviewed-job.mjs --candidate-dir <system_temp>/candidate --output-dir ~/Downloads --json
+```
+6. 无论成功或失败，都清理本次 Visual Job 与候选目录
+7. CLI 失败 → 按错误分类处理：`input_contract` 最多修正一次；只有 `content_fit` 可在同一 mode 内简化一次；`runtime`、`safety` 与 `quality_gate` 硬失败。任何修正都必须重新 validation、capture、check 和 PNG inspection，不能无声切换论点或旁路 checker。
+
+直接 `scripts/card.js --input/--stdin` 保留给 v1 兼容和底层 renderer 调试；它不会替 Agent 生成 Visual Plan 或 Visual Review。
 
 **JSON schema 结构**（每个 mode 的完整定义见 `schemas/` 目录）：
 
@@ -478,7 +503,7 @@ node scripts/check-output.mjs --html <html_path> --png <png_path> --width 1080 -
 
 ### Step 8: 交付
 
-报告文件路径。
+只有 Visual Review 通过并由 reviewed publisher 发布后，报告 PNG 路径；receipt 与 review 同目录保留审计证据。
 
 ## Refinement
 
@@ -503,6 +528,8 @@ npm run check-output
 npm test
 ```
 
+CardBench 是耗时、耗 token 的发布评测。任何 `npm run eval:cardbench`（包括 `--list-cases`、single、tail 与 full）都应交给宿主提供的低成本独立执行单元，例如子代理、后台任务或隔离会话；选择具备真实渲染和图像审核能力的最低成本配置，并保持串行执行。主交互上下文只接收进度与最终报告，不直接持有评测进程。若宿主不支持独立执行，先说明预计成本并取得用户确认。开发期先跑 single/tail，合并或发布前才跑一次 full；完整命令与报告边界见 `references/eval-protocol.md`。
+
 CLI 路径 smoke test 可用最小 big-mode 输入跑一次：
 
 ```powershell
@@ -515,6 +542,8 @@ $output = Join-Path $env:TEMP 'smoke_big.png'
 涉及 `editorial-image` 设计选择时，还必须实际渲染并检查一组 PNG：`reflective`、`sharp`、`warm`、`technical`、显式 `design` 各 1 张。确认视觉气质确实不同、仍保持 Quiet Paper、无明显裁切/溢出/坏换行/主体过小。
 
 涉及 `article-diagram` 时，至少实际渲染并检查一组 compression pack（默认公式卡），并回归 `concept-map`、`process-flow`、`boundary-model` 各 1 张 legacy fixture，确认缩略图里主关系清楚、节点和关系没有互相压住。
+
+Visual Reasoning 发布前另运行 `npm run eval:cardbench -- --report evals/cardbench-results.json`。普通 `npm test` 不调用模型；CardBench 使用隔离安装、真实 PNG 和独立 Critic。
 
 ## 开发者工具（非 AI 流程使用）
 

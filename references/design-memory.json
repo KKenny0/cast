@@ -1,0 +1,5 @@
+{
+  "schema_version": 1,
+  "policy": "Only maintainer-approved CardBench patterns may be added. Runtime tasks never write this file.",
+  "patterns": []
+}

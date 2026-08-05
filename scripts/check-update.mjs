@@ -695,7 +695,7 @@ async function selfTest() {
   assert.equal(resolveInstaller('/Users/test/project/.agents/skills/card-skill'), 'skills');
   assert.deepEqual(resolveInstallContext('/Users/test/.claude/plugins/cache/card-skill/card-skill/0.8.0/skills/card-skill'), { installer: 'claude', scope: 'global', projectRoot: null });
   assert.deepEqual(resolveInstallContext(path.join(os.homedir(), '.agents', 'skills', 'card-skill')), { installer: 'skills', scope: 'global', projectRoot: null });
-  assert.deepEqual(resolveInstallContext('/Users/test/project/.agents/skills/card-skill'), { installer: 'skills', scope: 'project', projectRoot: '/Users/test/project' });
+  assert.deepEqual(resolveInstallContext('/Users/test/project/.agents/skills/card-skill'), { installer: 'skills', scope: 'project', projectRoot: path.resolve('/Users/test/project') });
   assert.notEqual(defaultCachePath('/Users/test/.agents/skills/card-skill'), defaultCachePath('/Users/test/codex/plugins/cache/card-skill/card-skill/0.7.0/skills/card-skill'));
   assert.equal(
     installationIdentity('/Users/test/codex/plugins/cache/card-skill/card-skill/0.7.0/skills/card-skill'),

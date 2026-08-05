@@ -1,6 +1,6 @@
 {
   "name": "card-skill",
-  "version": "0.8.1",
+  "version": "0.9.0",
   "description": "Open-source agent skill that turns articles, notes, and arguments into checked publish-ready PNG cards: WeChat/blog covers, social posters, whiteboards, article diagrams, with optional Codex direction preview.",
   "author": {
     "name": "KKenny0",

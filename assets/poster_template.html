@@ -177,15 +177,21 @@
   }
 
   /* Sparse series cards use the canvas deliberately instead of looking empty. */
+  .card.sparse-poster {
+    justify-content: center;
+  }
+
   .card.sparse-poster .title-area {
     flex: 0 0 auto;
     justify-content: flex-start;
-    margin-bottom: 88px;
+    padding-bottom: 32px;
+    margin-bottom: 40px;
+    border-bottom: 2px solid var(--accent);
   }
 
   .card.sparse-poster .body-content {
-    justify-content: center;
-    padding-bottom: 120px;
+    flex: 0 0 auto;
+    justify-content: flex-start;
   }
 
   .card.sparse-poster .body-content h2 {

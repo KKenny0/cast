@@ -103,6 +103,16 @@ function semanticText(contract) {
   return JSON.stringify(semanticProjection(contract)).toLocaleLowerCase('en-US');
 }
 
+function visibleContractText(contract) {
+  if (contract.mode !== 'editorial-image') return semanticText(contract);
+  return JSON.stringify([
+    contract.title,
+    contract.kicker,
+    contract.subtitle,
+    visibleHtmlText(contract.content_html),
+  ].filter(Boolean)).toLocaleLowerCase('en-US');
+}
+
 function assertRequiredTermsInContracts(job, expected) {
   const contracts = job.outputs.map(output => semanticText(output.render_contract));
   const serialized = contracts.join('\n');
@@ -125,8 +135,8 @@ function assertRequiredTermsInContracts(job, expected) {
   for (const [mappingIndex, mapping] of sourceMappings.entries()) {
     const sourceIndex = job.source_units.findIndex((unit, index) => {
       if (usedSourceUnits.has(index)) return false;
-      const excerpt = String(unit.excerpt || '').toLocaleLowerCase('en-US');
-      return mapping.source_terms.every(term => excerpt.includes(term.toLocaleLowerCase('en-US')));
+      const sourceText = [unit.label, unit.excerpt].filter(Boolean).join('\n').toLocaleLowerCase('en-US');
+      return mapping.source_terms.every(term => sourceText.includes(term.toLocaleLowerCase('en-US')));
     });
     assert.notEqual(sourceIndex, -1, `No distinct source unit preserves source term group "${mapping.source_terms.join(' + ')}"`);
     const sourceUnit = job.source_units[sourceIndex];
@@ -143,7 +153,7 @@ function assertRequiredTermsInContracts(job, expected) {
       for (const [otherIndex, other] of sourceMappings.entries()) {
         if (otherIndex === mappingIndex) continue;
         assert.equal(
-          other.contract_terms.some(term => mappedContract.includes(term.toLocaleLowerCase('en-US'))),
+          other.contract_terms.every(term => mappedContract.includes(term.toLocaleLowerCase('en-US'))),
           false,
           `Output for source unit "${sourceUnit.id}" duplicated another source group "${other.contract_terms.join(' + ')}"`,
         );
@@ -155,9 +165,8 @@ function assertRequiredTermsInContracts(job, expected) {
 
   const cardGroups = expected.required_card_term_groups || [];
   if (cardGroups.length) {
-    assert.equal(job.outputs.length, 1, 'Per-card semantic anchors require exactly one render contract');
-    const cards = job.outputs[0].render_contract.cards;
-    assert.ok(Array.isArray(cards), 'Per-card semantic anchors require render_contract.cards');
+    const cards = job.outputs.flatMap(output => output.render_contract.cards || []);
+    assert.ok(cards.length, 'Per-card semantic anchors require render_contract.cards');
     const serializedCards = cards.map(card => JSON.stringify(posterCardProjection(card)).toLocaleLowerCase('en-US'));
     const usedCards = new Set();
     for (const [groupIndex, group] of cardGroups.entries()) {
@@ -193,13 +202,15 @@ function assertSourceAssignment(job, expected) {
 }
 
 if (process.argv.includes('--self-test')) {
-  assert.equal(cases.cases.filter(item => item.tier === 'stable').length, 8, 'expected eight Stable fresh-context cases');
+  assert.equal(cases.cases.length, 20, 'CardBench must contain exactly twenty initial cases');
+  assert.equal(cases.cases.filter(item => item.kind !== 'revision').length, 16, 'expected sixteen planning cases');
+  assert.equal(cases.cases.filter(item => item.kind === 'revision').length, 4, 'expected four revision cases');
   assert.ok(cases.cases.every(item => (
     item.request
     && item.source_text
     && item.modes.length
     && item.outputs.length === 2
-    && item.required_contract_fields?.length
+    && Array.isArray(item.required_contract_fields)
   )), 'fresh-context case definition is incomplete');
   assert.equal(new Set(cases.cases.map(item => item.id)).size, cases.cases.length, 'fresh-context case ids must be unique');
   assert.ok(
@@ -435,7 +446,7 @@ if (process.argv.includes('--self-test')) {
     /does not render source unit|distinct source units/,
     'split outputs must not silently drop a source unit',
   );
-  console.log('Visual Job eval self-test passed: 8 Stable cases and 1 Studio case with grounded prompts and contract assertions.');
+  console.log('Visual Job eval self-test passed: 16 planning cases and 4 revision cases with grounded contract assertions.');
   process.exit(0);
 }
 const input = process.argv[2];
@@ -448,6 +459,8 @@ const expected = cases.cases.find(item => item.id === caseId)
   || cases.cases.find(item => item.id === job.job_id)
   || cases.cases.find(item => item.publish_target === job.publish_target);
 if (!expected) throw new Error(`No agent case matches ${job.job_id}`);
+assert.equal(job.schema_version, 2, 'fresh-context jobs must use Visual Job v2');
+assert.equal(job.decision.selection_source, expected.selection_source || 'taxonomy');
 assert.equal(job.decision.tier, expected.tier); assert.ok(expected.modes.includes(job.decision.mode));
 assert.ok(job.outputs.length >= expected.outputs[0] && job.outputs.length <= expected.outputs[1]);
 if (expected.source_units) {
@@ -455,13 +468,18 @@ if (expected.source_units) {
 }
 assertSourceAssignment(job, expected);
 for (const [index, output] of job.outputs.entries()) {
+  assert.ok(output.visual_plan && typeof output.visual_plan === 'object', `outputs[${index}] is missing visual_plan`);
+  assert.ok(output.visual_plan.core_message?.trim(), `outputs[${index}].visual_plan is missing core_message`);
+  assert.ok(output.visual_plan.layout_strategy?.trim(), `outputs[${index}].visual_plan is missing layout_strategy`);
+  assert.ok(Array.isArray(output.visual_plan.visual_hierarchy) && output.visual_plan.visual_hierarchy.length, `outputs[${index}].visual_plan is missing visual_hierarchy`);
+  assert.ok(Array.isArray(output.visual_plan.avoid_patterns), `outputs[${index}].visual_plan is missing avoid_patterns`);
   for (const field of expected.required_contract_fields || []) {
     assert.notEqual(output.render_contract[field], undefined, `outputs[${index}].render_contract is missing ${field}`);
     if (field === 'composition_required') assert.equal(output.render_contract[field], true);
   }
 }
 assertRequiredTermsInContracts(job, expected);
-const serialized = job.outputs.map(output => semanticText(output.render_contract)).join('\n');
+const serialized = job.outputs.map(output => visibleContractText(output.render_contract)).join('\n');
 for (const term of expected.forbidden_terms || []) {
   assert.equal(serialized.includes(term.toLocaleLowerCase('en-US')), false, `Visual Job invented forbidden framing "${term}"`);
 }

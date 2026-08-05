@@ -190,6 +190,7 @@ Stable 适合出版场景、批量生产和品牌一致性。Studio 适合概念
 - **四个默认 tone：** `reflective` / `sharp` / `warm` / `technical`；26 个 design 仍可作为显式高级覆盖
 - **默认输出：** 默认 2 倍像素密度 PNG；以常见 1080 CSS 像素画布为例，导出宽度约 2160px（高度随 mode 与比例变化）
 - **质量门禁：** 截图前后检查占位符、溢出、裁切、坏图、可读性、标题换行、字体栈、远程资源与近乎空白结果
+- **视觉推理：** Visual Job v2 为每个输出记录计划、确定性 taxonomy 路由、真实 PNG 批评和最多一次修订
 - **运行时：** Node.js 22+、Playwright Chromium；字体随包分发并做加载预检
 - **隐私默认：** PNG 渲染与检查在本地完成；版本检查只读 GitHub Release API，不上传文章、提示词或图片
 - **可选来源：** 与腾讯官方 [WeChatReading Skill](https://github.com/Tencent/WeChatReading) 组合，仅在用户明确请求时读取个人划线/统计
@@ -206,11 +207,11 @@ Stable 适合出版场景、批量生产和品牌一致性。Studio 适合概念
 ## 从文本到 PNG 经历哪些步骤
 
 1. 读取 URL、粘贴文本、微信读书返回的数据或本地文件。
-2. 分析内容结构、密度、情绪与发布用途。
-3. 匹配 mode、Quiet Paper design 和画面方向。
-4. 使用结构化 renderer 或创意布局流程生成画面。
-5. 在截图前后检查占位符、溢出、裁切、坏图、可读性、标题换行、字体栈、远程资源和视觉体系漂移；PNG 还会阻止空白与近乎纯色结果。
-6. 通过 Playwright 截图并输出 PNG；默认写入 `~/Downloads/`。
+2. 切分有边界的来源单元，为每个预期输出写一份 Visual Plan。
+3. 由可执行 taxonomy 校验 mode；用户明确点名的 mode 仍可覆盖。
+4. 通过既有 schema、renderer、Playwright 和 `check-output` 链渲染候选图。
+5. 查看真实 PNG 并写入哈希绑定的 Visual Review；低于 8.0 或存在 blocker 时，最多修改计划和渲染契约一次。
+6. 原子发布通过的 PNG、receipt 与 review；默认写入 `~/Downloads/`。
 
 和直接让 AI 随手画一张图不同：card-skill 走结构化输入、固定 renderer、Playwright 截图和 `check-output` 质检，目标是可复现的发布级 PNG。
 
@@ -265,13 +266,19 @@ node scripts/card.js --input /path/to/input.json --output ~/Downloads/card.png
 
 Stable 命令行模式：`big`、`long`、`whiteboard`、`poster`、`editorial-image`、`article-diagram`。Studio 命令行模式：`infograph`、`comic`、`sketchnote`；它们要求完整的 `content_html` + `custom_css` 构图契约，并仍需人工视觉验收。
 
-需要记录一次多图任务如何从 source 变成成品时，可使用内部 Visual Job runner；它对普通自然语言使用保持透明：
+自然语言任务使用 Visual Job v2。先渲染候选：
 
 ```bash
-node scripts/render-job.mjs --input visual-job.json --output-dir ./output
+node scripts/render-job.mjs --input visual-job.json --output-dir ./candidate --candidate --json
 ```
 
-它只在全部输出经现有命令行、截图与 `check-output` 成功后发布 PNG 和去敏回执；说明见 [`references/visual-job.md`](references/visual-job.md)。
+候选渲染还会通过内部 manifest 封存已检查 HTML 与完整产物集合。宿主 Agent 查看每张 PNG 并写入匹配的 review 后，发布器会重跑 `check-output`，再发布通过的三件套：
+
+```bash
+node scripts/publish-reviewed-job.mjs --candidate-dir ./candidate --output-dir ./output --json
+```
+
+Visual Job v1 与直接 `card.js` 继续作为兼容的底层路径。参见[当前架构](docs/current-architecture.md)、[Visual Job](references/visual-job.md)与[Visual Review](references/visual-review.md)。
 
 `editorial-image` 的文章封面会用确定性的 `cover_motif` 把文章张力落到右侧主视觉；复杂头图、概念隐喻和正文配图仍优先使用 `content_html` + `custom_css`。`in-article` 与 `metaphor` 不会再静默回退到默认脚手架。完整的 skill 行为与输入边界见 [`SKILL.md`](SKILL.md)。
 
@@ -303,7 +310,7 @@ card-skill 是给 coding agent 用的开源内容制图 skill。输入文章、�
 
 ### 和直接让 AI 生成一张图有什么不同？
 
-card-skill 使用结构化 schema、确定性或受控 renderer、Playwright 截图，以及 `check-output` 质检，会拦截裁切、溢出、坏图和近乎空白结果。目标是可复现的发布级 PNG，不是一次性聊天配图。
+card-skill 使用结构化 Visual Plan、可执行 mode taxonomy、确定性或受控 renderer、Playwright 截图、`check-output` 与真实 PNG Critic 门禁。目标是可复现的发布级 PNG，不是一次性聊天配图。
 
 ### 公众号头图和正文解释图怎么选？
 

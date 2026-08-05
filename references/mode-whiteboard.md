@@ -363,6 +363,8 @@ Read `assets/whiteboard_template.html`
 **逻辑链布局技巧**：
 - 每条链用 `display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 6px;` 实现自然换行
 - 箭头用 `<span class="chain-arrow">→</span>` 内嵌文字流
+- 结构化 `render_contract.steps[].type="chain"` 把普通 / `highlight` 节点渲染成有边界的语义块，把 `muted` 节点渲染成轻量关系词；按“节点、关系、节点”交替排列，并保持每段简短。
+- 契约形状固定为 `{"type":"chain","nodes":[{"text":"事实","highlight":true},{"text":"约束","muted":true}]}`；节点文案字段是 `text`，不是 `label` 或 `items`。
 - 黄色关键词用 `<span class="chalk-yellow">关键词</span>`
 - 简笔画 SVG 用 `display: inline-block; vertical-align: middle;` 嵌入行内
 - 行间距不等——同一论点的行紧凑（`margin-top: 12px`），新话题换大间距（`margin-top: 28px`）

@@ -19,7 +19,7 @@ const { pathEntryExists, publishArtifacts } = require('./lib/publish-artifacts')
 const { isWithin, pathKey, realpathExisting } = require('./lib/file-access');
 
 function usage() {
-  console.log('Usage: node scripts/render-job.mjs --input <visual-job.json> --output-dir <directory> [--json]');
+  console.log('Usage: node scripts/render-job.mjs --input <visual-job.json> --output-dir <directory> [--candidate] [--json]');
 }
 
 function arg(flag) {
@@ -49,12 +49,18 @@ function receipt(job, output, contract, artifact, index) {
     tone: artifact.tone,
     design: artifact.resolved_design,
     render_contract_sha256: sha256Json(contract),
+    metaphor_required: Boolean(output.visual_plan?.visual_metaphor),
     png: {
       basename: artifact.basename,
       width: artifact.width,
       height: artifact.height,
       sha256: sha256Bytes(png),
     },
+    capture: artifact.capture,
+    checked_html: artifact.checkedHtmlPath ? {
+      basename: path.basename(artifact.checkedHtmlPath),
+      sha256: sha256Bytes(fs.readFileSync(artifact.checkedHtmlPath)),
+    } : null,
     checker: artifact.checker,
     job_success: true,
   };
@@ -83,6 +89,7 @@ function launchPostJobUpdate() {
 const inputPath = arg('--input');
 const outputDirArg = arg('--output-dir');
 const json = process.argv.includes('--json');
+const candidate = process.argv.includes('--candidate');
 if (process.argv.includes('--help') || process.argv.includes('-h')) {
   usage();
   process.exit(0);
@@ -104,6 +111,10 @@ if (!validated.valid) {
   console.error(`input_contract:\n${validated.errors.map(error => `- ${error}`).join('\n')}`);
   process.exit(1);
 }
+if (job.schema_version === 2 && !candidate) {
+  console.error('input_contract: Visual Job v2 must render with --candidate and pass Visual Review before publication');
+  process.exit(1);
+}
 
 const outputDir = path.resolve(outputDirArg);
 const stage = fs.mkdtempSync(path.join(os.tmpdir(), `card-skill-job-${job.job_id}-`));
@@ -119,12 +130,14 @@ try {
     const requestedPng = path.join(outputStage, output.basename);
     const reportPath = path.join(outputStage, 'card-report.json');
     fs.writeFileSync(input, JSON.stringify(contract));
-    const run = spawnSync(process.execPath, [
+    const cardArgs = [
       path.join(ROOT, 'scripts', 'card.js'),
       '--input', input,
       '--output', requestedPng,
       '--report', reportPath,
-    ], {
+    ];
+    if (candidate) cardArgs.push('--checked-html-dir', outputStage);
+    const run = spawnSync(process.execPath, cardArgs, {
       cwd: ROOT,
       encoding: 'utf8',
       env: { ...process.env, CARD_SKILL_DISABLE_AUTO_UPDATE: '1' },
@@ -144,6 +157,10 @@ try {
         throw new Error(`safety: renderer returned an artifact outside its staging directory`);
       }
       const basename = path.basename(artifactPath);
+      const checkedHtmlPath = artifact.checked_html?.path ? realpathExisting(artifact.checked_html.path) : null;
+      if (candidate && (!checkedHtmlPath || !expectedRoot || !isWithin(expectedRoot, checkedHtmlPath) || !pathEntryExists(checkedHtmlPath))) {
+        throw new Error('safety: renderer did not preserve checked HTML inside its staging directory');
+      }
       const targetKey = pathKey(path.join(outputDir, basename));
       if (targetKeys.has(targetKey)) throw new Error(`safety: duplicate publication target ${basename}`);
       targetKeys.add(targetKey);
@@ -153,6 +170,7 @@ try {
         basename,
         tone: cardReport.tone,
         resolved_design: cardReport.resolved_design,
+        checkedHtmlPath,
       };
       const receiptData = receipt(job, output, contract, artifactRecord, artifactOffset + 1);
       const receiptPath = path.join(outputStage, `${path.basename(basename, '.png')}.receipt.json`);
@@ -162,13 +180,17 @@ try {
         receipt: receiptPath,
         basename,
         receiptBasename: path.basename(receiptPath),
+        checkedHtml: checkedHtmlPath,
+        checkedHtmlBasename: checkedHtmlPath ? path.basename(checkedHtmlPath) : null,
+        outputId: output.id,
+        artifactIndex: artifactOffset + 1,
       });
     }
   }
 
   const existingNames = existingCaseFoldedNames(outputDir);
   for (const artifact of stagedArtifacts) {
-    for (const basename of [artifact.basename, artifact.receiptBasename]) {
+    for (const basename of [artifact.basename, artifact.receiptBasename, artifact.checkedHtmlBasename].filter(Boolean)) {
       if (existingNames.has(basename.toLocaleLowerCase('en-US'))) {
         throw new Error(`safety: publication target already exists: ${path.join(outputDir, basename)}`);
       }
@@ -178,11 +200,32 @@ try {
   const publicationEntries = stagedArtifacts.flatMap(artifact => [
     { stagedPath: artifact.png, finalPath: path.join(outputDir, artifact.basename) },
     { stagedPath: artifact.receipt, finalPath: path.join(outputDir, artifact.receiptBasename) },
+    ...(artifact.checkedHtml ? [{ stagedPath: artifact.checkedHtml, finalPath: path.join(outputDir, artifact.checkedHtmlBasename) }] : []),
   ]);
+  if (candidate) {
+    const manifestPath = path.join(stage, 'candidate-manifest.json');
+    const manifest = {
+      schema_version: 1,
+      job_id: job.job_id,
+      visual_job_sha256: sha256Json(job),
+      expected_output_ids: job.outputs.map(output => output.id),
+      artifacts: stagedArtifacts.map(artifact => ({
+        output_id: artifact.outputId,
+        artifact_index: artifact.artifactIndex,
+        png: artifact.basename,
+        receipt: artifact.receiptBasename,
+        checked_html: artifact.checkedHtmlBasename,
+        receipt_sha256: sha256Bytes(fs.readFileSync(artifact.receipt)),
+      })),
+    };
+    fs.writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+    publicationEntries.push({ stagedPath: manifestPath, finalPath: path.join(outputDir, 'candidate-manifest.json') });
+  }
   publishArtifacts(publicationEntries, { allowOverwrite: false });
-  launchPostJobUpdate();
+  if (!candidate) launchPostJobUpdate();
   const result = {
     pass: true,
+    candidate,
     job_id: job.job_id,
     outputs: stagedArtifacts.map(artifact => artifact.basename),
   };

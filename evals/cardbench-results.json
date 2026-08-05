@@ -1,0 +1,542 @@
+{
+  "schema_version": 2,
+  "scope": {
+    "kind": "full",
+    "selected": 20,
+    "total": 20,
+    "complete": true,
+    "case_ids": [
+      "wechat-cover",
+      "blog-hero",
+      "article-split",
+      "social-big",
+      "poster",
+      "long",
+      "whiteboard",
+      "reading-notes",
+      "studio-editorial-body",
+      "comparison-infograph",
+      "data-infograph",
+      "conflict-comic",
+      "reflective-sketchnote",
+      "timeline-infograph",
+      "mixed-claim-mechanism",
+      "user-whiteboard-override",
+      "revise-text-heavy",
+      "revise-flat-hierarchy",
+      "revise-small-subject",
+      "revise-generic-metaphor"
+    ]
+  },
+  "level": "L2-agent-critic",
+  "installed_runtime": "isolated-temp-install",
+  "package_source": "plugins\\card-skill\\skills\\card-skill",
+  "cases": [
+    {
+      "id": "wechat-cover",
+      "kind": "planning",
+      "pass": true,
+      "tier": "stable",
+      "mode": "editorial-image",
+      "visual_job_outputs": 1,
+      "rendered_artifacts": 1,
+      "checker_pass": true,
+      "review_score": 9.6,
+      "review_scores": [
+        {
+          "message_clarity": 5,
+          "visual_hierarchy": 5,
+          "cognitive_load": 5,
+          "style_consistency": 5,
+          "metaphor_quality": 4
+        }
+      ],
+      "self_corrected": false,
+      "answer_normalized": false
+    },
+    {
+      "id": "blog-hero",
+      "kind": "planning",
+      "pass": true,
+      "tier": "stable",
+      "mode": "editorial-image",
+      "visual_job_outputs": 1,
+      "rendered_artifacts": 1,
+      "checker_pass": true,
+      "review_score": 9.6,
+      "review_scores": [
+        {
+          "message_clarity": 5,
+          "visual_hierarchy": 5,
+          "cognitive_load": 5,
+          "style_consistency": 5,
+          "metaphor_quality": 4
+        }
+      ],
+      "self_corrected": false,
+      "answer_normalized": false
+    },
+    {
+      "id": "article-split",
+      "kind": "planning",
+      "pass": true,
+      "tier": "stable",
+      "mode": "article-diagram",
+      "visual_job_outputs": 2,
+      "rendered_artifacts": 2,
+      "checker_pass": true,
+      "review_score": 8.5,
+      "review_scores": [
+        {
+          "message_clarity": 4,
+          "visual_hierarchy": 4,
+          "cognitive_load": 5,
+          "style_consistency": 4,
+          "metaphor_quality": null
+        },
+        {
+          "message_clarity": 4,
+          "visual_hierarchy": 4,
+          "cognitive_load": 5,
+          "style_consistency": 4,
+          "metaphor_quality": null
+        }
+      ],
+      "self_corrected": false,
+      "answer_normalized": false
+    },
+    {
+      "id": "social-big",
+      "kind": "planning",
+      "pass": true,
+      "tier": "stable",
+      "mode": "big",
+      "visual_job_outputs": 1,
+      "rendered_artifacts": 1,
+      "checker_pass": true,
+      "review_score": 10,
+      "review_scores": [
+        {
+          "message_clarity": 5,
+          "visual_hierarchy": 5,
+          "cognitive_load": 5,
+          "style_consistency": 5,
+          "metaphor_quality": null
+        }
+      ],
+      "self_corrected": false,
+      "answer_normalized": false
+    },
+    {
+      "id": "poster",
+      "kind": "planning",
+      "pass": true,
+      "tier": "stable",
+      "mode": "poster",
+      "visual_job_outputs": 3,
+      "rendered_artifacts": 3,
+      "checker_pass": true,
+      "review_score": 9,
+      "review_scores": [
+        {
+          "message_clarity": 5,
+          "visual_hierarchy": 3,
+          "cognitive_load": 5,
+          "style_consistency": 4,
+          "metaphor_quality": null
+        },
+        {
+          "message_clarity": 5,
+          "visual_hierarchy": 4,
+          "cognitive_load": 5,
+          "style_consistency": 4,
+          "metaphor_quality": null
+        },
+        {
+          "message_clarity": 5,
+          "visual_hierarchy": 4,
+          "cognitive_load": 5,
+          "style_consistency": 5,
+          "metaphor_quality": null
+        }
+      ],
+      "self_corrected": false,
+      "answer_normalized": false
+    },
+    {
+      "id": "long",
+      "kind": "planning",
+      "pass": true,
+      "tier": "stable",
+      "mode": "long",
+      "visual_job_outputs": 1,
+      "rendered_artifacts": 1,
+      "checker_pass": true,
+      "review_score": 10,
+      "review_scores": [
+        {
+          "message_clarity": 5,
+          "visual_hierarchy": 5,
+          "cognitive_load": 5,
+          "style_consistency": 5,
+          "metaphor_quality": null
+        }
+      ],
+      "self_corrected": false,
+      "answer_normalized": false
+    },
+    {
+      "id": "whiteboard",
+      "kind": "planning",
+      "pass": true,
+      "tier": "stable",
+      "mode": "whiteboard",
+      "visual_job_outputs": 1,
+      "rendered_artifacts": 1,
+      "checker_pass": true,
+      "review_score": 9.5,
+      "review_scores": [
+        {
+          "message_clarity": 5,
+          "visual_hierarchy": 4,
+          "cognitive_load": 5,
+          "style_consistency": 5,
+          "metaphor_quality": null
+        }
+      ],
+      "self_corrected": false,
+      "answer_normalized": false
+    },
+    {
+      "id": "reading-notes",
+      "kind": "planning",
+      "pass": true,
+      "tier": "stable",
+      "mode": "poster",
+      "visual_job_outputs": 1,
+      "rendered_artifacts": 2,
+      "checker_pass": true,
+      "review_score": 9.5,
+      "review_scores": [
+        {
+          "message_clarity": 5,
+          "visual_hierarchy": 4,
+          "cognitive_load": 5,
+          "style_consistency": 5,
+          "metaphor_quality": null
+        },
+        {
+          "message_clarity": 5,
+          "visual_hierarchy": 4,
+          "cognitive_load": 5,
+          "style_consistency": 5,
+          "metaphor_quality": null
+        }
+      ],
+      "self_corrected": false,
+      "answer_normalized": false
+    },
+    {
+      "id": "studio-editorial-body",
+      "kind": "planning",
+      "pass": true,
+      "tier": "studio",
+      "mode": "editorial-image",
+      "visual_job_outputs": 1,
+      "rendered_artifacts": 1,
+      "checker_pass": true,
+      "review_score": 8.8,
+      "review_scores": [
+        {
+          "message_clarity": 4,
+          "visual_hierarchy": 4,
+          "cognitive_load": 5,
+          "style_consistency": 5,
+          "metaphor_quality": 4
+        }
+      ],
+      "self_corrected": false,
+      "answer_normalized": false
+    },
+    {
+      "id": "comparison-infograph",
+      "kind": "planning",
+      "pass": true,
+      "tier": "studio",
+      "mode": "infograph",
+      "visual_job_outputs": 1,
+      "rendered_artifacts": 1,
+      "checker_pass": true,
+      "review_score": 8,
+      "review_scores": [
+        {
+          "message_clarity": 4,
+          "visual_hierarchy": 3,
+          "cognitive_load": 5,
+          "style_consistency": 4,
+          "metaphor_quality": null
+        }
+      ],
+      "self_corrected": false,
+      "answer_normalized": false
+    },
+    {
+      "id": "data-infograph",
+      "kind": "planning",
+      "pass": true,
+      "tier": "studio",
+      "mode": "infograph",
+      "visual_job_outputs": 1,
+      "rendered_artifacts": 1,
+      "checker_pass": true,
+      "review_score": 9.5,
+      "review_scores": [
+        {
+          "message_clarity": 5,
+          "visual_hierarchy": 5,
+          "cognitive_load": 5,
+          "style_consistency": 4,
+          "metaphor_quality": null
+        }
+      ],
+      "self_corrected": false,
+      "answer_normalized": false
+    },
+    {
+      "id": "conflict-comic",
+      "kind": "planning",
+      "pass": true,
+      "tier": "studio",
+      "mode": "comic",
+      "visual_job_outputs": 1,
+      "rendered_artifacts": 1,
+      "checker_pass": true,
+      "review_score": 8,
+      "review_scores": [
+        {
+          "message_clarity": 4,
+          "visual_hierarchy": 4,
+          "cognitive_load": 4,
+          "style_consistency": 4,
+          "metaphor_quality": 4
+        }
+      ],
+      "self_corrected": false,
+      "answer_normalized": false
+    },
+    {
+      "id": "reflective-sketchnote",
+      "kind": "planning",
+      "pass": true,
+      "tier": "studio",
+      "mode": "sketchnote",
+      "visual_job_outputs": 1,
+      "rendered_artifacts": 1,
+      "checker_pass": true,
+      "review_score": 9,
+      "review_scores": [
+        {
+          "message_clarity": 5,
+          "visual_hierarchy": 4,
+          "cognitive_load": 5,
+          "style_consistency": 4,
+          "metaphor_quality": null
+        }
+      ],
+      "self_corrected": false,
+      "answer_normalized": false
+    },
+    {
+      "id": "timeline-infograph",
+      "kind": "planning",
+      "pass": true,
+      "tier": "studio",
+      "mode": "infograph",
+      "visual_job_outputs": 1,
+      "rendered_artifacts": 1,
+      "checker_pass": true,
+      "review_score": 8.4,
+      "review_scores": [
+        {
+          "message_clarity": 4,
+          "visual_hierarchy": 4,
+          "cognitive_load": 4,
+          "style_consistency": 5,
+          "metaphor_quality": 4
+        }
+      ],
+      "self_corrected": false,
+      "answer_normalized": false
+    },
+    {
+      "id": "mixed-claim-mechanism",
+      "kind": "planning",
+      "pass": true,
+      "tier": "stable",
+      "mode": "mixed",
+      "visual_job_outputs": 2,
+      "rendered_artifacts": 2,
+      "checker_pass": true,
+      "review_score": 9.3,
+      "review_scores": [
+        {
+          "message_clarity": 5,
+          "visual_hierarchy": 4,
+          "cognitive_load": 5,
+          "style_consistency": 4,
+          "metaphor_quality": null
+        },
+        {
+          "message_clarity": 4,
+          "visual_hierarchy": 5,
+          "cognitive_load": 5,
+          "style_consistency": 5,
+          "metaphor_quality": null
+        }
+      ],
+      "self_corrected": true,
+      "answer_normalized": false
+    },
+    {
+      "id": "user-whiteboard-override",
+      "kind": "planning",
+      "pass": true,
+      "tier": "stable",
+      "mode": "whiteboard",
+      "visual_job_outputs": 1,
+      "rendered_artifacts": 1,
+      "checker_pass": true,
+      "review_score": 10,
+      "review_scores": [
+        {
+          "message_clarity": 5,
+          "visual_hierarchy": 5,
+          "cognitive_load": 5,
+          "style_consistency": 5,
+          "metaphor_quality": null
+        }
+      ],
+      "self_corrected": false,
+      "answer_normalized": false
+    },
+    {
+      "id": "revise-text-heavy",
+      "kind": "revision",
+      "pass": true,
+      "tier": "stable",
+      "mode": "poster",
+      "visual_job_outputs": 1,
+      "rendered_artifacts": 1,
+      "checker_pass": true,
+      "review_score": 9.5,
+      "review_scores": [
+        {
+          "message_clarity": 5,
+          "visual_hierarchy": 5,
+          "cognitive_load": 5,
+          "style_consistency": 4,
+          "metaphor_quality": null
+        }
+      ],
+      "self_corrected": true,
+      "answer_normalized": false
+    },
+    {
+      "id": "revise-flat-hierarchy",
+      "kind": "revision",
+      "pass": true,
+      "tier": "stable",
+      "mode": "whiteboard",
+      "visual_job_outputs": 1,
+      "rendered_artifacts": 1,
+      "checker_pass": true,
+      "review_score": 10,
+      "review_scores": [
+        {
+          "message_clarity": 5,
+          "visual_hierarchy": 5,
+          "cognitive_load": 5,
+          "style_consistency": 5,
+          "metaphor_quality": null
+        }
+      ],
+      "self_corrected": true,
+      "answer_normalized": false
+    },
+    {
+      "id": "revise-small-subject",
+      "kind": "revision",
+      "pass": true,
+      "tier": "studio",
+      "mode": "editorial-image",
+      "visual_job_outputs": 1,
+      "rendered_artifacts": 1,
+      "checker_pass": true,
+      "review_score": 9.2,
+      "review_scores": [
+        {
+          "message_clarity": 5,
+          "visual_hierarchy": 4,
+          "cognitive_load": 5,
+          "style_consistency": 5,
+          "metaphor_quality": 4
+        }
+      ],
+      "self_corrected": true,
+      "answer_normalized": false
+    },
+    {
+      "id": "revise-generic-metaphor",
+      "kind": "revision",
+      "pass": true,
+      "tier": "studio",
+      "mode": "editorial-image",
+      "visual_job_outputs": 1,
+      "rendered_artifacts": 1,
+      "checker_pass": true,
+      "review_score": 8.8,
+      "review_scores": [
+        {
+          "message_clarity": 4,
+          "visual_hierarchy": 4,
+          "cognitive_load": 5,
+          "style_consistency": 5,
+          "metaphor_quality": 4
+        }
+      ],
+      "self_corrected": true,
+      "answer_normalized": false
+    }
+  ],
+  "metrics": {
+    "content": {
+      "message_preservation": 10,
+      "factual_correctness": 10,
+      "abstraction_quality": null
+    },
+    "visual": {
+      "hierarchy": 8.6,
+      "readability": 9.6,
+      "metaphor_quality": 8,
+      "composition": 9.2
+    },
+    "agent": {
+      "mode_selection": 10,
+      "planning_quality": null,
+      "self_correction": 10
+    }
+  },
+  "scores": {
+    "content": null,
+    "visual": 8.9,
+    "agent": null,
+    "overall": null
+  },
+  "summary": {
+    "passed": 20,
+    "failed": 0,
+    "l2_agent_critic": true,
+    "l2_maintainer_judgment": false,
+    "l3_real_user_evidence": false
+  }
+}

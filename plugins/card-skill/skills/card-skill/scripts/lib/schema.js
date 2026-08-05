@@ -217,6 +217,17 @@ const POSTER_BODY_TYPES = new Set(['paragraph', 'heading', 'highlight', 'items',
 const POSTER_VARIANTS = new Set(['reading-notes']);
 const EDITORIAL_ASPECTS = new Set(['wechat-cover', 'blog-hero', 'body-3-2', 'body-4-3', 'cinematic', 'square']);
 const EDITORIAL_USES = new Set(['cover', 'in-article', 'metaphor']);
+
+function validateCompositionSafety(mode, input, errors) {
+  if (typeof input.content_html === 'string'
+      && /<(?:script|iframe|object|embed|link|base)\b|\son[a-z]+\s*=|javascript:/i.test(input.content_html)) {
+    errors.push(`${mode} content_html cannot contain executable or embedded-resource markup`);
+  }
+  if (typeof input.custom_css === 'string'
+      && /<\/style\b|@import\b|url\s*\(\s*['"]?\s*(?:file|javascript|data):/i.test(input.custom_css)) {
+    errors.push(`${mode} custom_css cannot escape its style element, import stylesheets, or reference unsafe URLs`);
+  }
+}
 const EDITORIAL_COVER_MOTIFS = new Set(['paper-stack', 'drawer', 'window', 'lens', 'path', 'archive', 'layers']);
 const ARTICLE_DIAGRAM_FAMILIES = new Set(['concept-map', 'process-flow', 'boundary-model']);
 const ARTICLE_DIAGRAM_ASPECTS = new Set(['body-2-1', 'body-3-2', 'body-4-3']);
@@ -297,14 +308,7 @@ function validate(input) {
     if (typeof input.custom_css !== 'string' || input.custom_css.trim() === '') {
       errors.push(`${mode} requires non-empty "custom_css"`);
     }
-    if (typeof input.content_html === 'string'
-        && /<(?:script|iframe|object|embed|link|base)\b|\son[a-z]+\s*=|javascript:/i.test(input.content_html)) {
-      errors.push(`${mode} content_html cannot contain executable or embedded-resource markup`);
-    }
-    if (typeof input.custom_css === 'string'
-        && /@import\b|url\s*\(\s*['"]?\s*file:/i.test(input.custom_css)) {
-      errors.push(`${mode} custom_css cannot import stylesheets or reference file: URLs`);
-    }
+    validateCompositionSafety(mode, input, errors);
     const resolvedDesign = getDesign(resolveDesignNameForInput(input, 'claude'));
     if ((mode === 'infograph' || mode === 'sketchnote') && resolvedDesign?.surface === 'dark') {
       errors.push(`${mode} requires a light-surface design`);
@@ -327,6 +331,15 @@ function validate(input) {
       if (!step.type) errors.push(`steps[${i}]: missing "type"`);
       else if (!WHITEBOARD_STEP_TYPES.has(step.type)) errors.push(`steps[${i}]: unknown type "${step.type}". Allowed: ${[...WHITEBOARD_STEP_TYPES].join(', ')}`);
       if (step.type === 'chain' && !Array.isArray(step.nodes)) errors.push(`steps[${i}]: chain requires "nodes" array`);
+      else if (step.type === 'chain') step.nodes.forEach((node, j) => {
+        if (!node || typeof node !== 'object' || Array.isArray(node)) {
+          errors.push(`steps[${i}].nodes[${j}] must be an object`);
+          return;
+        }
+        if (typeof node.text !== 'string' || !node.text.trim()) errors.push(`steps[${i}].nodes[${j}] requires non-empty "text"`);
+        if (node.highlight !== undefined && typeof node.highlight !== 'boolean') errors.push(`steps[${i}].nodes[${j}].highlight must be boolean`);
+        if (node.muted !== undefined && typeof node.muted !== 'boolean') errors.push(`steps[${i}].nodes[${j}].muted must be boolean`);
+      });
       if (step.type === 'layers' && !Array.isArray(step.items)) errors.push(`steps[${i}]: layers requires "items" array`);
     });
   }
@@ -403,6 +416,7 @@ function validate(input) {
       if (typeof input.custom_css !== 'string' || input.custom_css.trim() === '') {
         errors.push('composition_required=true requires non-empty "custom_css"');
       }
+      validateCompositionSafety('editorial-image', input, errors);
     }
   }
 

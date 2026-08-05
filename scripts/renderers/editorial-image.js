@@ -315,20 +315,26 @@ function baseCss(input, design, aspect) {
     }
 
     .cover-motif-drawer .drawer-sheet-front {
-      left: 15%; top: 13%; width: 58%; height: 62%; transform: rotate(-4deg); opacity: .78;
+      left: 15%; top: 13%; width: 58%; height: 62%; transform: rotate(-4deg); opacity: .9;
     }
 
     .cover-motif-drawer .drawer-box {
       right: 5%; bottom: 10%; width: 61%; height: 39%; padding: 17px 21px;
-      display: grid; grid-template-rows: repeat(3, 1fr); gap: 13px; border-color: var(--ink);
+      display: grid; grid-template-rows: repeat(3, 1fr); gap: 13px; border: 2px solid var(--ink);
+      background: color-mix(in srgb, var(--surface-2) 66%, var(--bg));
+    }
+
+    .cover-motif-drawer .drawer-box::before {
+      content: ""; position: absolute; left: -5%; right: -5%; top: -12px; border-top: 4px solid var(--ink); transform: skewX(-16deg);
     }
 
     .cover-motif-drawer .drawer-box i {
-      display: block; border-top: 1px solid var(--hairline);
+      display: block; border-top: 2px solid color-mix(in srgb, var(--ink) 42%, var(--hairline));
     }
 
     .cover-motif-drawer .drawer-handle {
-      position: absolute; right: 27%; bottom: 27%; width: 27%; border-top: 2px solid var(--accent); opacity: .8;
+      position: absolute; right: 24%; bottom: 22%; width: 24%; height: 18px;
+      border: 2px solid var(--accent); border-radius: 999px; background: var(--surface-1);
     }
 
     .cover-motif-window .window-field {
@@ -394,13 +400,19 @@ function baseCss(input, design, aspect) {
 
     .cover-motif-archive .archive-case {
       left: 17%; top: 12%; width: 57%; height: 67%; padding: 14px 17px; display: grid; grid-template-rows: repeat(4, 1fr); gap: 11px;
+      border: 2px solid var(--ink);
+      background: color-mix(in srgb, var(--surface-2) 62%, var(--bg));
     }
 
-    .cover-motif-archive .archive-case i { display: block; border-top: 1px solid var(--hairline); }
-    .cover-motif-archive .archive-file { width: 32%; height: 45%; }
-    .cover-motif-archive .archive-file-a { right: 5%; top: 12%; transform: rotate(5deg); opacity: .6; }
-    .cover-motif-archive .archive-file-b { right: 0; top: 29%; transform: rotate(-4deg); opacity: .78; }
-    .cover-motif-archive .archive-file-c { right: 11%; bottom: 7%; transform: rotate(7deg); opacity: .5; }
+    .cover-motif-archive .archive-case i { display: block; border-top: 2px solid color-mix(in srgb, var(--ink) 46%, var(--hairline)); }
+    .cover-motif-archive .archive-file { width: 32%; height: 45%; border: 2px solid var(--accent); }
+    .cover-motif-archive .archive-file::before {
+      content: ""; position: absolute; left: 18%; right: 18%; top: 27%; height: 38%;
+      background: repeating-linear-gradient(to bottom, var(--ink-muted) 0 2px, transparent 2px 14px); opacity: .62;
+    }
+    .cover-motif-archive .archive-file-a { right: 5%; top: 12%; transform: rotate(5deg); opacity: .84; }
+    .cover-motif-archive .archive-file-b { right: 0; top: 29%; transform: rotate(-4deg); opacity: 1; }
+    .cover-motif-archive .archive-file-c { right: 11%; bottom: 7%; transform: rotate(7deg); opacity: .76; }
 
     .cover-motif-layers .layer-sheet { width: 63%; height: 65%; }
     .cover-motif-layers .layer-sheet i { position: absolute; left: 15%; right: 15%; top: 48%; border-top: 1px solid var(--accent); opacity: .62; }

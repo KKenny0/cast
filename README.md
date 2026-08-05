@@ -190,6 +190,7 @@ Prefer the publishing task first, then map to an internal mode. You do not need 
 - **Four default tones:** `reflective` / `sharp` / `warm` / `technical`; 26 designs remain explicit advanced overrides
 - **Default output:** DPR 2 PNG; a common 1080 CSS-wide canvas exports at about 2160px wide (height varies by mode and aspect)
 - **Quality gates:** pre/post capture checks for placeholders, overflow, crop, broken images, readability, title breaks, font stack, remote resources, and near-blank results
+- **Visual reasoning:** Visual Job v2 records a per-output plan, deterministic taxonomy choice, real-PNG critique, and at most one revision
 - **Runtime:** Node.js 22+, Playwright Chromium; fonts ship with the package and are load-checked
 - **Privacy default:** PNG render and checks are local; version checks only read the GitHub Release API and do not upload articles, prompts, or images
 - **Optional source:** pairs with Tencent's official [WeChatReading Skill](https://github.com/Tencent/WeChatReading) only when the user explicitly asks for personal highlights or stats
@@ -206,11 +207,11 @@ Every mode shares the Quiet Paper skeleton. Content mood and brand feel only cha
 ## From text to PNG
 
 1. Read a URL, pasted text, WeChat Reading payload, or local file.
-2. Analyze structure, density, mood, and publishing job.
-3. Match mode, Quiet Paper design, and visual direction.
-4. Generate the frame with a structured renderer or composition flow.
-5. Check placeholders, overflow, crop, broken images, readability, title breaks, fonts, remote resources, and visual-system drift; PNG output also blocks blank / near-solid results.
-6. Capture with Playwright and write a PNG, defaulting to `~/Downloads/`.
+2. Split bounded source units and write one Visual Plan per intended output.
+3. Let the executable taxonomy validate mode; an explicit user mode remains an override.
+4. Render a candidate through the existing schema, renderer, Playwright, and `check-output` chain.
+5. Inspect the real PNG and write a hash-bound Visual Review. Revise the plan and render contract at most once when it scores below 8.0 or has a blocker.
+6. Atomically publish the passing PNG, receipt, and review, defaulting to `~/Downloads/`.
 
 Unlike a one-shot chat image, card-skill uses structured input, controlled renderers, Playwright capture, and `check-output` so the result is a repeatable publish-ready PNG.
 
@@ -265,13 +266,19 @@ node scripts/card.js --input /path/to/input.json --output ~/Downloads/card.png
 
 Stable CLI modes: `big`, `long`, `whiteboard`, `poster`, `editorial-image`, `article-diagram`. Studio CLI modes: `infograph`, `comic`, `sketchnote`; they require a full `content_html` + `custom_css` composition contract and still need human visual review.
 
-To record how a multi-image job went from source to artifacts, use the internal Visual Job runner (transparent to ordinary natural-language use):
+Natural-language jobs use Visual Job v2. Render candidates first:
 
 ```bash
-node scripts/render-job.mjs --input visual-job.json --output-dir ./output
+node scripts/render-job.mjs --input visual-job.json --output-dir ./candidate --candidate --json
 ```
 
-It publishes PNGs and a redacted receipt only after CLI, capture, and `check-output` all succeed. See [`references/visual-job.md`](references/visual-job.md).
+Candidate rendering also seals the checked HTML and complete artifact set in an internal manifest. After the host Agent inspects every PNG and writes matching reviews, the publisher re-runs `check-output` and publishes the checked triples:
+
+```bash
+node scripts/publish-reviewed-job.mjs --candidate-dir ./candidate --output-dir ./output --json
+```
+
+Visual Job v1 and direct `card.js` remain compatible low-level paths. See [the architecture](docs/current-architecture.md), [Visual Job](references/visual-job.md), and [Visual Review](references/visual-review.md).
 
 For `editorial-image` article covers, a deterministic `cover_motif` places tension in the right-side motif. Complex covers, metaphors, and in-article images still prefer `content_html` + `custom_css`. `in-article` and `metaphor` no longer silently fall back to the default scaffold. Full skill behavior and input boundaries are in [`SKILL.md`](SKILL.md).
 
@@ -303,7 +310,7 @@ No. `brand_name`, `logo`, and `source` are written only when you provide them. O
 
 ### How is this different from asking an AI to draw one image?
 
-card-skill uses structured schemas, controlled renderers, Playwright capture, and `check-output` gates that block crop, overflow, broken images, and near-blank results. The goal is a repeatable publish-ready PNG, not a one-off chat illustration.
+card-skill uses structured Visual Plans, executable mode taxonomy, controlled renderers, Playwright capture, `check-output`, and a real-PNG Critic gate. The goal is a repeatable publish-ready PNG, not a one-off chat illustration.
 
 ### When should I use a cover vs an in-article diagram?
 

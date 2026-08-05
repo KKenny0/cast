@@ -102,6 +102,8 @@ Read `assets/comic_template.html`
 }
 ```
 
+正式 composition 不要覆盖模板的 `.card` / `.panels` 尺寸。自定义漫画根节点使用 `width: 100%; height: 100%`，Grid 行用 `minmax(0, …)` 或 `fr` 分配，固定行高、间距和 padding 的总和不得超过模板内容区。气泡、标题等短文本不要手写 `<br>`；留足内边距并让 CSS 自动换行，避免 `html_text_box_overflow` 与 `text_line_break_bad`。
+
 #### 集中线（Focus Lines）
 
 用于强调关键概念，制造"震撼"感：

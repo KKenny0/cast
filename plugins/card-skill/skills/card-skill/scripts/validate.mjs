@@ -330,6 +330,14 @@ function assertProjectAgentContract() {
   assert.match(agents, /composition_required: true/, 'AGENTS.md is missing the executable editorial composition contract');
 }
 
+function assertCardBenchDelegationContract() {
+  const skill = fs.readFileSync(path.join(ROOT, 'SKILL.md'), 'utf8');
+  const protocol = fs.readFileSync(path.join(ROOT, 'references', 'eval-protocol.md'), 'utf8');
+  assert.match(skill, /任何 `npm run eval:cardbench`[\s\S]*低成本独立执行单元[\s\S]*主交互上下文只接收进度与最终报告/, 'SKILL.md does not delegate every CardBench run away from the main interactive context');
+  assert.doesNotMatch(skill, /gpt-5\.6-terra|medium reasoning/, 'SKILL.md hard-codes a host-specific CardBench model');
+  assert.match(protocol, /low-cost independent execution facility[\s\S]*Do not parallelize case or Critic model calls[\s\S]*obtain user confirmation/, 'eval protocol is missing the portable delegated CardBench boundary');
+}
+
 function runCardCli(input, outputName, expectedCount = 1) {
   const inputPath = path.join(tmpDir, `${outputName}.json`);
   const outputPath = path.join(tmpDir, `${outputName}.png`);
@@ -365,6 +373,7 @@ try {
   assertWereadSourceContract();
   assertCodexPreviewContract();
   assertProjectAgentContract();
+  assertCardBenchDelegationContract();
   assert.equal(renderers.big.calcFontSize('能重建<br>才算能验证'), '176px', 'big mode must fit the longest explicit CJK line');
   assert.equal(renderers.big.resolveFontSize('能重建<br>才算能验证', 190), '176px', 'explicit big font size must not bypass the line-fit cap');
   assert.equal(renderers.big.calcFontSize('Make<br>clear'), '220px', 'short Latin big phrases should keep the large display size');
@@ -378,6 +387,11 @@ try {
     renderers.poster.isSparsePosterCard({ body: [{ type: 'heading', text: '二' }, { type: 'highlight', text: '再选择视觉结构' }] }),
     true,
     'short poster series cards must opt into the deliberate sparse composition',
+  );
+  assert.equal(
+    renderers.poster.isSparsePosterCard({ body: [{ type: 'heading', text: '先确认来源' }, { type: 'paragraph', text: '记录出处、作者与上下文，让后续判断建立在可追溯的信息上。' }] }),
+    true,
+    'one-step poster cards must keep their title and explanation in one compact composition',
   );
   assert.equal(
     renderers.poster.isSparsePosterCard({ body: [{ type: 'paragraph', text: 'This paragraph is deliberately long enough to use the regular poster composition without sparse scaling.' }] }),
@@ -407,6 +421,21 @@ try {
     const rendered = renderers[mode].render(input, target);
     for (const html of readOutputs(rendered)) assertUnbranded(html, mode);
   }
+
+  const whiteboardChainPath = path.join(tmpDir, 'whiteboard-four-node-chain.html');
+  const whiteboardChainOutput = renderers.whiteboard.render({
+    mode: 'whiteboard',
+    title: '事实约束选择，回执更新事实',
+    steps: [{ type: 'chain', nodes: [
+      { text: '01｜事实约束选择', highlight: true },
+      { text: '02｜选择决定动作' },
+      { text: '03｜动作产生回执' },
+      { text: '04｜回执更新事实', highlight: true },
+    ] }],
+  }, whiteboardChainPath);
+  assert.match(fs.readFileSync(whiteboardChainPath, 'utf8'), /class="chain-segment highlight"/, 'whiteboard chain lost its bounded semantic nodes');
+  const whiteboardChainCheck = runOutputCheck(whiteboardChainPath, whiteboardChainOutput);
+  assert.equal(whiteboardChainCheck.report?.pass, true, 'four-node whiteboard chain must wrap inside the capture viewport');
 
   const logoPath = path.join(tmpDir, 'example " onerror="attack.png');
   const logoUrl = pathToFileURL(logoPath).href;
@@ -731,6 +760,25 @@ try {
         readComputedStyles(coverMotifPath, '.cover-motif-window .window-field i', 'border-top-width'),
         ['1px', '1px', '1px', '1px'],
         'window motif detail dots lost their visible border',
+      );
+    }
+    if (motif === 'archive') {
+      assert.deepEqual(
+        readComputedStyles(coverMotifPath, '.cover-motif-archive .archive-file', 'border-top-width'),
+        ['2px', '2px', '2px'],
+        'archive receipt sheets must remain visible at thumbnail size',
+      );
+    }
+    if (motif === 'drawer') {
+      assert.deepEqual(
+        readComputedStyles(coverMotifPath, '.cover-motif-drawer .drawer-box', 'border-top-width'),
+        ['2px'],
+        'drawer body must remain legible at thumbnail size',
+      );
+      assert.deepEqual(
+        readComputedStyles(coverMotifPath, '.cover-motif-drawer .drawer-handle', 'border-top-width'),
+        ['2px'],
+        'drawer pull must remain a visible external object',
       );
     }
   }
@@ -1493,7 +1541,7 @@ try {
   assert.equal(validateVisualJob({ ...visualJob, outputs: [{ ...visualJob.outputs[0], source_unit_ids: ['missing'] }] }).valid, false, 'unknown Visual Job source unit unexpectedly passed');
   assert.equal(validateVisualJob({ ...visualJob, source: { ...visualJob.source, api_key: 'nope' } }).valid, false, 'sensitive Visual Job field unexpectedly passed');
   const visualJobSchema = JSON.parse(fs.readFileSync(path.join(ROOT, 'schemas', 'visual-job.json'), 'utf8'));
-  assert.equal(visualJobSchema.properties.schema_version.const, 1, 'public Visual Job schema version drifted');
+  assert.deepEqual(visualJobSchema.properties.schema_version.enum, [1, 2], 'public Visual Job schema version drifted');
   assert.deepEqual(visualJobSchema.properties.decision.properties.tier.enum, ['stable', 'studio'], 'public Visual Job tier contract drifted');
 
   assert.ok(listDesigns().length >= 1, 'Design registry is empty');

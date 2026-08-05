@@ -69,7 +69,7 @@ function isSparsePosterCard(card) {
     if (Array.isArray(element.entries)) return element.entries.map(entry => `${entry.label || ''}${entry.text || ''}`).join('');
     return '';
   }).join('').replace(/\s+/g, '');
-  return visibleText.length > 0 && visibleText.length <= 28;
+  return visibleText.length > 0 && visibleText.length <= 64;
 }
 
 /**

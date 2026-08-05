@@ -18,6 +18,7 @@ const REQUIRED_ENTRIES = [
   'package.json',
   'package-lock.json',
   'assets',
+  'docs',
   'evals',
   'references',
   'schemas',

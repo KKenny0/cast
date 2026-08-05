@@ -270,6 +270,8 @@ Visual weight rules:
 
 Custom CSS should not create a separate visual universe. If the composition needs stronger contrast, increase hierarchy through scale, position, or negative space before adding thick borders, bright fills, or heavy shadows.
 
+Every visible custom-composition element must keep its own bounding box inside the capture viewport. `overflow: hidden` does not make negative `inset` / `top` / `left` / `right` / `bottom` positions acceptable to `check-output`; build beams and edge fields from in-bounds boxes. Keep any shadow extent at 8px or less.
+
 ## Rendering Rules
 
 - Text should usually take less than 20% of the image.

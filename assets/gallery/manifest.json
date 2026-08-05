@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "card_skill_version": "0.8.1",
+  "card_skill_version": "0.9.0",
   "images": [
     {
       "fixture": "evals/gallery/creative/comic.json",
@@ -12,8 +12,8 @@
       "dpr": 2,
       "width": 2160,
       "height": 2880,
-      "render_contract_sha256": "e01f1c7ef86fd6966d53e86f851e772b3e56082ec6dbfc64abe61940b37acac9",
-      "png_sha256": "5cc1be3621eeae605e6d8baa3de3e1b29ad68b6e01823b05603012001c8eafbb"
+      "render_contract_sha256": "df2cf5bad248f317dd5b99525ccac948619ffff99cc4edd2a9794d2422b3c6ab",
+      "png_sha256": "c1ca44a0698c929ff30428b5b960adbc5cb766f0ae013b6f74b604f958afe0ed"
     },
     {
       "fixture": "evals/gallery/creative/infograph.json",
@@ -26,7 +26,7 @@
       "width": 2160,
       "height": 1600,
       "render_contract_sha256": "ede426103c686d2a81e1d2d9157973652e1f75c2a2280eae0c5186afcf0839d8",
-      "png_sha256": "e96c999f67ed1625ce0cc3214515ca3a52ba88bd51f08eb01b2eab7017c61f8d"
+      "png_sha256": "cc1ab1ed3c767a1cd8400e885dc35941ce268a4a0c038a555012e1a8286273ac"
     },
     {
       "fixture": "evals/gallery/creative/sketchnote.json",
@@ -37,9 +37,9 @@
       "tone": "warm",
       "dpr": 2,
       "width": 2160,
-      "height": 2834,
+      "height": 2832,
       "render_contract_sha256": "868caaa0d340ae45d3d0db942d9f2cdf216713e28a30292169152ce8ce32118a",
-      "png_sha256": "b847a1dfb49e00d406c9ca52ec9e4008ff6cc30bb896703dd9533943b2e345bf"
+      "png_sha256": "ec5fa6c45eb8068d0d2a8ffb1e782a27ae5a0f45e46cf80127e7a977a5a448ea"
     },
     {
       "fixture": "evals/gallery/jobs/article-boundary-legacy.json",
@@ -52,7 +52,7 @@
       "width": 2160,
       "height": 1440,
       "render_contract_sha256": "f95c9ef8f1b55435813521ee5815cab0b31f7b498c9ea5f43ebe92bfbd2b8732",
-      "png_sha256": "0688ff2ce886afc1b8c26d2c6375a9013fc1ef64e8277553047a4282127b5e12"
+      "png_sha256": "ec78dcf16acef3064095b4d094d7528d0a1f336220e410445694043c825d22ac"
     },
     {
       "fixture": "evals/gallery/jobs/article-formula.json",
@@ -65,7 +65,7 @@
       "width": 2160,
       "height": 1080,
       "render_contract_sha256": "3a424ca136a79354dc1f8a1915170af916a6ba6cd2d5f3db8b9eef71668e1147",
-      "png_sha256": "4745e6e65434613d13ce0e25493984e870166ae7ae062550c0319c7cf2549f7a"
+      "png_sha256": "bfc61c023de90771ed8eec6484c838819a0b1be63aa8b7c82acfebfad57e4a94"
     },
     {
       "fixture": "evals/gallery/jobs/big.json",
@@ -78,7 +78,7 @@
       "width": 2160,
       "height": 2880,
       "render_contract_sha256": "86627fe4f66bc4b8509c4557b48877a47f99f90f839b8d5572238bd1d32f6ccb",
-      "png_sha256": "53531a293c763b6450c6feccbfa5479a967923cb3f9997d625188de4f9cc87ff"
+      "png_sha256": "50be2773fdfa0b93ef874807d85adf9ab56320ff7d97680fbf2277a9bc2d141b"
     },
     {
       "fixture": "evals/gallery/jobs/editorial-wechat-cover.json",
@@ -91,7 +91,7 @@
       "width": 2160,
       "height": 920,
       "render_contract_sha256": "729cf840d73174198921d35a7a3ba820fd21360ef36dbf04d086020bf09a813d",
-      "png_sha256": "003c6f9ddae4acfb7c87aedb55c7d7092ae26753dfd04ff74fd2f9c9e6185dea"
+      "png_sha256": "ef032b623d46e78520b0e3d26ed1c760ff3469c1a92a56fc5144e63988b08792"
     },
     {
       "fixture": "evals/gallery/jobs/long.json",
@@ -104,7 +104,7 @@
       "width": 2160,
       "height": 2242,
       "render_contract_sha256": "6e17e7dfe501e32016529b555520fc31bfc345ac1c2c06fa5513158c4acf5309",
-      "png_sha256": "1c9b9befc6c2d833504b6dc0073224b0e606bfc7226125cb172199f00c7ff835"
+      "png_sha256": "ef7b790308d8090192f8c0da440b08dac22cd437386f5f225191db6b0ab2a3ba"
     },
     {
       "fixture": "evals/gallery/jobs/poster.json",
@@ -117,7 +117,7 @@
       "width": 2160,
       "height": 2880,
       "render_contract_sha256": "41b27f9abc57bd27d90660c6ee92a5a5fbc69308c292b6f22c64b4ff758362e2",
-      "png_sha256": "6faf0cb275cd88134ec0723bf5ed2fc8c8260422686ab891adce3f2d658b78e9"
+      "png_sha256": "575baaa194dea25a9e924cb062479519e945e8946a3d99ffbecd172ffc7d0b7d"
     },
     {
       "fixture": "evals/gallery/jobs/reading-notes.json",
@@ -130,7 +130,7 @@
       "width": 2160,
       "height": 2880,
       "render_contract_sha256": "925c5b330c495baa08873c5a11235e23a576a6e97044946b5c961f258f9f3b75",
-      "png_sha256": "10fa4bbad6cae147325ecc77975cf299e7299d4367cb53191a270c2cef8b7a29"
+      "png_sha256": "a3f83c8efd1e855e73c5f24b3c95f365dfa230b8d4bb898bc396dc300613672c"
     },
     {
       "fixture": "evals/gallery/jobs/reading-report.json",
@@ -143,7 +143,7 @@
       "width": 2160,
       "height": 2880,
       "render_contract_sha256": "356cb16f25708e8d20f424c679ef1c6aae63406a44870af88254ad53599239e5",
-      "png_sha256": "b1a5e10104ec9bfe1a008d4334cc0339276e86767abe1a4cd5c04d2400c6c432"
+      "png_sha256": "c54622307cf1954b6a84e0a2790e9c814aec178e900dfce57d4eef990627ddf6"
     },
     {
       "fixture": "evals/gallery/jobs/whiteboard.json",
@@ -154,9 +154,9 @@
       "tone": "technical",
       "dpr": 2,
       "width": 2160,
-      "height": 1468,
+      "height": 1484,
       "render_contract_sha256": "18097005ab629f5d5e48dd054f3f496a0507c8e36257c4f5bbfdc69e85c1a979",
-      "png_sha256": "4af34b141a45e5eb8b6c2a37c0fc068488e10d2d1ef753f9c55bae451f6206fc"
+      "png_sha256": "1b30bd1d7ef76849a1f813b39fbe4f548e4d3b1871c8ecc7839cf4fae56ae70d"
     }
   ]
 }

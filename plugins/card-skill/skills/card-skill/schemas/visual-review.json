@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/KKenny0/card-skill/schemas/visual-review.json",
+  "title": "Card Skill Visual Review v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "job_id", "output_id", "artifact_index", "attempt", "render_contract_sha256", "png_sha256", "checker_pass", "metaphor_required", "scores", "overall_score", "issues", "verdict"],
+  "properties": {
+    "schema_version": { "type": "integer", "const": 1 },
+    "job_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{0,63}$" },
+    "output_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{0,63}$" },
+    "artifact_index": { "type": "integer", "minimum": 1 },
+    "attempt": { "type": "integer", "enum": [0, 1] },
+    "render_contract_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "png_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "checker_pass": { "type": "boolean", "const": true },
+    "metaphor_required": { "type": "boolean" },
+    "scores": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["message_clarity", "visual_hierarchy", "cognitive_load", "style_consistency", "metaphor_quality"],
+      "properties": {
+        "message_clarity": { "type": "integer", "minimum": 0, "maximum": 5 },
+        "visual_hierarchy": { "type": "integer", "minimum": 0, "maximum": 5 },
+        "cognitive_load": { "type": "integer", "minimum": 0, "maximum": 5 },
+        "style_consistency": { "type": "integer", "minimum": 0, "maximum": 5 },
+        "metaphor_quality": { "type": ["integer", "null"], "minimum": 0, "maximum": 5 }
+      }
+    },
+    "overall_score": { "type": "number", "minimum": 0, "maximum": 10 },
+    "issues": {
+      "type": "array",
+      "maxItems": 20,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["type", "severity", "suggestion"],
+        "properties": {
+          "type": { "type": "string", "pattern": "^[a-z0-9][a-z0-9_-]{0,63}$" },
+          "severity": { "type": "string", "enum": ["blocker", "major", "minor"] },
+          "suggestion": { "type": "string", "minLength": 1, "maxLength": 500 }
+        }
+      }
+    },
+    "verdict": { "type": "string", "enum": ["pass", "revise", "fail"] }
+  }
+}

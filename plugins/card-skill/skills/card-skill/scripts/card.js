@@ -57,6 +57,7 @@ Options:
   --output <path>    Output PNG path (default: ~/Downloads/card_{mode}_{ts}.png)
   --dpr <number>     Device pixel ratio (default: 2)
   --report <path>    Write a machine-readable artifact/checker report
+  --checked-html-dir <directory>  Preserve the exact checked HTML for reviewed publication
   --list-designs     List all available design systems
   --help             Show this help
 
@@ -146,6 +147,7 @@ if (!result.valid) {
 const DPR = parseFloat(getArg('--dpr')) || 2;
 const outputArg = getArg('--output');
 const reportArg = getArg('--report');
+const checkedHtmlDirArg = getArg('--checked-html-dir');
 const ts = Date.now();
 const defaultOutputName = `card_${input.mode}_${ts}.png`;
 const outputPath = outputArg
@@ -212,7 +214,10 @@ function runOutputCheck(out, pngPath, options = {}) {
   }
 
   if (result.status !== 0 || !report || !report.pass) {
-    const details = report?.issues?.map(item => `  - ${item.code}: ${item.message}`).join('\n')
+    const details = report?.issues?.map(item => {
+      const evidence = item.details && Object.keys(item.details).length ? ` ${JSON.stringify(item.details)}` : '';
+      return `  - ${item.code}: ${item.message}${evidence}`;
+    }).join('\n')
       || result.stderr
       || result.stdout
       || 'unknown output-check failure';
@@ -391,12 +396,26 @@ function pngMetadata(pngPath) {
   };
 }
 
-function artifactReport(stagedPath, finalPath, checker, index) {
+function artifactReport(out, stagedPath, finalPath, checker, index) {
+  let checkedHtml = null;
+  if (checkedHtmlDirArg) {
+    fs.mkdirSync(path.resolve(checkedHtmlDirArg), { recursive: true });
+    const checkedHtmlPath = path.join(path.resolve(checkedHtmlDirArg), `${path.basename(finalPath, '.png')}.checked.html`);
+    fs.copyFileSync(out.htmlPath, checkedHtmlPath);
+    checkedHtml = { path: checkedHtmlPath };
+  }
   return {
     index,
     path: path.resolve(finalPath),
     basename: path.basename(finalPath),
     ...pngMetadata(stagedPath),
+    capture: {
+      width: out.captureWidth,
+      height: out.captureHeight,
+      dpr: DPR,
+      fullpage: Boolean(out.fullpage),
+    },
+    checked_html: checkedHtml,
     checker: {
       pass: checker.pass,
       issues: checker.issues,
@@ -446,7 +465,7 @@ try {
       const checker = captureWithOutputCheck(out, stagedPath);
       pngPaths.push(pngPath);
       publishEntries.push({ stagedPath, finalPath: pngPath });
-      artifactReports.push(artifactReport(stagedPath, pngPath, checker, i + 1));
+      artifactReports.push(artifactReport(out, stagedPath, pngPath, checker, i + 1));
     });
 
     publishCardArtifacts(publishEntries, artifactReports, runTmpDir);
@@ -466,7 +485,7 @@ try {
       });
 
       const artifactReports = entries.map((entry, i) =>
-        artifactReport(entry.stagedPath, pngPaths[i], entry.checker, i + 1));
+        artifactReport(entry.out, entry.stagedPath, pngPaths[i], entry.checker, i + 1));
       publishCardArtifacts(
         entries.map((entry, i) => ({ stagedPath: entry.stagedPath, finalPath: pngPaths[i] })),
         artifactReports,
@@ -482,7 +501,7 @@ try {
       const checker = captureWithOutputCheck(out, stagedPath);
       publishCardArtifacts(
         [{ stagedPath, finalPath: outputPath }],
-        [artifactReport(stagedPath, outputPath, checker, 1)],
+        [artifactReport(out, stagedPath, outputPath, checker, 1)],
         runTmpDir,
       );
       console.log(outputPath);

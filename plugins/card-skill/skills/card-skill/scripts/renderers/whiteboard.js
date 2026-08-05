@@ -25,9 +25,8 @@ function renderSteps(steps) {
       case 'chain': {
         const parts = step.nodes.map(node => {
           const text = escapeHtml(node.text);
-          if (node.highlight) return `<span class="highlight">${text}</span>`;
-          if (node.muted) return `<span class="muted">${text}</span>`;
-          return text;
+          const state = node.highlight ? ' highlight' : node.muted ? ' muted' : '';
+          return `<span class="chain-segment${state}">${text}</span>`;
         }).join(' ');
         return `${num}<div class="chain"><div class="chain-node">${parts}</div></div>`;
       }

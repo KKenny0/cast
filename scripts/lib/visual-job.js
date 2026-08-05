@@ -1,6 +1,7 @@
 const crypto = require('crypto');
 const { validate } = require('./schema');
 const { EDITORIAL_TONES } = require('./designs');
+const { ARGUMENT_STRUCTURES, CONTENT_TYPES, modeTier, selectMode } = require('./mode-selector');
 
 const PUBLISH_TARGETS = new Set(['wechat-cover', 'blog-hero', 'article-body', 'social-single', 'social-series', 'reading-notes', 'long-read', 'whiteboard']);
 const SOURCE_KINDS = new Set(['pasted-text', 'url', 'file', 'normalized-adapter']);
@@ -16,8 +17,9 @@ const SENSITIVE_KEY = /(?:api[_-]?key|authorization|cookie|token|secret|password
 const TOP_LEVEL_FIELDS = new Set(['schema_version', 'job_id', 'publish_target', 'source', 'source_units', 'decision', 'outputs']);
 const SOURCE_FIELDS = new Set(['kind', 'label', 'language', 'digest']);
 const SOURCE_UNIT_FIELDS = new Set(['id', 'label', 'digest', 'excerpt']);
-const DECISION_FIELDS = new Set(['mode', 'tier', 'reason', 'tone', 'selection_summary', 'visual_risks']);
-const OUTPUT_FIELDS = new Set(['id', 'basename', 'source_unit_ids', 'transformation', 'section', 'render_contract']);
+const DECISION_FIELDS = new Set(['mode', 'tier', 'reason', 'tone', 'selection_source', 'selection_summary', 'visual_risks']);
+const OUTPUT_FIELDS = new Set(['id', 'basename', 'source_unit_ids', 'transformation', 'section', 'visual_plan', 'render_contract']);
+const VISUAL_PLAN_FIELDS = new Set(['core_message', 'content_type', 'argument_structure', 'visual_metaphor', 'layout_strategy', 'visual_hierarchy', 'avoid_patterns']);
 
 function canonicalJson(value) {
   if (Array.isArray(value)) return `[${value.map(canonicalJson).join(',')}]`;
@@ -72,11 +74,36 @@ function noSensitiveKeys(value, path = 'job', errors = []) {
   return errors;
 }
 
+function validateStringList(value, path, minimum, maximum, itemMaximum, errors) {
+  if (!Array.isArray(value) || value.length < minimum || value.length > maximum) {
+    errors.push(`${path} must contain ${minimum} to ${maximum} strings`);
+    return;
+  }
+  value.forEach((item, index) => {
+    if (typeof item !== 'string' || !item.trim() || item.length > itemMaximum) errors.push(`${path}[${index}] must be a non-empty string of at most ${itemMaximum} characters`);
+  });
+}
+
+function validateVisualPlan(plan, path, errors) {
+  if (!plan || typeof plan !== 'object' || Array.isArray(plan)) {
+    errors.push(`${path} must be an object`);
+    return;
+  }
+  rejectUnknownFields(plan, VISUAL_PLAN_FIELDS, path, errors);
+  if (typeof plan.core_message !== 'string' || !plan.core_message.trim() || plan.core_message.length > 280) errors.push(`${path}.core_message must be a non-empty string of at most 280 characters`);
+  if (!CONTENT_TYPES.has(plan.content_type)) errors.push(`${path}.content_type must be one of: ${[...CONTENT_TYPES].join(', ')}`);
+  if (!ARGUMENT_STRUCTURES.has(plan.argument_structure)) errors.push(`${path}.argument_structure must be one of: ${[...ARGUMENT_STRUCTURES].join(', ')}`);
+  if (plan.visual_metaphor !== null && (typeof plan.visual_metaphor !== 'string' || !plan.visual_metaphor.trim() || plan.visual_metaphor.length > 280)) errors.push(`${path}.visual_metaphor must be null or a non-empty string of at most 280 characters`);
+  if (typeof plan.layout_strategy !== 'string' || !plan.layout_strategy.trim() || plan.layout_strategy.length > 500) errors.push(`${path}.layout_strategy must be a non-empty string of at most 500 characters`);
+  validateStringList(plan.visual_hierarchy, `${path}.visual_hierarchy`, 1, 5, 160, errors);
+  validateStringList(plan.avoid_patterns, `${path}.avoid_patterns`, 0, 32, 160, errors);
+}
+
 function validateVisualJob(job) {
   const errors = [];
   if (!job || typeof job !== 'object' || Array.isArray(job)) return { valid: false, errors: ['Visual Job must be an object'] };
   rejectUnknownFields(job, TOP_LEVEL_FIELDS, 'Visual Job', errors);
-  if (job.schema_version !== 1) errors.push('schema_version must be 1');
+  if (![1, 2].includes(job.schema_version)) errors.push('schema_version must be 1 or 2');
   if (typeof job.job_id !== 'string' || !SAFE_ID.test(job.job_id)) errors.push('job_id must be a safe lowercase slug');
   if (!PUBLISH_TARGETS.has(job.publish_target)) errors.push(`publish_target must be one of: ${[...PUBLISH_TARGETS].join(', ')}`);
 
@@ -92,7 +119,7 @@ function validateVisualJob(job) {
 
   if (!Array.isArray(job.source_units) || job.source_units.length < 1 || job.source_units.length > 100) errors.push('source_units must contain 1 to 100 entries');
   const unitIds = new Set();
-  for (const [index, unit] of (job.source_units || []).entries()) {
+  for (const [index, unit] of (Array.isArray(job.source_units) ? job.source_units : []).entries()) {
     if (!unit || typeof unit !== 'object' || Array.isArray(unit)) { errors.push(`source_units[${index}] must be an object`); continue; }
     rejectUnknownFields(unit, SOURCE_UNIT_FIELDS, `source_units[${index}]`, errors);
     if (typeof unit.id !== 'string' || !SAFE_ID.test(unit.id)) errors.push(`source_units[${index}].id must be a safe lowercase slug`);
@@ -109,6 +136,8 @@ function validateVisualJob(job) {
     rejectUnknownFields(decision, DECISION_FIELDS, 'decision', errors);
     if (!DECISION_MODES.has(decision.mode)) errors.push(`decision.mode must be one of: ${[...DECISION_MODES].join(', ')}`);
     if (!['stable', 'studio'].includes(decision.tier)) errors.push('decision.tier must be stable or studio');
+    if (job.schema_version === 2 && !['taxonomy', 'user-override'].includes(decision.selection_source)) errors.push('decision.selection_source must be taxonomy or user-override for Visual Job v2');
+    if (job.schema_version === 1 && decision.selection_source !== undefined) errors.push('decision.selection_source is only supported by Visual Job v2');
     if (typeof decision.reason !== 'string' || !decision.reason.trim() || decision.reason.length > 500) errors.push('decision.reason must be a non-empty string of at most 500 characters');
     if (decision.tone !== undefined && !EDITORIAL_TONES.has(decision.tone)) errors.push(`decision.tone must be one of: ${[...EDITORIAL_TONES].join(', ')}`);
     if (decision.selection_summary !== undefined && (typeof decision.selection_summary !== 'string' || decision.selection_summary.length > 500)) {
@@ -127,7 +156,8 @@ function validateVisualJob(job) {
 
   if (!Array.isArray(job.outputs) || job.outputs.length < 1 || job.outputs.length > 20) errors.push('outputs must contain 1 to 20 entries');
   const outputIds = new Set(); const basenames = new Set();
-  for (const [index, output] of (job.outputs || []).entries()) {
+  const actualModes = new Set(); const actualTiers = new Set();
+  for (const [index, output] of (Array.isArray(job.outputs) ? job.outputs : []).entries()) {
     if (!output || typeof output !== 'object' || Array.isArray(output)) { errors.push(`outputs[${index}] must be an object`); continue; }
     rejectUnknownFields(output, OUTPUT_FIELDS, `outputs[${index}]`, errors);
     if (typeof output.id !== 'string' || !SAFE_ID.test(output.id)) errors.push(`outputs[${index}].id must be a safe lowercase slug`);
@@ -146,6 +176,8 @@ function validateVisualJob(job) {
     if (output.section !== undefined && (typeof output.section !== 'string' || output.section.length > 160)) {
       errors.push(`outputs[${index}].section must be a string of at most 160 characters`);
     }
+    if (job.schema_version === 2) validateVisualPlan(output.visual_plan, `outputs[${index}].visual_plan`, errors);
+    else if (output.visual_plan !== undefined) errors.push(`outputs[${index}].visual_plan is only supported by Visual Job v2`);
     if (!output.render_contract || typeof output.render_contract !== 'object' || Array.isArray(output.render_contract)) {
       errors.push(`outputs[${index}].render_contract must be an object`);
       continue;
@@ -157,11 +189,23 @@ function validateVisualJob(job) {
     }
     const contractResult = validate(contract);
     if (!contractResult.valid) errors.push(...contractResult.errors.map(error => `outputs[${index}].render_contract: ${error}`));
-    else if (decision?.mode && decision.mode !== 'mixed' && contract.mode !== decision.mode) errors.push(`outputs[${index}].render_contract.mode must match decision.mode`);
+    actualModes.add(contract.mode);
+    actualTiers.add(modeTier(contract.mode, contract));
+    if (job.schema_version === 2 && decision?.selection_source === 'taxonomy' && output.visual_plan) {
+      const selectedMode = selectMode(job.publish_target, output.visual_plan);
+      if (contract.mode !== selectedMode) errors.push(`outputs[${index}].render_contract.mode must match taxonomy mode "${selectedMode}"`);
+      if (job.publish_target === 'article-body' && output.visual_plan.visual_metaphor && !studioContract(contract)) {
+        errors.push(`outputs[${index}].render_contract must provide a complete Studio composition for an article-body visual metaphor`);
+      }
+    }
     const isStudioContract = studioContract(contract);
     if (decision?.tier === 'stable' && isStudioContract) errors.push(`outputs[${index}] uses a Studio contract but decision.tier is stable`);
     if (decision?.tier === 'studio' && !isStudioContract) errors.push(`outputs[${index}] uses a Stable contract but decision.tier is studio`);
   }
+  const aggregateMode = actualModes.size === 1 ? [...actualModes][0] : 'mixed';
+  if (decision?.mode && decision.mode !== aggregateMode) errors.push(`decision.mode must equal aggregate output mode "${aggregateMode}"`);
+  if (actualTiers.size === 1 && decision?.tier !== [...actualTiers][0]) errors.push(`decision.tier must equal aggregate output tier "${[...actualTiers][0]}"`);
+  if (actualTiers.size > 1) errors.push('Visual Job cannot mix Stable and Studio outputs');
   noSensitiveKeys(job, 'job', errors);
   return { valid: errors.length === 0, errors };
 }
@@ -173,6 +217,7 @@ module.exports = {
   TRANSFORMATIONS,
   STABLE_MODES,
   STUDIO_MODES,
+  validateVisualPlan,
   canonicalJson,
   sha256Bytes,
   sha256Json,

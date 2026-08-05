@@ -183,17 +183,35 @@
     color: var(--ink);
     line-height: 1.5;
     padding: 6px 4px;
-    white-space: nowrap;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .chain-segment {
+    display: inline-flex;
+    align-items: center;
+    padding: 10px 14px;
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius);
+    background: var(--surface-1);
   }
 
   .chain-node .highlight {
     color: var(--accent);
     font-weight: 700;
+    border-color: var(--accent);
   }
 
   .chain-node .muted {
     color: var(--ink-muted);
-    font-size: 36px;
+    font-size: 30px;
+    padding: 4px 0;
+    border: 0;
+    background: transparent;
   }
 
   /* ═══════════════════════════════════

@@ -28,6 +28,8 @@ Read `assets/poster_template.html`
 
 当输入是多条个人划线 / 想法，且没有明确要求长图或结构图时，使用 `mode: "poster"` + `variant: "reading-notes"`。这不是新的 mode，也不改变普通 Poster 的默认行为。
 
+普通 Poster 只使用 contract 顶层 `title`；不要给 `cards[]` 添加 `title`。`cards[].title` 仅由下面的 `reading-notes` 变体支持。
+
 ```json
 {
   "mode": "poster",
