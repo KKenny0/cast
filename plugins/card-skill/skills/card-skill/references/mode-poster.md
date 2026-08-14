@@ -66,6 +66,53 @@ Read `assets/poster_template.html`
 - 用户明确要求每条都要时，保持原始顺序，分成每批最多 8 张卡，不得静默丢弃，也不得塞进一张超长 Poster。
 - 第一张卡必须同时呈现系列标题和实际内容，不允许 title-only 首卡。
 
+### 证据媒体与原生流程
+
+普通 Poster 还支持两个受约束的正文元素。它们解决的是证据和布局，不是开放任意 HTML/CSS：
+
+```json
+{
+  "mode": "poster",
+  "kicker": "COMMAND-LINE WORKFLOW",
+  "title": "把仓库压成可审阅的输入",
+  "cards": [
+    {
+      "body": [
+        {
+          "type": "media",
+          "path": "C:/absolute/path/current-output.png",
+          "alt": "当前版本输出界面",
+          "caption": "由当前官方工作流产生的输出。",
+          "fit": "cover",
+          "position": "top"
+        }
+      ]
+    },
+    {
+      "body": [
+        {
+          "type": "process",
+          "steps": [
+            { "label": "01", "title": "输入", "text": "选择仓库或目录。" },
+            { "label": "02", "title": "控制", "text": "执行原样保留的命令。" },
+            { "label": "03", "title": "输出", "text": "检查可交付文件。" }
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+
+- `media.path` 必须是显式给出的、可读的本地 PNG/JPEG/WebP 绝对路径；拒绝 UNC、设备 namespace 与 renderer 联网。运行时在 Chromium 前创建私有快照，限制单文件及整份 poster 合计 32 MiB、单边 8192 px、整份 poster 解码像素合计 4000 万，验证容器后以内嵌 data URL 渲染；原始路径不会进入浏览器 allow-list。
+- 通过 Visual Job 编排 `media` 时必须使用 v3，使每张媒体卡绑定 current primary evidence，而且 source unit 的 `digest` 必须匹配私有快照 SHA-256；候选 receipt 和 checked HTML 继续封存该摘要。低级 `card.js` 仍可直接渲染已验证的本地 contract。
+- `media` 是主证据场，不是把完整卡片、带标题的 article-diagram 或另一张 poster 再嵌进来。界面与输出必须来自当前版本，`alt` 只用于可访问性，事实说明放在可见 `caption`。
+- `media.fit` 默认是 `contain`，保证界面、终端输出和图表边缘不被静默裁掉。只有在裁切不会损失证据且构图确实需要时，才显式选择 `cover`。
+- `process` 固定为 2–5 步，只接受 `label`、`title`、`text`；短流程优先使用它，不要先生成一张流程图截图再塞回 poster。仅含一个 `process` 的首卡或续卡会让流程按可用阅读区伸展，避免固定高度留下无意的大空洞。
+- 每张普通卡应只选择一个主证据职责；`reading-notes` 变体不接受 `media` 或 `process`。
+- `check-output` 会拒绝缩成小块或在正文后留下意外大空洞的 media/process。主体宽度至少占卡片约 78%；证据图根据首卡、续卡和相邻正文在画布约 25%–76% 之间自适应，流程场约占 38%–65%，正文主场需填满可用阅读区。`fit: contain` 按图片实际绘制矩形而非 CSS 容器计量；只能形成细条的极端横图或竖图不能冒充主证据场。
+- 多卡系列可用顶层 `kicker` 作为统一的 running label；首卡与续卡都显示同一骨架和 `01 / 03` 式页码。没有 `kicker` 时，首卡 running label 留空以避免与主标题重复，续卡回退到系列标题。
+
 ## 步骤 3：计算视觉重量
 
 模板在 1080x1440 全分辨率渲染，正文 36px，行高 1.7。
@@ -113,7 +160,7 @@ Read `assets/poster_template.html`
 ### 特殊情况
 
 - 只有一张卡：不显示页码
-- 多张卡：显示 `1 / N` 格式页码
+- 多张卡：首卡与续卡都显示 `01 / 0N` 格式页码；`kicker` 存在时统一显示为 running label；没有 `kicker` 时首卡留空、续卡回退到系列标题
 
 ## 步骤 5：格式化为 HTML
 
@@ -156,7 +203,7 @@ Read `assets/poster_template.html`
 |------|------|
 | `{{BG_COLOR}}` | 步骤 1.5 确定的背景底色 |
 | `{{ACCENT_COLOR}}` | 步骤 1.5 确定的强调色 |
-| `{{HEADER_BLOCK}}` | 续页卡：`<div class="header"><span class="running-title">文章标题</span></div>`；首卡或单卡：空字符串 |
+| `{{HEADER_BLOCK}}` | 多卡的每一张：`<div class="header"><span class="running-title">kicker；无 kicker 时首卡为空、续卡为系列标题</span><span class="page-indicator">01 / 03</span></div>`；单卡为空 |
 | `{{TITLE_BLOCK}}` | 首卡有标题时：`<div class="title-area"><h1>标题</h1></div>`；续页卡或无标题时：空字符串 |
 | `{{BODY_HTML}}` | 步骤 5 生成的 HTML |
 | `{{SOURCE_LINE}}` | 内容来源（可选）：`<span class="info-source">来源文字</span>`，无来源时空字符串 |

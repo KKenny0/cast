@@ -8,7 +8,12 @@
   "oneOf": [
     {
       "required": ["formula", "sentence", "structure"],
-      "not": { "required": ["family"] }
+      "not": {
+        "anyOf": [
+          { "required": ["family"] },
+          { "required": ["logo"] }
+        ]
+      }
     },
     {
       "required": ["family", "nodes"],
@@ -181,6 +186,8 @@
     },
     "logo": {
       "type": "string",
+      "maxLength": 1024,
+      "pattern": "^(?:[A-Za-z]:[\\\\/]|/(?![/?\\\\]))",
       "description": "Optional path to a brand logo or avatar image. Omit for an unbranded output."
     },
     "brand_name": {

@@ -116,6 +116,41 @@ try {
   assert.equal(articleDiagram.stderr, '', 'article-diagram success wrote unexpected stderr output');
   assert.deepEqual(readPngSize(articleDiagramOutputPath), { width: 2160, height: 1620 });
 
+  const posterEvidencePath = path.join(ROOT, 'assets', 'gallery', 'article-formula.png');
+  const evidencePosterBase = path.join(harnessDir, 'evidence-process.png');
+  const evidencePoster = runCard({
+    mode: 'poster',
+    design: 'stripe',
+    kicker: 'EVIDENCE ROUTE',
+    title: 'Proof chooses the layout',
+    source: 'Owned smoke fixture',
+    cards: [
+      {
+        body: [
+          { type: 'media', path: posterEvidencePath, alt: 'Current product evidence', caption: 'One current source, shown at reading scale.', fit: 'cover' },
+          { type: 'paragraph', text: 'The evidence occupies the primary field instead of sitting inside another diagram card.' },
+        ],
+      },
+      {
+        body: [
+          { type: 'heading', text: 'A native three-step path' },
+          { type: 'process', steps: [
+            { title: 'Collect', text: 'Bind current evidence.' },
+            { title: 'Route', text: 'Choose one visual responsibility.' },
+            { title: 'Review', text: 'Inspect the rendered PNG.' },
+          ] },
+        ],
+      },
+    ],
+  }, evidencePosterBase);
+  assert.equal(evidencePoster.status, 0, evidencePoster.stderr || evidencePoster.stdout || 'evidence/process poster CLI failed');
+  const evidencePosterPaths = [
+    path.join(harnessDir, 'evidence-process_1.png'),
+    path.join(harnessDir, 'evidence-process_2.png'),
+  ];
+  assert.deepEqual(evidencePoster.stdout.trim().split(/\r?\n/), evidencePosterPaths, 'poster stdout did not contain the complete series');
+  evidencePosterPaths.forEach(pngPath => assert.deepEqual(readPngSize(pngPath), { width: 2160, height: 2880 }));
+
   const posterCard = text => ({ body: [{ type: 'paragraph', text }] });
   const overflowBase = path.join(harnessDir, 'overflow.png');
   const overflow = runCard({
@@ -147,7 +182,7 @@ try {
 
   assert.deepEqual(activeRunDirs(), beforeRunDirs, 'card CLI left a temporary run directory behind');
 
-  console.log('Runtime smoke passed: CLI, editorial-image and article-diagram renders, Chromium capture, PNG dimensions, stdout contract, poster transactions, and temp cleanup.');
+  console.log('Runtime smoke passed: CLI, editorial-image, article-diagram, evidence/process poster renders, Chromium capture, PNG dimensions, stdout contract, poster transactions, and temp cleanup.');
 } finally {
   fs.rmSync(harnessDir, { recursive: true, force: true });
 }

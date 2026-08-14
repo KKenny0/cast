@@ -25,7 +25,7 @@ function calcPosterTitleFontSize(title) {
 /**
  * Convert structured body elements into HTML for poster_template.
  * Supported types: paragraph, heading, highlight, items, data_row, divider,
- * and reading_unit for the reading-notes variant.
+ * media, process, and reading_unit for the reading-notes variant.
  */
 function renderCardBody(body) {
   return body.map(el => {
@@ -50,6 +50,29 @@ function renderCardBody(body) {
       }
       case 'divider':
         return '<div class="divider"></div>';
+      case 'media': {
+        // Evidence should remain complete by default. Cropping is an explicit
+        // editorial decision because screenshots and output records often put
+        // important labels at their edges.
+        const fit = el.fit === 'cover' ? 'cover' : 'contain';
+        const position = ['center', 'top', 'bottom', 'left', 'right'].includes(el.position) ? el.position : 'center';
+        const caption = typeof el.caption === 'string' && el.caption.trim()
+          ? `<figcaption>${escapeHtml(el.caption)}</figcaption>`
+          : '';
+        const extension = path.extname(el.path).toLowerCase();
+        const mime = el.mime_type || (extension === '.png' ? 'image/png' : extension === '.webp' ? 'image/webp' : 'image/jpeg');
+        const dataUrl = `data:${mime};base64,${fs.readFileSync(path.resolve(el.path)).toString('base64')}`;
+        return `<figure class="evidence-media fit-${fit} position-${position}" data-poster-media="true"><img src="${dataUrl}" alt="${escapeHtml(el.alt)}">${caption}</figure>`;
+      }
+      case 'process': {
+        if (!Array.isArray(el.steps)) return '';
+        const steps = el.steps.map((step, index) => {
+          const label = typeof step.label === 'string' && step.label.trim() ? escapeHtml(step.label) : String(index + 1).padStart(2, '0');
+          const detail = typeof step.text === 'string' && step.text.trim() ? `<p>${escapeHtml(step.text)}</p>` : '';
+          return `<li class="process-step"><span class="process-index">${label}</span><div class="process-copy"><h3>${escapeHtml(step.title)}</h3>${detail}</div></li>`;
+        }).join('');
+        return `<ol class="native-process" data-poster-process="true">${steps}</ol>`;
+      }
       case 'reading_unit': {
         const thought = typeof el.thought === 'string' && el.thought.trim() !== ''
           ? `<div class="reading-thought"><div class="reading-label">我的想法</div><p>${escapeHtml(el.thought)}</p></div>`
@@ -64,12 +87,38 @@ function renderCardBody(body) {
 
 function isSparsePosterCard(card) {
   if (!Array.isArray(card.body) || card.body.length === 0 || card.body.length > 2) return false;
+  if (card.body.some(element => ['media', 'process'].includes(element?.type))) return false;
   const visibleText = card.body.map(element => {
     if (typeof element.text === 'string') return element.text;
     if (Array.isArray(element.entries)) return element.entries.map(entry => `${entry.label || ''}${entry.text || ''}`).join('');
     return '';
   }).join('').replace(/\s+/g, '');
   return visibleText.length > 0 && visibleText.length <= 64;
+}
+
+function isDenseMediaCopyCard(card) {
+  if (!Array.isArray(card.body) || !card.body.some(element => element?.type === 'media')) return false;
+
+  const copyBlocks = card.body.filter(element => element && !['media', 'divider'].includes(element.type));
+  const dataRows = copyBlocks.filter(element => element.type === 'data_row').length;
+  const listEntries = copyBlocks.reduce((sum, element) => (
+    element.type === 'items' && Array.isArray(element.entries) ? sum + element.entries.length : sum
+  ), 0);
+  const visibleTextLength = card.body.reduce((sum, element) => {
+    if (!element) return sum;
+    if (typeof element.text === 'string') sum += [...element.text.replace(/\s+/g, '')].length;
+    if (typeof element.caption === 'string') sum += [...element.caption.replace(/\s+/g, '')].length;
+    if (typeof element.key === 'string') sum += [...element.key.replace(/\s+/g, '')].length;
+    if (typeof element.value === 'string') sum += [...element.value.replace(/\s+/g, '')].length;
+    if (Array.isArray(element.entries)) {
+      sum += element.entries.reduce((entrySum, entry) => (
+        entrySum + [...`${entry?.label || ''}${entry?.text || ''}`.replace(/\s+/g, '')].length
+      ), 0);
+    }
+    return sum;
+  }, 0);
+
+  return copyBlocks.length >= 4 || dataRows >= 3 || listEntries >= 4 || visibleTextLength > 180;
 }
 
 /**
@@ -102,10 +151,11 @@ function render(input, outputDir) {
     const isLast = i === totalCards - 1;
     const pageNum = i + 1;
 
-    // Build header block (empty for first card)
+    // Multi-card series share one running skeleton, including the first card.
     let headerBlock = '';
-    if (!isFirst) {
-      headerBlock = `<div class="header"><span class="running-title">${escapeHtml(input.title)}</span><span class="page-indicator">${pageNum} / ${totalCards}</span></div>`;
+    if (totalCards > 1) {
+      const runningTitle = input.kicker || (isFirst ? '' : input.title);
+      headerBlock = `<div class="header"><span class="running-title">${escapeHtml(runningTitle)}</span><span class="page-indicator">${String(pageNum).padStart(2, '0')} / ${String(totalCards).padStart(2, '0')}</span></div>`;
     }
 
     // Build title block (only for first card)
@@ -143,7 +193,19 @@ function render(input, outputDir) {
       : '';
     const bodyHtml = Array.isArray(card.body) ? renderCardBody(card.body) : '';
     const sparseClass = !isReadingNotes && isSparsePosterCard(card) ? ' sparse-poster' : '';
-    html = html.replaceAll('{{CARD_CLASS}}', `${isReadingNotes ? ' reading-notes' : ''}${sparseClass}`);
+    const evidenceClass = !isReadingNotes && card.body?.some(element => element?.type === 'media') ? ' evidence-poster' : '';
+    const processClass = !isReadingNotes && card.body?.some(element => element?.type === 'process') ? ' process-poster' : '';
+    const hasMediaCaption = !isReadingNotes && card.body?.some(element => element?.type === 'media' && typeof element.caption === 'string' && element.caption.trim());
+    const mediaOnlyClass = !isReadingNotes && card.body?.length === 1 && card.body[0]?.type === 'media' && !hasMediaCaption ? ' media-only-poster' : '';
+    const mediaWithCopyClass = !isReadingNotes
+      && card.body?.some(element => element?.type === 'media')
+      && (hasMediaCaption || card.body?.some(element => !['media', 'divider'].includes(element?.type)))
+      ? ' media-with-copy-poster'
+      : '';
+    const denseMediaCopyClass = mediaWithCopyClass && isDenseMediaCopyCard(card) ? ' media-copy-dense' : '';
+    const processOnlyClass = !isReadingNotes && card.body?.length === 1 && card.body[0]?.type === 'process' ? ' process-only-poster' : '';
+    const singleClass = totalCards === 1 ? ' single-poster' : '';
+    html = html.replaceAll('{{CARD_CLASS}}', `${isReadingNotes ? ' reading-notes' : ''}${singleClass}${sparseClass}${evidenceClass}${processClass}${mediaOnlyClass}${mediaWithCopyClass}${denseMediaCopyClass}${processOnlyClass}`);
     html = html.replaceAll('{{BODY_HTML}}', `${cardTitle}${bodyHtml}`);
     html = html.replaceAll('{{COLOPHON_BLOCK}}', colophonBlock);
     html = html.replaceAll('{{LOGO}}', logoPath ? escapeHtml(pathToFileURL(logoPath).href) : '');
@@ -166,4 +228,4 @@ function render(input, outputDir) {
   return results;
 }
 
-module.exports = { render, renderCardBody, calcPosterTitleFontSize, isSparsePosterCard };
+module.exports = { render, renderCardBody, calcPosterTitleFontSize, isSparsePosterCard, isDenseMediaCopyCard };

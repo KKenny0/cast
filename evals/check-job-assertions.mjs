@@ -41,6 +41,8 @@ function bodyText(body) {
     if (element.type === 'items') return (element.entries || []).flatMap(entry => [entry.label, entry.text]);
     if (element.type === 'data_row') return [element.key, element.value];
     if (element.type === 'reading_unit') return [element.quote, element.thought];
+    if (element.type === 'media') return [element.caption];
+    if (element.type === 'process') return (element.steps || []).flatMap(step => [step.label, step.title, step.text]);
     return [];
   }).filter(Boolean);
 }
@@ -103,6 +105,33 @@ function semanticText(contract) {
   return JSON.stringify(semanticProjection(contract)).toLocaleLowerCase('en-US');
 }
 
+function artifactsForOutput(job, output) {
+  if (job.schema_version === 3) return output.artifacts || [];
+  return [{
+    artifact_index: 1,
+    id: output.id,
+    role: output.section || 'output',
+    source_unit_ids: output.source_unit_ids,
+    visual_plan: output.visual_plan,
+  }];
+}
+
+function artifactEntries(job) {
+  return job.outputs.flatMap(output => artifactsForOutput(job, output).map((artifact, artifactOffset) => ({
+    output,
+    artifact,
+    artifactOffset,
+  })));
+}
+
+function artifactSemanticText(entry) {
+  const { output, artifactOffset } = entry;
+  if (output.render_contract.mode === 'poster' && output.render_contract.cards?.[artifactOffset]) {
+    return JSON.stringify(posterCardProjection(output.render_contract.cards[artifactOffset])).toLocaleLowerCase('en-US');
+  }
+  return semanticText(output.render_contract);
+}
+
 function visibleContractText(contract) {
   if (contract.mode !== 'editorial-image') return semanticText(contract);
   return JSON.stringify([
@@ -130,7 +159,8 @@ function assertRequiredTermsInContracts(job, expected) {
   }
 
   const usedSourceUnits = new Set();
-  const usedOutputs = new Set();
+  const usedArtifacts = new Set();
+  const artifacts = artifactEntries(job);
   const sourceMappings = expected.required_source_contract_mappings || [];
   for (const [mappingIndex, mapping] of sourceMappings.entries()) {
     const sourceIndex = job.source_units.findIndex((unit, index) => {
@@ -140,14 +170,14 @@ function assertRequiredTermsInContracts(job, expected) {
     });
     assert.notEqual(sourceIndex, -1, `No distinct source unit preserves source term group "${mapping.source_terms.join(' + ')}"`);
     const sourceUnit = job.source_units[sourceIndex];
-    const outputIndex = job.outputs.findIndex((output, index) => (
-      !usedOutputs.has(index) && output.source_unit_ids.includes(sourceUnit.id)
+    const artifactIndex = artifacts.findIndex((entry, index) => (
+      !usedArtifacts.has(index) && entry.artifact.source_unit_ids.includes(sourceUnit.id)
     ));
-    assert.notEqual(outputIndex, -1, `No distinct output references source unit "${sourceUnit.id}"`);
-    const mappedContract = semanticText(job.outputs[outputIndex].render_contract);
+    assert.notEqual(artifactIndex, -1, `No distinct artifact references source unit "${sourceUnit.id}"`);
+    const mappedContract = artifactSemanticText(artifacts[artifactIndex]);
     assert.ok(
       mapping.contract_terms.every(term => mappedContract.includes(term.toLocaleLowerCase('en-US'))),
-      `Output for source unit "${sourceUnit.id}" lost contract term group "${mapping.contract_terms.join(' + ')}"`,
+      `Artifact for source unit "${sourceUnit.id}" lost contract term group "${mapping.contract_terms.join(' + ')}"`,
     );
     if (expected.exclusive_source_contract_mappings) {
       for (const [otherIndex, other] of sourceMappings.entries()) {
@@ -155,12 +185,12 @@ function assertRequiredTermsInContracts(job, expected) {
         assert.equal(
           other.contract_terms.every(term => mappedContract.includes(term.toLocaleLowerCase('en-US'))),
           false,
-          `Output for source unit "${sourceUnit.id}" duplicated another source group "${other.contract_terms.join(' + ')}"`,
+          `Artifact for source unit "${sourceUnit.id}" duplicated another source group "${other.contract_terms.join(' + ')}"`,
         );
       }
     }
     usedSourceUnits.add(sourceIndex);
-    usedOutputs.add(outputIndex);
+    usedArtifacts.add(artifactIndex);
   }
 
   const cardGroups = expected.required_card_term_groups || [];
@@ -191,19 +221,39 @@ function assertRequiredTermsInContracts(job, expected) {
 }
 
 function assertSourceAssignment(job, expected) {
-  const referenced = job.outputs.flatMap(output => output.source_unit_ids);
-  for (const sourceUnit of job.source_units) {
+  const artifacts = artifactEntries(job);
+  const referenced = artifacts.flatMap(entry => entry.artifact.source_unit_ids);
+  const requiredUnits = job.source_units.filter(sourceUnit => (
+    !sourceUnit.evidence
+    || (sourceUnit.evidence.strength !== 'unusable' && sourceUnit.evidence.freshness === 'current')
+  ));
+  for (const sourceUnit of requiredUnits) {
     assert.ok(referenced.includes(sourceUnit.id), `Visual Job does not render source unit "${sourceUnit.id}"`);
   }
   if (expected.source_unit_assignment === 'one-to-one') {
-    assert.ok(job.outputs.every(output => output.source_unit_ids.length === 1), 'Each output must reference exactly one source unit');
-    assert.equal(new Set(referenced).size, job.outputs.length, 'One-to-one outputs must reference distinct source units');
+    assert.ok(artifacts.every(entry => entry.artifact.source_unit_ids.length === 1), 'Each artifact must reference exactly one source unit');
+    assert.equal(new Set(referenced).size, artifacts.length, 'One-to-one artifacts must reference distinct source units');
+  }
+}
+
+function assertRejectedEvidence(job, expected) {
+  const referenced = new Set(artifactEntries(job).flatMap(entry => entry.artifact.source_unit_ids));
+  for (const rejected of expected.rejected_source_expectations || []) {
+    const unit = job.source_units.find(sourceUnit => {
+      const text = [sourceUnit.label, sourceUnit.excerpt].filter(Boolean).join('\n').toLocaleLowerCase('en-US');
+      return rejected.source_terms.every(term => text.includes(term.toLocaleLowerCase('en-US')));
+    });
+    assert.ok(unit, `Rejected evidence is missing source terms "${rejected.source_terms.join(' + ')}"`);
+    assert.equal(unit.evidence?.strength, rejected.strength, `Rejected evidence "${unit.id}" has wrong strength`);
+    assert.equal(unit.evidence?.freshness, rejected.freshness, `Rejected evidence "${unit.id}" has wrong freshness`);
+    assert.ok(unit.evidence?.reason?.trim(), `Rejected evidence "${unit.id}" needs a reason`);
+    assert.equal(referenced.has(unit.id), false, `Rejected evidence "${unit.id}" must not be referenced by an artifact`);
   }
 }
 
 if (process.argv.includes('--self-test')) {
-  assert.equal(cases.cases.length, 20, 'CardBench must contain exactly twenty initial cases');
-  assert.equal(cases.cases.filter(item => item.kind !== 'revision').length, 16, 'expected sixteen planning cases');
+  assert.equal(cases.cases.length, 24, 'CardBench must contain exactly twenty-four cases');
+  assert.equal(cases.cases.filter(item => item.kind !== 'revision').length, 20, 'expected twenty planning cases');
   assert.equal(cases.cases.filter(item => item.kind === 'revision').length, 4, 'expected four revision cases');
   assert.ok(cases.cases.every(item => (
     item.request
@@ -232,6 +282,20 @@ if (process.argv.includes('--self-test')) {
     ),
     /Render contracts lost required source term/,
     'source text alone must not satisfy render-contract fidelity',
+  );
+  assert.doesNotThrow(
+    () => assertSourceAssignment(
+      {
+        schema_version: 3,
+        source_units: [
+          { id: 'current', evidence: { strength: 'primary', freshness: 'current' } },
+          { id: 'old', evidence: { strength: 'unusable', freshness: 'stale' } },
+        ],
+        outputs: [{ artifacts: [{ source_unit_ids: ['current'] }] }],
+      },
+      {},
+    ),
+    'rejected evidence must remain unreferenced without failing source coverage',
   );
   assert.throws(
     () => assertRequiredTermsInContracts(
@@ -446,7 +510,7 @@ if (process.argv.includes('--self-test')) {
     /does not render source unit|distinct source units/,
     'split outputs must not silently drop a source unit',
   );
-  console.log('Visual Job eval self-test passed: 16 planning cases and 4 revision cases with grounded contract assertions.');
+  console.log('Visual Job eval self-test passed: 20 planning cases and 4 revision cases with grounded artifact assertions.');
   process.exit(0);
 }
 const input = process.argv[2];
@@ -459,7 +523,7 @@ const expected = cases.cases.find(item => item.id === caseId)
   || cases.cases.find(item => item.id === job.job_id)
   || cases.cases.find(item => item.publish_target === job.publish_target);
 if (!expected) throw new Error(`No agent case matches ${job.job_id}`);
-assert.equal(job.schema_version, 2, 'fresh-context jobs must use Visual Job v2');
+assert.equal(job.schema_version, expected.visual_job_version || 3, `fresh-context job must use Visual Job v${expected.visual_job_version || 3}`);
 assert.equal(job.decision.selection_source, expected.selection_source || 'taxonomy');
 assert.equal(job.decision.tier, expected.tier); assert.ok(expected.modes.includes(job.decision.mode));
 assert.ok(job.outputs.length >= expected.outputs[0] && job.outputs.length <= expected.outputs[1]);
@@ -467,12 +531,23 @@ if (expected.source_units) {
   assert.ok(job.source_units.length >= expected.source_units[0] && job.source_units.length <= expected.source_units[1]);
 }
 assertSourceAssignment(job, expected);
+assertRejectedEvidence(job, expected);
+const plannedArtifacts = artifactEntries(job);
+if (expected.artifact_outputs) {
+  assert.ok(plannedArtifacts.length >= expected.artifact_outputs[0] && plannedArtifacts.length <= expected.artifact_outputs[1]);
+}
+if (expected.required_artifact_roles) {
+  assert.deepEqual(plannedArtifacts.map(entry => entry.artifact.role), expected.required_artifact_roles);
+}
 for (const [index, output] of job.outputs.entries()) {
-  assert.ok(output.visual_plan && typeof output.visual_plan === 'object', `outputs[${index}] is missing visual_plan`);
-  assert.ok(output.visual_plan.core_message?.trim(), `outputs[${index}].visual_plan is missing core_message`);
-  assert.ok(output.visual_plan.layout_strategy?.trim(), `outputs[${index}].visual_plan is missing layout_strategy`);
-  assert.ok(Array.isArray(output.visual_plan.visual_hierarchy) && output.visual_plan.visual_hierarchy.length, `outputs[${index}].visual_plan is missing visual_hierarchy`);
-  assert.ok(Array.isArray(output.visual_plan.avoid_patterns), `outputs[${index}].visual_plan is missing avoid_patterns`);
+  for (const [artifactOffset, artifact] of artifactsForOutput(job, output).entries()) {
+    const plan = artifact.visual_plan;
+    assert.ok(plan && typeof plan === 'object', `outputs[${index}] artifact ${artifactOffset + 1} is missing visual_plan`);
+    assert.ok(plan.core_message?.trim(), `outputs[${index}] artifact ${artifactOffset + 1} visual_plan is missing core_message`);
+    assert.ok(plan.layout_strategy?.trim(), `outputs[${index}] artifact ${artifactOffset + 1} visual_plan is missing layout_strategy`);
+    assert.ok(Array.isArray(plan.visual_hierarchy) && plan.visual_hierarchy.length, `outputs[${index}] artifact ${artifactOffset + 1} visual_plan is missing visual_hierarchy`);
+    assert.ok(Array.isArray(plan.avoid_patterns), `outputs[${index}] artifact ${artifactOffset + 1} visual_plan is missing avoid_patterns`);
+  }
   for (const field of expected.required_contract_fields || []) {
     assert.notEqual(output.render_contract[field], undefined, `outputs[${index}].render_contract is missing ${field}`);
     if (field === 'composition_required') assert.equal(output.render_contract[field], true);

@@ -4,13 +4,13 @@
 
 Before a minor release, run `npm run eval:fresh -- --report evals/fresh-context-results.json`. The runner copies the generated package mirror into a temporary install root, runs `npm ci` there, verifies Playwright resolves inside that isolated root, and prepares the declared runtime. It then starts one ephemeral, read-only Codex process per case from that install, with no prior conversation or user configuration. It validates each produced Visual Job with `evals/check-job-assertions.mjs`, renders it through the installed `scripts/render-job.mjs`, and requires real passing receipts.
 
-`eval:fresh` runs the 16 planning cases at L1 and does not invoke a visual model. `npm run eval:cardbench -- --report evals/cardbench-results.json` runs all 20 cases. It attaches actual checked PNGs to independent ephemeral Critic calls, enforces Visual Review hashes and the 8.0 threshold, and exercises four forced-revision cases. A failed first review may revise only `visual_plan` and `render_contract`, then rerender and review once.
+`eval:fresh` runs the 20 planning cases at L1 and does not invoke a visual model. Four evidence-first cases cover adaptive CLI, launch, library/API, and stale-evidence routing with Visual Job v3. `npm run eval:cardbench -- --report evals/cardbench-results.json` runs all 24 cases. It attaches actual checked PNGs to independent ephemeral Critic calls, enforces Visual Review hashes and the 8.0 threshold, and exercises four forced-revision cases. A failed first review may revise only the applicable artifact/output `visual_plan` and `render_contract`, then rerender and review once.
 
 ## Host orchestration
 
 Do not run CardBench in the main interactive context. Delegate every `npm run eval:cardbench` invocation to the host's low-cost independent execution facility, such as a subagent, background task, or isolated session, including `--list-cases`, single, tail, and full runs. Choose the lowest-cost configuration that can perform real rendering and image review. The delegated worker must use PowerShell 7, run cases serially, avoid code changes and caches, wait for completion, validate the requested scope/report fields, and return only progress plus the result or first failure. The main context may inspect the finished report and package the mirror, but must not own the CardBench process. Do not parallelize case or Critic model calls. If the host has no independent execution facility, disclose the expected cost and obtain user confirmation before running CardBench interactively.
 
-During development, give the delegated worker one of these commands instead of repeatedly spending the full 20-case gate:
+During development, give the delegated worker one of these commands instead of repeatedly spending the full 24-case gate:
 
 ```powershell
 # Inspect the ordered case set without installing dependencies or calling a model.

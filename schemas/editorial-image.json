@@ -62,10 +62,12 @@
     },
     "content_html": {
       "type": "string",
+      "maxLength": 1000000,
       "description": "Trusted custom HTML composition. Use after the AI flow chooses a visual direction; preferred for final editorial images that need a concrete subject or scene."
     },
     "custom_css": {
       "type": "string",
+      "maxLength": 262144,
       "description": "Trusted custom CSS composition layer. Use for visual expression beyond the default scaffold, including the dominant object, scene, gesture, or diagram metaphor. Visible text must use a controlled primary font: DM Sans, DM Serif Display, JetBrains Mono, XiangcuiDengcusong, or XiangcuiDazijiti; fallback fonts may follow the primary font. Custom CSS must stay inside the card-skill Quiet Paper system: token-derived paper surfaces, low-saturation accents, hairline borders, small radius, and little or no shadow."
     },
     "source": {
@@ -74,6 +76,8 @@
     },
     "logo": {
       "type": "string",
+      "maxLength": 1024,
+      "pattern": "^(?:[A-Za-z]:[\\\\/]|/(?![/?\\\\]))",
       "description": "Optional path to a brand logo or avatar image. Omit for an unbranded output; do not use a photo alias."
     },
     "brand_name": {

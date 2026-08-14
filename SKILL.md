@@ -1,6 +1,6 @@
 ---
 name: card-skill
-description: "Render text content into a polished, shareable PNG visual. Use this skill whenever the user asks to turn words, notes, articles, quotes, arguments, stories, explicit WeChat Reading highlights/thoughts, or WeChat Reading personal statistics into an 信息图/infographic, 海报/poster, 卡片/card, 大字报, whiteboard, visual summary, comic, sketchnote, social card grid, 公众号头图, 博客封面, 正文配图, 正文解释图, 关系图, 流程图, 边界图, reading report, or non-summary editorial image for an essay. Trigger on phrases like 做成图, 渲染成图, 做张卡片, 卡片组, 做成漫画, 视觉笔记, 给文章配图, 微信读书划线做卡, 微信读书笔记, 微信读书阅读月报, article cover, blog hero, article diagram, concept map, process flow, and editorial image. Supports 9 modes: infographic, big-text poster, long-form reading card, whiteboard reasoning, multi-card poster, comic, sketchnote, editorial-image, and article-diagram. If the user mentions a restrained brand feel such as Apple, Stripe, Linear, Vercel, IBM, Notion, Claude, or similar, apply it as a visual style, not as a full brand redesign. Do not use for websites, UI components, Figma prototypes, logos/VI systems, chart-library plotting, photo editing, or plain file conversion."
+description: "Render text and evidence into polished, shareable PNG visuals. Use this skill whenever the user asks to turn words, notes, articles, quotes, arguments, stories, open-source repository or tool material, technical commands/workflows, explicit WeChat Reading highlights/thoughts, or WeChat Reading personal statistics into an 信息图/infographic, 海报/poster, 卡片/card, 大字报, whiteboard, visual summary, comic, sketchnote, social card grid, 开源工具介绍配图, 工具推荐卡片, GitHub 项目介绍插画, 小红书式竖版技术内容, 公众号头图, 博客封面, 正文配图, 正文解释图, 关系图, 流程图, 边界图, reading report, or non-summary editorial image for an essay. Trigger on phrases like 做成图, 渲染成图, 做张卡片, 卡片组, 处理这个开源工具, 技术工作流卡片, 做成漫画, 视觉笔记, 给文章配图, 微信读书划线做卡, article cover, blog hero, article diagram, process flow, and editorial image. Supports 9 modes: infographic, big-text poster, long-form reading card, whiteboard reasoning, multi-card poster, comic, sketchnote, editorial-image, and article-diagram. If the user mentions a restrained brand feel such as Apple, Stripe, Linear, Vercel, IBM, Notion, Claude, or similar, apply it as a visual style, not as a full brand redesign. Do not use for websites, UI components, Figma prototypes, logos/VI systems, chart-library plotting, photo editing, or plain file conversion."
 user_invocable: true
 version: "0.9.0"
 ---
@@ -64,18 +64,18 @@ For one-off use without installing, run `npx skills use KKenny0/card-skill/plugi
 
 ## Agent Operating Principles
 
-自然语言出图默认使用 Visual Job v2。`scripts/card.js` 只是兼容旧输入和开发者调试的底层 renderer，不代表完整 Agent 流程。
+自然语言出图默认使用 Visual Job v3。`scripts/card.js` 只是兼容旧输入和开发者调试的底层 renderer，不代表完整 Agent 流程。
 
 出图前：
 
-1. 理解来源，按独立语义拆成 `source_units`。
-2. 为每个输出写 `visual_plan`：核心判断、内容类型、论证结构、具体隐喻或 `null`、布局策略、阅读层级和禁忌。
+1. 读取 `references/source-material.md`，按独立证据拆成带 `evidence` 的 `source_units`；开源工具再读取 `references/source-open-source-tool.md`。
+2. 先按当前强证据决定 1–4 个 artifact，再为每个 artifact 写唯一证据职责与 `visual_plan`；不得重复素材或判断凑数量。
 3. 读取 `references/visual-taxonomy.md`；Agent 自动规划使用 `decision.selection_source: "taxonomy"`，由 taxonomy 决定 mode。只有用户明确点名 mode 才使用 `user-override`。
-4. 把计划落成已有 mode 的 `render_contract`，再进入 schema、renderer、截图和 checker。
+4. 把同一 renderer 调用的 artifact 计划与已有 mode 的 `render_contract` 放进一个 output，再进入 schema、renderer、截图和 checker。
 
 出图后：
 
-5. 必须实际查看每张候选 PNG，并按 `references/visual-review.md` 输出哈希绑定的 Visual Review。
+5. 必须实际查看每张候选 PNG，并按 `references/visual-review.md` 输出哈希绑定的 Visual Review；v3 还要从 receipt 逐字复制 `visual_job_sha256`、`artifact_plan_sha256` 与 `artifact_contract_sha256`。
 6. 总分达到 8.0 且没有 blocker 才发布。首次不通过时，只修改 `visual_plan` 与对应 `render_contract`，完整重跑一次；第二次仍不通过则停止，不把失败候选当成成品。
 7. 通过 `scripts/publish-reviewed-job.mjs` 原子发布 PNG、receipt 和 review。
 
@@ -89,7 +89,7 @@ For one-off use without installing, run `npx skills use KKenny0/card-skill/plugi
 | `editorial_tone` | `editorial-image` 自动设计选择：`reflective` / `sharp` / `warm` / `technical` | 空 |
 | `--dpr` | 设备像素比 | 2（2× 像素密度） |
 | `brand_name` | 可选署名/品牌文字；只在用户明确提供时渲染 | 空 |
-| `logo` | 可选署名头像/品牌 logo 路径；只在用户明确提供时渲染 | 空 |
+| `logo` | 可选署名头像/品牌 logo 的安全本地 PNG/JPEG/WebP 路径；只在用户明确提供时，经受限私有快照内嵌渲染 | 空 |
 | `source` | 可选来源文字；`long`、`poster`、`editorial-image` 与 `article-diagram` 支持 | 空 |
 
 ## Codex 环境扩展（可选）
@@ -131,7 +131,8 @@ card-skill 把 9 个 mode 分两层：
    - 内容过于复杂（嵌套引用、多栏对比、特殊排版需求、不确定能 fit）→ 降级到 AI 路径
 
 **自然语言 Agent 路径**：
-1. 生成符合 `schemas/visual-job.json` 的 Visual Job v2；每个 output 同时包含 `visual_plan` 与现有 mode 的 `render_contract`
+1. 生成符合 `schemas/visual-job.json` 的 Visual Job v3；每个 artifact 包含证据引用与 `visual_plan`，每个 output 包含现有 mode 的 `render_contract`
+   - `command` / `quote` 证据必须有原文 `excerpt`、使用 `preserve`，并逐 artifact 出现在确定会逐字绘制的可见文本中；仅用 `long` 或 `poster` 承载，避免 Studio CSS、diagram 截断、Big accent markup 或 Whiteboard inline markup 改变字符
 2. 将 Visual Job 写入操作系统临时目录，不要写进 repo
 3. 以候选模式调用：
 ```bash
@@ -140,19 +141,21 @@ node scripts/render-job.mjs --input <system_temp>/visual-job.json --output-dir <
 4. renderer 成功 → 候选已完成预检、DPR 2 截图、脚本复查，并生成 receipt、封存的 checked HTML 与闭合集合 manifest；实际查看每张 PNG，按 receipt 的 `metaphor_required` 写入同 basename 的 `.review.json`
 5. Review 通过后调用：
 ```bash
-node scripts/publish-reviewed-job.mjs --candidate-dir <system_temp>/candidate --output-dir ~/Downloads --json
+approved_sha=$(node scripts/hash-reviewed-candidate.mjs --candidate-dir <system_temp>/candidate)
+node scripts/publish-reviewed-job.mjs --candidate-dir <system_temp>/candidate --output-dir ~/Downloads --expected-candidate-sha256 "$approved_sha" --json
 ```
+   - `approved_sha` 是人工看图并写完 review 后的外部审批锚点；不要把它写回 candidate 目录，也不要在候选被改动后重新计算来掩盖变更
 6. 无论成功或失败，都清理本次 Visual Job 与候选目录
 7. CLI 失败 → 按错误分类处理：`input_contract` 最多修正一次；只有 `content_fit` 可在同一 mode 内简化一次；`runtime`、`safety` 与 `quality_gate` 硬失败。任何修正都必须重新 validation、capture、check 和 PNG inspection，不能无声切换论点或旁路 checker。
 
-直接 `scripts/card.js --input/--stdin` 保留给 v1 兼容和底层 renderer 调试；它不会替 Agent 生成 Visual Plan 或 Visual Review。
+Visual Job v1/v2 与直接 `scripts/card.js --input/--stdin` 保留给兼容和底层 renderer 调试；它们不会替 Agent 完成 v3 的 evidence-first 规划或 Visual Review。
 
 **JSON schema 结构**（每个 mode 的完整定义见 `schemas/` 目录）：
 
 big: `{ mode, phrase, design?, accent_words?, ghost_char?, attribution? }`
 long: `{ mode, title, body: [{type, text, ...}], design?, kicker?, subtitle?, theme? }`
 whiteboard: `{ mode, title, steps: [{type, ...}], design?, subtitle?, accent_words? }`
-poster: `{ mode, variant?, title, cards: [{title?, body: [{type, ...}]}], design?, subtitle?, source? }`；个人读书笔记使用 `variant: "reading-notes"`，配对内容单元为 `{ type: "reading_unit", quote, thought? }`
+poster: `{ mode, variant?, kicker?, title, cards: [{title?, body: [{type, ...}]}], design?, subtitle?, source? }`；普通正文支持受约束的 `{ type: "media", path, alt, caption?, fit?, position? }` 与 `{ type: "process", steps: [{label?, title, text?}] }`；media 在浏览器启动前封存为有大小、尺寸与像素上限的私有快照，原始路径不进入 browser allow-list；个人读书笔记使用 `variant: "reading-notes"`，配对内容单元为 `{ type: "reading_unit", quote, thought? }`
 editorial-image: `{ mode, title, use?, aspect?, visual_metaphor?, cover_motif?, art_direction?, content_html?, custom_css?, composition_required?, design?, editorial_tone? }`；文章型 `use=cover` 选择 `cover_motif`，`use=in-article` / `metaphor` 必须带 `composition_required: true`、`content_html` 与 `custom_css`
 article-diagram: `{ mode, title, formula, sentence, structure: {nodes: [{id, label, note?}], relations?}, render_plan?, caption?, design? }`；legacy: `{ mode, family, title, nodes, links?, zones? }`
 
@@ -161,8 +164,10 @@ article-diagram: `{ mode, title, formula, sentence, structure: {nodes: [{id, lab
 按路线读取，不要为了简单 CLI 渲染过度加载参考文件。
 
 **CLI 路径必读**：
-1. `schemas/{mode}.json` — 目标 mode 的结构化输入约束
-2. `references/design-index.md` — 仅当用户未指定 `--design`、需要自动选择设计系统时读取
+1. `references/source-material.md` — 来源、证据、新鲜度与素材权利边界
+2. `references/source-open-source-tool.md` — 仅当来源是开源工具 / GitHub 项目时读取
+3. `schemas/{mode}.json` — 目标 mode 的结构化输入约束
+4. `references/design-index.md` — 仅当用户未指定 `--design`、需要自动选择设计系统时读取
 
 **AI / 手工 HTML 路径必读**：
 1. `references/taste.md` — 品味底线（反 AI 美学 + 纸质印刷感）

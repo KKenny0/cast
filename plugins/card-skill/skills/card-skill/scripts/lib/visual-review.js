@@ -15,12 +15,15 @@ function computedOverall(scores) {
 function validateVisualReview(review) {
   const errors = [];
   if (!review || typeof review !== 'object' || Array.isArray(review)) return { valid: false, errors: ['Visual Review must be an object'] };
-  const allowed = new Set(['schema_version', 'job_id', 'output_id', 'artifact_index', 'attempt', 'render_contract_sha256', 'png_sha256', 'checker_pass', 'metaphor_required', 'scores', 'overall_score', 'issues', 'verdict']);
+  const allowed = new Set(['schema_version', 'job_id', 'output_id', 'artifact_index', 'visual_job_sha256', 'artifact_plan_sha256', 'artifact_contract_sha256', 'attempt', 'render_contract_sha256', 'png_sha256', 'checker_pass', 'metaphor_required', 'scores', 'overall_score', 'issues', 'verdict']);
   for (const key of Object.keys(review)) if (!allowed.has(key)) errors.push(`Unknown Visual Review field: ${key}`);
   if (review.schema_version !== 1) errors.push('schema_version must be 1');
   if (typeof review.job_id !== 'string' || !SAFE_ID.test(review.job_id)) errors.push('job_id must be a safe lowercase slug');
   if (typeof review.output_id !== 'string' || !SAFE_ID.test(review.output_id)) errors.push('output_id must be a safe lowercase slug');
   if (!Number.isInteger(review.artifact_index) || review.artifact_index < 1) errors.push('artifact_index must be a positive integer');
+  for (const field of ['visual_job_sha256', 'artifact_plan_sha256', 'artifact_contract_sha256']) {
+    if (review[field] !== undefined && (typeof review[field] !== 'string' || !SHA256.test(review[field]))) errors.push(`${field} must be a SHA-256 hex digest`);
+  }
   if (![0, 1].includes(review.attempt)) errors.push('attempt must be 0 or 1');
   if (typeof review.render_contract_sha256 !== 'string' || !SHA256.test(review.render_contract_sha256)) errors.push('render_contract_sha256 must be a SHA-256 hex digest');
   if (typeof review.png_sha256 !== 'string' || !SHA256.test(review.png_sha256)) errors.push('png_sha256 must be a SHA-256 hex digest');

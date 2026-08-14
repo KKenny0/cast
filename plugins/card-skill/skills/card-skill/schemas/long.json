@@ -41,50 +41,56 @@
         "oneOf": [
           {
             "type": "object",
+            "additionalProperties": false,
             "required": ["type", "text"],
             "properties": {
               "type": { "type": "string", "const": "paragraph" },
-              "text": { "type": "string" },
+              "text": { "type": "string", "minLength": 1, "pattern": "\\S" },
               "dropcap": { "type": "boolean", "description": "Add dropcap styling to this paragraph", "default": false }
             }
           },
           {
             "type": "object",
+            "additionalProperties": false,
             "required": ["type", "text"],
             "properties": {
               "type": { "type": "string", "const": "heading" },
-              "text": { "type": "string" },
+              "text": { "type": "string", "minLength": 1, "pattern": "\\S" },
               "level": { "type": "integer", "enum": [2, 3], "default": 2 }
             }
           },
           {
             "type": "object",
+            "additionalProperties": false,
             "required": ["type", "text"],
             "properties": {
               "type": { "type": "string", "const": "highlight" },
-              "text": { "type": "string" },
+              "text": { "type": "string", "minLength": 1, "pattern": "\\S" },
               "accent": { "type": "boolean", "description": "Use accent color for the text", "default": false }
             }
           },
           {
             "type": "object",
+            "additionalProperties": false,
             "required": ["type", "text"],
             "properties": {
               "type": { "type": "string", "const": "blockquote" },
-              "text": { "type": "string" }
+              "text": { "type": "string", "minLength": 1, "pattern": "\\S" }
             }
           },
           {
             "type": "object",
+            "additionalProperties": false,
             "required": ["type", "text"],
             "properties": {
               "type": { "type": "string", "const": "layer_card" },
               "label": { "type": "string", "description": "Layer label, e.g. 'LAYER 01'" },
-              "text": { "type": "string" }
+              "text": { "type": "string", "minLength": 1, "pattern": "\\S" }
             }
           },
           {
             "type": "object",
+            "additionalProperties": false,
             "required": ["type"],
             "properties": {
               "type": { "type": "string", "const": "section_break" }
@@ -99,7 +105,7 @@
       "description": "Optional source attribution line.",
       "default": ""
     },
-    "logo": { "type": "string", "description": "Optional path to a brand logo image. Omit for an unbranded output." },
+    "logo": { "type": "string", "maxLength": 1024, "pattern": "^(?:[A-Za-z]:[\\\\/]|/(?![/?\\\\]))", "description": "Optional safe absolute path to a brand logo image. Omit for an unbranded output." },
     "brand_name": { "type": "string", "description": "Optional brand name in the colophon footer. Omit for an unbranded output." }
   }
 }

@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "card-skill poster mode input",
-  "description": "Structured input for poster mode CLI rendering. Poster mode produces a series of cards (1080x1440 each) from structured content.",
+  "description": "Structured input for poster mode CLI rendering. Poster mode produces a series of cards (1080x1440 each) from structured content. Runtime validation also limits aggregate contract text to 40,000 characters.",
   "type": "object",
   "additionalProperties": false,
   "required": ["mode", "title", "cards"],
@@ -18,38 +18,50 @@
       "default": "stripe"
     },
     "tone": { "type": "string", "enum": ["reflective", "sharp", "warm", "technical"], "description": "Default-selection tone. Ignored when design is explicit." },
+    "kicker": {
+      "type": "string",
+      "maxLength": 160,
+      "description": "Optional compact series label shown in the running header of every card in a multi-card set."
+    },
     "title": {
       "type": "string",
       "description": "Overall title for the poster series, shown on the first card header.",
-      "minLength": 1
+      "minLength": 1,
+      "maxLength": 240
     },
     "subtitle": {
       "type": "string",
+      "maxLength": 500,
       "description": "Optional subtitle shown below the title on the first card.",
       "default": ""
     },
     "source": {
       "type": "string",
+      "maxLength": 500,
       "description": "Optional source attribution shown in the colophon on the final card.",
       "default": ""
     },
     "cards": {
       "type": "array",
-      "description": "Array of card objects. Each card gets its own HTML file and PNG output.",
+      "description": "Array of card objects. Each card gets its own HTML file and PNG output; aggregate contract text across the poster is limited to 40,000 characters at runtime.",
       "minItems": 1,
+      "maxItems": 20,
       "items": {
         "type": "object",
+        "additionalProperties": false,
         "required": ["body"],
         "properties": {
           "title": {
             "type": "string",
             "minLength": 1,
+            "maxLength": 200,
             "description": "Optional theme-organizing title. In reading-notes it is an editorial label, not a claimed source heading."
           },
           "body": {
             "type": "array",
             "description": "Array of body elements for this card.",
             "minItems": 1,
+            "maxItems": 24,
             "contains": {
               "anyOf": [
                 {
@@ -89,6 +101,26 @@
                     "key": { "type": "string", "pattern": "\\S" },
                     "value": { "type": "string", "pattern": "\\S" }
                   }
+                },
+                {
+                  "required": ["type", "path", "alt"],
+                  "properties": {
+                    "type": { "const": "media" },
+                    "path": { "type": "string", "maxLength": 1024, "pattern": "^(?:[A-Za-z]:[\\\\/]|/(?![/?\\\\])).*\\.(?:[pP][nN][gG]|[jJ][pP][eE]?[gG]|[wW][eE][bB][pP])$" },
+                    "alt": { "type": "string", "maxLength": 240, "pattern": "\\S" }
+                  }
+                },
+                {
+                  "required": ["type", "steps"],
+                  "properties": {
+                    "type": { "const": "process" },
+                    "steps": {
+                      "type": "array",
+                      "minItems": 2,
+                      "maxItems": 5,
+                      "contains": { "required": ["title"], "properties": { "title": { "type": "string", "pattern": "\\S" } } }
+                    }
+                  }
                 }
               ]
             },
@@ -98,23 +130,102 @@
               "properties": {
                 "type": {
                   "type": "string",
-                  "enum": ["paragraph", "heading", "highlight", "items", "data_row", "divider", "reading_unit"]
+                  "enum": ["paragraph", "heading", "highlight", "items", "data_row", "divider", "reading_unit", "media", "process"]
                 },
                 "quote": {
                   "type": "string",
                   "minLength": 1,
+                  "maxLength": 1200,
                   "pattern": "\\S",
                   "description": "Verbatim source highlight. Required and non-empty for reading_unit."
                 },
                 "thought": {
                   "type": "string",
+                  "maxLength": 1200,
                   "description": "Optional personal thought paired to the quote by the source adapter."
+                },
+                "path": { "type": "string", "maxLength": 1024, "pattern": "^(?:[A-Za-z]:[\\\\/]|/(?![/?\\\\])).*\\.(?:[pP][nN][gG]|[jJ][pP][eE]?[gG]|[wW][eE][bB][pP])$", "description": "Absolute readable local PNG, JPEG, or WebP evidence path. Runtime validation limits the file to 32 MiB." },
+                "alt": { "type": "string", "maxLength": 240, "pattern": "\\S" },
+                "caption": { "type": "string", "maxLength": 500, "pattern": "\\S" },
+                "fit": { "enum": ["cover", "contain"], "default": "contain", "description": "Evidence fitting strategy. Defaults to contain so UI and output edges are not silently cropped; choose cover only as an explicit editorial crop." },
+                "position": { "enum": ["center", "top", "bottom", "left", "right"] },
+                "text": { "type": "string", "maxLength": 1200 },
+                "entries": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 8,
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": ["label", "text"],
+                    "properties": {
+                      "label": { "type": "string", "maxLength": 80, "pattern": "\\S" },
+                      "text": { "type": "string", "maxLength": 500, "pattern": "\\S" }
+                    }
+                  }
+                },
+                "key": { "type": "string", "maxLength": 80, "pattern": "\\S" },
+                "value": { "type": "string", "maxLength": 240, "pattern": "\\S" },
+                "steps": {
+                  "type": "array",
+                  "minItems": 2,
+                  "maxItems": 5,
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": ["title"],
+                    "properties": {
+                      "label": { "type": "string", "maxLength": 24, "pattern": "\\S" },
+                      "title": { "type": "string", "maxLength": 160, "pattern": "\\S" },
+                      "text": { "type": "string", "maxLength": 400, "pattern": "\\S" }
+                    }
+                  }
                 }
               },
               "allOf": [
                 {
+                  "if": { "properties": { "type": { "const": "paragraph" } } },
+                  "then": { "required": ["text"], "properties": { "text": { "maxLength": 1200, "pattern": "\\S" } } }
+                },
+                {
+                  "if": { "properties": { "type": { "const": "heading" } } },
+                  "then": { "required": ["text"], "properties": { "text": { "maxLength": 240, "pattern": "\\S" } } }
+                },
+                {
+                  "if": { "properties": { "type": { "const": "highlight" } } },
+                  "then": { "required": ["text"], "properties": { "text": { "maxLength": 600, "pattern": "\\S" } } }
+                },
+                {
+                  "if": { "properties": { "type": { "const": "items" } } },
+                  "then": {
+                    "required": ["entries"],
+                    "propertyNames": { "enum": ["type", "entries"] }
+                  }
+                },
+                {
+                  "if": { "properties": { "type": { "const": "data_row" } } },
+                  "then": {
+                    "required": ["key", "value"],
+                    "propertyNames": { "enum": ["type", "key", "value"] }
+                  }
+                },
+                {
                   "if": { "properties": { "type": { "const": "reading_unit" } } },
                   "then": { "required": ["quote"] }
+                },
+                {
+                  "if": { "properties": { "type": { "const": "media" } } },
+                  "then": {
+                    "required": ["path", "alt"],
+                    "propertyNames": { "enum": ["type", "path", "alt", "caption", "fit", "position"] }
+                  }
+                },
+                {
+                  "if": { "properties": { "type": { "const": "process" } } },
+                  "then": {
+                    "required": ["steps"],
+                    "propertyNames": { "enum": ["type", "steps"] }
+                  }
                 }
               ]
             }
@@ -124,10 +235,13 @@
     },
     "logo": {
       "type": "string",
+      "maxLength": 1024,
+      "pattern": "^(?:[A-Za-z]:[\\\\/]|/(?![/?\\\\]))",
       "description": "Optional path to a brand logo image. Omit for an unbranded output."
     },
     "brand_name": {
       "type": "string",
+      "maxLength": 160,
       "description": "Optional brand name in the colophon footer. Omit for an unbranded output."
     }
   },
@@ -186,6 +300,13 @@
                         }
                       }
                     ]
+                  },
+                  "items": {
+                    "properties": {
+                      "type": {
+                        "enum": ["paragraph", "heading", "highlight", "items", "data_row", "divider", "reading_unit"]
+                      }
+                    }
                   }
                 }
               }
@@ -203,7 +324,7 @@
                   "items": {
                     "properties": {
                       "type": {
-                        "enum": ["paragraph", "heading", "highlight", "items", "data_row", "divider"]
+                        "enum": ["paragraph", "heading", "highlight", "items", "data_row", "divider", "media", "process"]
                       }
                     }
                   }

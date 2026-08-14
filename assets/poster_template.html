@@ -10,10 +10,10 @@
   ─────────────────────────────────────────────────────────────────────
   {{BG_COLOR}}       — background / canvas color (sets --bg)
   {{ACCENT_COLOR}}   — accent color (sets --accent)
-  {{LOGO}}           — path to brand logo image
-  {{BRAND_NAME}}     — brand / series name text
+  LOGO / BRAND_NAME — optional active-markup substitutions; placeholders
+                      are intentionally omitted from this comment block
 
-  {{HEADER_BLOCK}}   — running header HTML (empty for title card):
+  {{HEADER_BLOCK}}   — shared running header HTML (empty for a single card):
                         <div class="header">
                           <span class="running-title">…</span>
                           <span class="page-indicator">2 / 4</span>
@@ -123,6 +123,7 @@
     line-height: 1.15;
     color: var(--ink);
     letter-spacing: 0;
+    text-wrap: balance;
     margin-bottom: 24px;
   }
 
@@ -166,6 +167,7 @@
     font: 400 52px/1.2 var(--zh-serif);
     color: var(--ink);
     letter-spacing: 0;
+    text-wrap: balance;
     margin-bottom: 40px;
   }
 
@@ -179,6 +181,181 @@
   /* Sparse series cards use the canvas deliberately instead of looking empty. */
   .card.sparse-poster {
     justify-content: center;
+  }
+
+  /* Evidence and process cards use compact series chrome so the proof owns the canvas. */
+  .card.evidence-poster .title-area,
+  .card.process-poster .title-area {
+    flex: 0 0 auto;
+    justify-content: flex-start;
+    padding-bottom: 28px;
+    margin-bottom: 34px;
+    border-bottom: 1px solid var(--hairline);
+  }
+
+  .card.evidence-poster .title-area h1,
+  .card.process-poster .title-area h1 {
+    max-width: 880px;
+    font-size: 64px !important;
+    line-height: 1.12;
+    margin-bottom: 12px;
+  }
+
+  .card.evidence-poster .title-area .subtitle,
+  .card.process-poster .title-area .subtitle {
+    font-size: 30px;
+    line-height: 1.4;
+  }
+
+  .card.evidence-poster .header,
+  .card.process-poster .header {
+    margin-bottom: 34px;
+  }
+
+  .card.evidence-poster .body-content,
+  .card.process-poster .body-content {
+    min-height: 0;
+  }
+
+  .evidence-media {
+    width: 100%;
+    flex: 1 1 auto;
+    min-height: 0;
+    margin: 0 0 38px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .evidence-media img {
+    display: block;
+    width: 100%;
+    height: 0;
+    min-height: 360px;
+    flex: 1 1 auto;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+
+  .card.media-only-poster .evidence-media { margin-bottom: 0; }
+
+  /* When explanation follows evidence, size the image from its intrinsic
+     aspect ratio so the visual and copy read as one editorial group. */
+  .card.media-with-copy-poster .evidence-media {
+    flex: 0 0 auto;
+    margin-bottom: 28px;
+  }
+
+  .card.media-with-copy-poster .body-content {
+    justify-content: safe center;
+  }
+
+  .card.media-with-copy-poster .evidence-media.fit-contain img {
+    align-self: center;
+    width: 100%;
+    height: auto;
+    min-height: 0;
+    max-height: 660px;
+  }
+
+  .card.media-with-copy-poster .evidence-media.fit-cover img {
+    height: 520px;
+    min-height: 0;
+    flex: 0 0 auto;
+  }
+
+  /* Dense evidence cards preserve the shared series chrome while reserving
+     enough vertical budget for explanatory copy. */
+  .card.media-copy-dense .body-content { justify-content: flex-start; }
+  .card.media-copy-dense .body-content h2 { margin-bottom: 28px; }
+  .card.media-copy-dense .evidence-media { margin-bottom: 20px; }
+  .card.media-copy-dense .evidence-media.fit-contain img { max-height: 500px; }
+  .card.media-copy-dense .evidence-media.fit-cover img { height: 440px; }
+  .card.media-copy-dense .body-content > p { margin-bottom: 16px; }
+  .card.media-copy-dense .highlight { margin: 16px 0; padding: 24px 28px; }
+  .card.media-copy-dense .item { padding: 20px 0; }
+  .card.media-copy-dense .data-row { padding: 14px 0; }
+
+  .evidence-media.fit-cover img { object-fit: cover; }
+  .evidence-media.fit-contain img { object-fit: contain; }
+  .evidence-media.position-center img { object-position: center; }
+  .evidence-media.position-top img { object-position: top; }
+  .evidence-media.position-bottom img { object-position: bottom; }
+  .evidence-media.position-left img { object-position: left; }
+  .evidence-media.position-right img { object-position: right; }
+
+  .evidence-media figcaption {
+    padding-top: 14px;
+    font: 500 24px/1.35 var(--sans);
+    color: var(--ink-muted);
+  }
+
+  .native-process {
+    list-style: none;
+    min-height: 820px;
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    border-top: 1px solid var(--hairline);
+    border-bottom: 1px solid var(--hairline);
+  }
+
+  .card.single-poster.process-poster .native-process { min-height: 900px; }
+
+  .card.process-only-poster .native-process {
+    min-height: 0;
+    flex: 1 1 auto;
+  }
+
+  .process-step {
+    position: relative;
+    flex: 1 1 0;
+    min-height: 150px;
+    display: grid;
+    grid-template-columns: 104px minmax(0, 1fr);
+    align-items: center;
+    column-gap: 30px;
+    padding: 26px 8px;
+  }
+
+  .process-step + .process-step { border-top: 1px solid var(--hairline); }
+
+  .process-step::before {
+    content: '';
+    position: absolute;
+    left: 47px;
+    top: -1px;
+    bottom: -1px;
+    width: 1px;
+    background: var(--hairline);
+  }
+
+  .process-index {
+    position: relative;
+    z-index: 1;
+    width: 70px;
+    height: 70px;
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--accent);
+    border-radius: 50%;
+    background: var(--bg);
+    font: 600 24px/1 var(--mono);
+    color: var(--accent);
+    letter-spacing: 0.02em;
+  }
+
+  .process-copy { min-width: 0; }
+
+  .process-copy h3 {
+    font: 400 44px/1.18 var(--zh-serif);
+    color: var(--ink);
+  }
+
+  .process-copy p {
+    margin: 10px 0 0;
+    font: 400 36px/1.42 var(--zh-serif);
+    color: var(--ink-muted);
   }
 
   .card.sparse-poster .title-area {
@@ -383,7 +560,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font: 500 22px/1.25 var(--sans);
+    font: 500 24px/1.25 var(--sans);
     color: var(--ink-muted);
     letter-spacing: 0.02em;
   }
