@@ -1,6 +1,8 @@
 # Visual taxonomy
 
-The Agent identifies meaning; the runtime maps it to a mode. Visual Job v2 records the meaning in each `outputs[].visual_plan`, and `scripts/lib/mode-selector.js` is the executable authority.
+The Agent identifies source evidence and intended meaning; the runtime maps each artifact plan to a mode. Visual Job v3 records meaning in `outputs[].artifacts[].visual_plan`, while v2 keeps it in `outputs[].visual_plan`. `scripts/lib/mode-selector.js` is the executable mode authority.
+
+Source routing happens before mode routing. A source archetype chooses the evidence responsibilities and artifact count; it does not create a new renderer mode. For example, a CLI source can yield three artifact plans—input, command, output—inside one poster contract. Read `references/source-material.md` and the applicable source adapter before this taxonomy.
 
 ## Precedence
 
@@ -25,4 +27,4 @@ The Agent identifies meaning; the runtime maps it to a mode. Visual Job v2 recor
 | Article-body idea with a concrete metaphor | composition-required `editorial-image` |
 | Other article-body argument | `article-diagram` |
 
-`recommended_mode` is deliberately absent from the contract. The selected mode already exists in `render_contract.mode`; storing both would create contradictory sources of truth.
+All artifact plans inside one renderer output must resolve to its contract mode. If adjacent artifacts need different modes, use separate outputs. `recommended_mode` is deliberately absent: the selected mode already exists in `render_contract.mode`; storing both would create contradictory sources of truth.

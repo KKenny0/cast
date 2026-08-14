@@ -1,12 +1,75 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/KKenny0/card-skill/schemas/visual-job.json",
-  "title": "Card Skill Visual Job v1/v2",
+  "title": "Card Skill Visual Job v1/v2/v3",
+  "description": "Host-owned planning contract. Runtime validation limits the serialized job to 4 MiB, each materialized render contract to the card CLI's 2 MiB input limit, aggregate rendered artifacts to 20, and unique poster media across the whole job to 32 MiB so checked HTML remains publishable within the candidate budget.",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema_version", "job_id", "publish_target", "source", "source_units", "decision", "outputs"],
+  "$defs": {
+    "visual_plan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["core_message", "content_type", "argument_structure", "visual_metaphor", "layout_strategy", "visual_hierarchy", "avoid_patterns"],
+      "properties": {
+        "core_message": { "type": "string", "minLength": 1, "maxLength": 280 },
+        "content_type": { "enum": ["idea", "argument", "mechanism", "comparison", "story", "timeline", "data", "system"] },
+        "argument_structure": { "enum": ["single-claim", "linear-argument", "cause-effect", "compare-contrast", "sequence", "hierarchy", "network", "conflict-turn", "reflective-arc"] },
+        "visual_metaphor": { "type": ["string", "null"], "minLength": 1, "maxLength": 280 },
+        "layout_strategy": { "type": "string", "minLength": 1, "maxLength": 500 },
+        "visual_hierarchy": { "type": "array", "minItems": 1, "maxItems": 5, "items": { "type": "string", "minLength": 1, "maxLength": 160 } },
+        "avoid_patterns": { "type": "array", "maxItems": 32, "items": { "type": "string", "minLength": 1, "maxLength": 160 } }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "strength", "freshness"],
+      "properties": {
+        "kind": { "enum": ["claim", "quote", "command", "interface", "output", "benchmark", "architecture", "case", "hero"] },
+        "strength": { "enum": ["primary", "supporting", "unusable"] },
+        "freshness": { "enum": ["current", "stale", "unknown"] },
+        "reason": { "type": "string", "minLength": 1, "maxLength": 200 }
+      },
+      "allOf": [
+        {
+          "if": {
+            "anyOf": [
+              { "properties": { "strength": { "const": "unusable" } }, "required": ["strength"] },
+              { "properties": { "freshness": { "enum": ["stale", "unknown"] } }, "required": ["freshness"] }
+            ]
+          },
+          "then": { "required": ["reason"] }
+        }
+        ,
+        {
+          "not": {
+            "properties": {
+              "strength": { "const": "primary" },
+              "freshness": { "const": "unknown" }
+            },
+            "required": ["strength", "freshness"]
+          }
+        }
+      ]
+    },
+    "artifact_plan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifact_index", "id", "basename", "role", "source_unit_ids", "transformation", "visual_plan"],
+      "properties": {
+        "artifact_index": { "type": "integer", "minimum": 1, "maximum": 20 },
+        "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{0,63}$" },
+        "basename": { "type": "string", "maxLength": 200, "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*\\.png$" },
+        "role": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{0,63}$" },
+        "source_unit_ids": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string" } },
+        "transformation": { "enum": ["preserve", "compress", "rewrite", "visualize"] },
+        "visual_plan": { "$ref": "#/$defs/visual_plan" }
+      }
+    }
+  },
   "properties": {
-    "schema_version": { "enum": [1, 2] },
+    "schema_version": { "enum": [1, 2, 3] },
     "job_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{0,63}$" },
     "publish_target": { "enum": ["wechat-cover", "blog-hero", "article-body", "social-single", "social-series", "reading-notes", "long-read", "whiteboard"] },
     "source": {
@@ -21,19 +84,51 @@
       }
     },
     "source_units": {
-      "type": "array", "minItems": 1, "maxItems": 100,
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 100,
       "items": {
-        "type": "object", "additionalProperties": false, "required": ["id"],
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id"],
         "properties": {
           "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{0,63}$" },
           "label": { "type": "string", "maxLength": 160 },
           "digest": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
-          "excerpt": { "type": "string", "maxLength": 500 }
-        }
+          "excerpt": { "type": "string", "maxLength": 500, "pattern": "^(?!.*[\\p{Cc}\\p{Cs}\\p{Default_Ignorable_Code_Point}])[\\s\\S]*$" },
+          "evidence": { "$ref": "#/$defs/evidence" }
+        },
+        "allOf": [
+          {
+            "if": { "properties": { "evidence": {} }, "required": ["evidence"] },
+            "then": {
+              "anyOf": [
+                { "required": ["digest"] },
+                { "required": ["excerpt"], "properties": { "excerpt": { "minLength": 1, "pattern": "\\S" } } }
+              ]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "evidence": {
+                  "properties": { "kind": { "enum": ["command", "quote"] } },
+                  "required": ["kind"]
+                }
+              },
+              "required": ["evidence"]
+            },
+            "then": {
+              "required": ["excerpt"],
+              "properties": { "excerpt": { "minLength": 1, "pattern": "^(?!.*(?:  |[^\\S ]|[\\p{Cc}\\p{Cf}])).*\\S.*$" } }
+            }
+          }
+        ]
       }
     },
     "decision": {
-      "type": "object", "additionalProperties": false,
+      "type": "object",
+      "additionalProperties": false,
       "required": ["mode", "tier", "reason"],
       "properties": {
         "mode": { "enum": ["big", "long", "whiteboard", "poster", "editorial-image", "article-diagram", "infograph", "comic", "sketchnote", "mixed"] },
@@ -46,30 +141,21 @@
       }
     },
     "outputs": {
-      "type": "array", "minItems": 1, "maxItems": 20,
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 20,
       "items": {
-        "type": "object", "additionalProperties": false,
-        "required": ["id", "basename", "source_unit_ids", "transformation", "render_contract"],
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "render_contract"],
         "properties": {
           "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{0,63}$" },
-          "basename": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*\\.png$" },
+          "basename": { "type": "string", "maxLength": 200, "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*\\.png$" },
           "source_unit_ids": { "type": "array", "minItems": 1, "items": { "type": "string" } },
           "transformation": { "enum": ["preserve", "compress", "rewrite", "visualize"] },
           "section": { "type": "string", "maxLength": 160 },
-          "visual_plan": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": ["core_message", "content_type", "argument_structure", "visual_metaphor", "layout_strategy", "visual_hierarchy", "avoid_patterns"],
-            "properties": {
-              "core_message": { "type": "string", "minLength": 1, "maxLength": 280 },
-              "content_type": { "enum": ["idea", "argument", "mechanism", "comparison", "story", "timeline", "data", "system"] },
-              "argument_structure": { "enum": ["single-claim", "linear-argument", "cause-effect", "compare-contrast", "sequence", "hierarchy", "network", "conflict-turn", "reflective-arc"] },
-              "visual_metaphor": { "type": ["string", "null"], "minLength": 1, "maxLength": 280 },
-              "layout_strategy": { "type": "string", "minLength": 1, "maxLength": 500 },
-              "visual_hierarchy": { "type": "array", "minItems": 1, "maxItems": 5, "items": { "type": "string", "minLength": 1, "maxLength": 160 } },
-              "avoid_patterns": { "type": "array", "maxItems": 32, "items": { "type": "string", "minLength": 1, "maxLength": 160 } }
-            }
-          },
+          "visual_plan": { "$ref": "#/$defs/visual_plan" },
+          "artifacts": { "type": "array", "minItems": 1, "maxItems": 20, "items": { "$ref": "#/$defs/artifact_plan" } },
           "render_contract": { "type": "object" }
         }
       }
@@ -77,14 +163,51 @@
   },
   "allOf": [
     {
-      "if": { "properties": { "schema_version": { "const": 2 } } },
+      "if": { "properties": { "schema_version": { "const": 3 } }, "required": ["schema_version"] },
       "then": {
         "properties": {
+          "source_units": { "items": { "required": ["evidence"] } },
           "decision": { "required": ["mode", "tier", "reason", "selection_source"] },
-          "outputs": { "items": { "required": ["id", "basename", "source_unit_ids", "transformation", "visual_plan", "render_contract"] } }
+          "outputs": {
+            "items": {
+              "required": ["id", "artifacts", "render_contract"],
+              "not": {
+                "anyOf": [
+                  { "required": ["basename"] },
+                  { "required": ["source_unit_ids"] },
+                  { "required": ["transformation"] },
+                  { "required": ["section"] },
+                  { "required": ["visual_plan"] }
+                ]
+              }
+            }
+          }
         }
       },
       "else": {
+        "properties": {
+          "source_units": { "items": { "not": { "required": ["evidence"] } } },
+          "outputs": {
+            "items": {
+              "required": ["id", "basename", "source_unit_ids", "transformation", "render_contract"],
+              "not": { "required": ["artifacts"] }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "schema_version": { "const": 2 } }, "required": ["schema_version"] },
+      "then": {
+        "properties": {
+          "decision": { "required": ["mode", "tier", "reason", "selection_source"] },
+          "outputs": { "items": { "required": ["visual_plan"] } }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "schema_version": { "const": 1 } }, "required": ["schema_version"] },
+      "then": {
         "properties": {
           "decision": { "not": { "required": ["selection_source"] } },
           "outputs": { "items": { "not": { "required": ["visual_plan"] } } }

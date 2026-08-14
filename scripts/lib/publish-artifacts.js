@@ -15,6 +15,7 @@ function pathEntryExists(target) {
 function publishArtifacts(entries, options = {}) {
   const allowOverwrite = options.allowOverwrite !== false;
   const rename = options.rename || fs.renameSync;
+  const link = options.link || fs.linkSync;
   const copyFile = options.copyFile || fs.copyFileSync;
   const unlink = options.unlink || fs.unlinkSync;
   const onCleanupWarning = options.onCleanupWarning || (warning => {
@@ -55,6 +56,14 @@ function publishArtifacts(entries, options = {}) {
     }
 
     for (const item of prepared) {
+      if (!allowOverwrite) {
+        // Atomic create-if-absent: unlike rename(), link cannot replace a
+        // target created after the preparation check.
+        link(item.stagingPath, item.finalPath);
+        committed.push(item);
+        unlink(item.stagingPath);
+        continue;
+      }
       if (item.backupPath) rename(item.finalPath, item.backupPath);
       try {
         rename(item.stagingPath, item.finalPath);

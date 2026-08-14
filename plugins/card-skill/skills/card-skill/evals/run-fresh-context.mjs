@@ -32,13 +32,19 @@ function run(command, args, options = {}) {
 }
 
 function promptFor(testCase, intentionallyFlawed = false) {
+  const jobVersion = testCase.visual_job_version || 3;
   return [
     'You are evaluating card-skill from a completely fresh context.',
-    'Read SKILL.md, references/visual-job.md, references/visual-taxonomy.md, and schemas/visual-job.json before deciding.',
-    'Return Visual Job v2. Every output must include a complete visual_plan before its render_contract.',
+    jobVersion === 3
+      ? 'Read SKILL.md, references/source-material.md, references/source-open-source-tool.md, references/visual-job.md, references/visual-taxonomy.md, and schemas/visual-job.json before deciding.'
+      : 'Read SKILL.md, references/visual-job.md, references/visual-taxonomy.md, and schemas/visual-job.json before deciding.',
+    jobVersion === 3
+      ? 'Return Visual Job v3. Every source unit needs evidence metadata; every renderer artifact needs its own complete artifact plan before the shared render_contract.'
+      : 'Return Visual Job v2. Every output must include a complete visual_plan before its render_contract.',
     'Keep visual_hierarchy to 1-5 strings and avoid_patterns to at most 32 strings.',
-    'After taxonomy chooses a mode, read its references/mode-*.md file and obey that mode-specific composition, font, and fit contract.',
+    'After taxonomy chooses a mode, read its schemas/{mode}.json and references/mode-*.md files; obey the supported element types, composition, font, and fit contract.',
     'For custom CSS, keep every visible element bounding box inside the capture viewport; overflow:hidden does not excuse negative inset/top/left/right/bottom values. Keep shadows at 8px or less.',
+    'For poster cards, use compact heading labels rather than long clauses; move the full claim into paragraph, highlight, items, or data_row content so headings do not leave a short orphan line.',
     'For comic compositions, do not override template .card or .panels dimensions, do not hard-code grid rows beyond the available content area, and do not insert manual <br> in short framed text.',
     'Do not render, edit files, browse, or use prior conversation context.',
     'Return only one Visual Job JSON object that can be validated and rendered by this installed skill.',
@@ -60,12 +66,15 @@ function promptFor(testCase, intentionallyFlawed = false) {
 }
 
 function revisionPrompt(testCase, job, reviews) {
+  const v3 = job.schema_version === 3;
   return [
     'Revise this Card Skill Visual Job exactly once from structured Visual Reviews.',
     'Read SKILL.md, references/visual-job.md, references/visual-review.md, schemas/visual-job.json, and the selected references/mode-*.md contract before editing.',
-    'Return only the complete revised Visual Job v2 JSON.',
-    'Keep schema_version, job_id, publish_target, source, source_units, output ids, basenames, source assignments, transformations, decision mode/tier/tone/selection_source, and factual meaning unchanged.',
-    'Only edit outputs[].visual_plan and outputs[].render_contract. Apply every blocker and major suggestion. Do not add facts.',
+    `Return only the complete revised Visual Job v${job.schema_version} JSON.`,
+    'Keep schema_version, job_id, publish_target, source, source_units, artifact/output ids, basenames, roles, source assignments, transformations, decision mode/tier/tone/selection_source, and factual meaning unchanged.',
+    v3
+      ? 'Only edit outputs[].artifacts[].visual_plan and outputs[].render_contract. Apply every blocker and major suggestion. Do not add facts.'
+      : 'Only edit outputs[].visual_plan and outputs[].render_contract. Apply every blocker and major suggestion. Do not add facts.',
     'Preserve valid mode-specific field shapes unless the review requires replacing them. Never invent container keys; for whiteboard chain steps the array key is nodes and each node uses text plus optional highlight/muted booleans.',
     'Remove the deliberately seeded defect completely. Before returning, score the revised contract against message clarity, hierarchy, cognitive load, style consistency, and metaphor specificity; make the smallest change that can credibly reach 8.0.',
     `USER REQUIREMENT:\n${testCase.request}`,
@@ -76,12 +85,15 @@ function revisionPrompt(testCase, job, reviews) {
 }
 
 function renderFailureRevisionPrompt(testCase, job, failure) {
+  const v3 = job.schema_version === 3;
   return [
     'Revise this Card Skill Visual Job exactly once after schema/render/capture/checker failure.',
     'Read SKILL.md, references/visual-job.md, and the selected mode reference.',
-    'Return only the complete revised Visual Job v2 JSON.',
-    'Keep schema_version, job_id, publish_target, source, source_units, output ids, basenames, source assignments, transformations, decision mode/tier/tone/selection_source, and factual meaning unchanged.',
-    'Only edit outputs[].visual_plan and outputs[].render_contract. Fix the concrete failure without adding facts. This consumes the only revision; the next candidate must pass both checker and visual review.',
+    `Return only the complete revised Visual Job v${job.schema_version} JSON.`,
+    'Keep schema_version, job_id, publish_target, source, source_units, artifact/output ids, basenames, roles, source assignments, transformations, decision mode/tier/tone/selection_source, and factual meaning unchanged.',
+    v3
+      ? 'Only edit outputs[].artifacts[].visual_plan and outputs[].render_contract. Fix the concrete failure without adding facts. This consumes the only revision; the next candidate must pass both checker and visual review.'
+      : 'Only edit outputs[].visual_plan and outputs[].render_contract. Fix the concrete failure without adding facts. This consumes the only revision; the next candidate must pass both checker and visual review.',
     `SOURCE:\n${testCase.source_text}`,
     `CURRENT JOB:\n${JSON.stringify(job)}`,
     `FAILURE:\n${failure}`,
@@ -89,19 +101,27 @@ function renderFailureRevisionPrompt(testCase, job, failure) {
 }
 
 function criticPrompt(job, output, receipt, attempt, seedIssue = null) {
+  const artifactPlan = job.schema_version === 3
+    ? output.artifacts?.[receipt.artifact_index - 1]
+    : { visual_plan: output.visual_plan };
+  const artifactEvidence = job.schema_version === 3
+    ? artifactPlan.source_unit_ids.map(id => job.source_units.find(unit => unit.id === id))
+    : output.source_unit_ids.map(id => job.source_units.find(unit => unit.id === id));
   return [
     'You are the independent visual critic for card-skill. Inspect the attached real PNG at thumbnail and full size.',
     'Return only one Visual Review JSON matching schemas/visual-review.json.',
+    'When the receipt contains visual_job_sha256, artifact_plan_sha256, and artifact_contract_sha256, copy all three fields exactly into the review.',
     'Score message_clarity, visual_hierarchy, cognitive_load, and style_consistency as integers from 0 to 5.',
-    `Set metaphor_required to ${Boolean(output.visual_plan?.visual_metaphor)}. Score metaphor_quality when true; otherwise use null.`,
+    `Set metaphor_required to ${Boolean(artifactPlan?.visual_plan?.visual_metaphor)}. Score metaphor_quality when true; otherwise use null.`,
     'overall_score is the applicable score average multiplied by 2 and rounded to one decimal.',
     'Derive verdict only after computing the score: at 8.0 or above with no blocker, verdict MUST be pass on either attempt. Below 8.0 or with a blocker, verdict MUST be revise on attempt 0 and fail on attempt 1.',
     'Before returning JSON, silently recompute overall_score and verify that verdict follows that rule exactly. A fail or revise verdict is invalid when the pass condition is true.',
     'Judge subjective composition only. The receipt already proves mechanical checks passed.',
     'Judge only the attached receipt artifact_index. A multi-card renderer emits sibling cards as separate PNG artifacts; do not report a sibling card as missing merely because it is not repeated in this PNG.',
+    'Verify that the visible artifact preserves its attached source evidence and fulfills the artifact role; a visually polished card with swapped or unrelated evidence is a blocker.',
     seedIssue ? `REVISION BENCHMARK TARGET: ${seedIssue}. On attempt 0 verify this defect is visibly present and do not pass while it remains; on attempt 1 verify the real PNG removed it.` : '',
     `ATTEMPT: ${attempt}`,
-    `VISUAL PLAN AND CONTRACT: ${JSON.stringify({ visual_plan: output.visual_plan, render_contract: output.render_contract })}`,
+    `SOURCE EVIDENCE, ARTIFACT PLAN, AND CONTRACT: ${JSON.stringify({ source_evidence: artifactEvidence, artifact_plan: artifactPlan, render_contract: output.render_contract })}`,
     `RECEIPT IDENTITY AND HASHES: ${JSON.stringify(receipt)}`,
   ].join('\n\n');
 }
@@ -209,7 +229,14 @@ function completeMean(values) {
 function revisionInvariant(job) {
   return {
     ...job,
-    outputs: job.outputs.map(({ visual_plan, render_contract, ...immutable }) => immutable),
+    outputs: job.outputs.map(output => {
+      const { visual_plan, render_contract, ...immutable } = output;
+      if (job.schema_version !== 3) return immutable;
+      return {
+        ...immutable,
+        artifacts: output.artifacts.map(({ visual_plan: artifactVisualPlan, ...artifactIdentity }) => artifactIdentity),
+      };
+    }),
   };
 }
 
@@ -326,9 +353,12 @@ try {
       } else {
         finalReviews = review.reviews;
       }
+      const approvedCandidateSha256 = run(process.execPath, [
+        path.join(installed, 'scripts', 'hash-reviewed-candidate.mjs'), '--candidate-dir', candidateDir,
+      ], { cwd: installed }).stdout.trim();
       const promoted = run(process.execPath, [
         path.join(installed, 'scripts', 'publish-reviewed-job.mjs'), '--candidate-dir', candidateDir,
-        '--output-dir', finalDir, '--json',
+        '--output-dir', finalDir, '--expected-candidate-sha256', approvedCandidateSha256, '--json',
       ], { cwd: installed });
       publication = JSON.parse(promoted.stdout);
     }

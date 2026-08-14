@@ -1,0 +1,20 @@
+{
+  "product": "Relay Atlas",
+  "source_label": "card-skill owned launch fixture",
+  "kicker": "REVIEW SYSTEM / LAUNCH",
+  "title": "把一次变更，整理成一条可审阅的证据链",
+  "judgment": "它不是把记录堆进同一个页面，而是让来源、判断和交付物保持可追溯。",
+  "records": [
+    { "time": "09:12", "kind": "SOURCE", "title": "Repository snapshot", "detail": "31 files · src / docs / tests" },
+    { "time": "09:18", "kind": "DECISION", "title": "Route selected", "detail": "CLI workflow · documentary copy" },
+    { "time": "09:24", "kind": "ARTIFACT", "title": "Review packet", "detail": "3 cards · 3 evidence duties" }
+  ],
+  "evidence_note": "三类记录来自同一轮自有 fixture，但各自承担不同证据职责。",
+  "capability_steps": [
+    { "label": "01", "title": "锁定来源", "text": "先确认当前材料和可用边界。" },
+    { "label": "02", "title": "分配职责", "text": "每张卡只绑定一个主证据。" },
+    { "label": "03", "title": "封存交付", "text": "图像、合同与审查结果保持一致。" }
+  ],
+  "case_title": "一次发布，三种证据职责",
+  "case_detail": "界面证据、能力路径和最终交付分别出现；系列共享骨架，但不共享同一张图。"
+}

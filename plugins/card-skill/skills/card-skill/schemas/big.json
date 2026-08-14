@@ -41,6 +41,8 @@
     },
     "logo": {
       "type": "string",
+      "maxLength": 1024,
+      "pattern": "^(?:[A-Za-z]:[\\\\/]|/(?![/?\\\\]))",
       "description": "Optional path to a brand logo image. Omit for an unbranded output."
     },
     "brand_name": {

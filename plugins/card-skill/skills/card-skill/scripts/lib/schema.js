@@ -10,6 +10,15 @@ const {
   listDesigns,
   resolveDesignNameForInput,
 } = require('./designs');
+const fs = require('fs');
+const path = require('path');
+const {
+  MAX_LOGO_BYTES,
+  MAX_LOGO_DIMENSION,
+  MAX_LOGO_PIXELS,
+  inspectLocalImage,
+  isSafeAbsoluteLocalPath,
+} = require('./file-access');
 
 const SCHEMAS = {
   big: {
@@ -62,7 +71,7 @@ const SCHEMAS = {
   },
   poster: {
     required: ['mode', 'title', 'cards'],
-    optional: ['variant', 'design', 'tone', 'subtitle', 'source', 'logo', 'brand_name'],
+    optional: ['variant', 'design', 'tone', 'kicker', 'subtitle', 'source', 'logo', 'brand_name'],
     types: {
       mode: 'string',
       title: 'string',
@@ -70,6 +79,7 @@ const SCHEMAS = {
       variant: 'string',
       design: 'string',
       tone: 'string',
+      kicker: 'string',
       subtitle: 'string',
       source: 'string',
       logo: 'string',
@@ -213,19 +223,55 @@ const SCHEMAS = {
 
 const LONG_BODY_TYPES = new Set(['paragraph', 'heading', 'highlight', 'blockquote', 'layer_card', 'section_break']);
 const WHITEBOARD_STEP_TYPES = new Set(['chain', 'annotation', 'layers', 'insight']);
-const POSTER_BODY_TYPES = new Set(['paragraph', 'heading', 'highlight', 'items', 'data_row', 'divider', 'reading_unit']);
+const POSTER_BODY_TYPES = new Set(['paragraph', 'heading', 'highlight', 'items', 'data_row', 'divider', 'reading_unit', 'media', 'process']);
 const POSTER_VARIANTS = new Set(['reading-notes']);
+const POSTER_MAX_CARDS = 20;
+const POSTER_MAX_BODY_ELEMENTS = 24;
+const POSTER_MAX_TOTAL_TEXT = 40_000;
 const EDITORIAL_ASPECTS = new Set(['wechat-cover', 'blog-hero', 'body-3-2', 'body-4-3', 'cinematic', 'square']);
 const EDITORIAL_USES = new Set(['cover', 'in-article', 'metaphor']);
+const MAX_COMPOSITION_HTML_CHARS = 1_000_000;
+const MAX_COMPOSITION_CSS_CHARS = 262_144;
+
+function safeCodePoint(value) {
+  return Number.isInteger(value) && value >= 0 && value <= 0x10ffff
+    ? String.fromCodePoint(value)
+    : '\ufffd';
+}
 
 function validateCompositionSafety(mode, input, errors) {
+  if (typeof input.content_html === 'string' && input.content_html.length > MAX_COMPOSITION_HTML_CHARS) {
+    errors.push(`${mode} content_html must be at most ${MAX_COMPOSITION_HTML_CHARS} characters`);
+  }
+  if (typeof input.custom_css === 'string' && input.custom_css.length > MAX_COMPOSITION_CSS_CHARS) {
+    errors.push(`${mode} custom_css must be at most ${MAX_COMPOSITION_CSS_CHARS} characters`);
+  }
   if (typeof input.content_html === 'string'
-      && /<(?:script|iframe|object|embed|link|base)\b|\son[a-z]+\s*=|javascript:/i.test(input.content_html)) {
+      && (/<(?:script|iframe|object|embed|link|base|animate|animatetransform|animatemotion|set)\b|\son[a-z]+\s*=|javascript:/i.test(input.content_html)
+        || /<template\b[^>]*\bshadowrootmode\s*=/i.test(input.content_html))) {
     errors.push(`${mode} content_html cannot contain executable or embedded-resource markup`);
+  }
+  if (typeof input.content_html === 'string') {
+    const normalizedResourceText = input.content_html
+      .replace(/\\([0-9a-f]{1,6})\s?/gi, (_, hex) => safeCodePoint(Number.parseInt(hex, 16)))
+      .replace(/&#x([0-9a-f]+);?/gi, (_, hex) => safeCodePoint(Number.parseInt(hex, 16)))
+      .replace(/&#([0-9]+);?/g, (_, decimal) => safeCodePoint(Number.parseInt(decimal, 10)))
+      .replace(/&colon;/gi, ':');
+    if (/data\s*:\s*image\//i.test(normalizedResourceText)) {
+      errors.push(`${mode} content_html cannot embed authored data:image resources; use a bounded renderer media or logo field`);
+    }
+  }
+  if (typeof input.content_html === 'string'
+      && /@keyframes\b|(?:^|[;{\s"'])animation(?:-[a-z-]+)?\s*:|(?:^|[;{\s"'])transition(?:-[a-z-]+)?\s*:|scroll-behavior\s*:/i.test(input.content_html)) {
+    errors.push(`${mode} content_html cannot contain time-dependent animation or transition rules`);
   }
   if (typeof input.custom_css === 'string'
       && /<\/style\b|@import\b|url\s*\(\s*['"]?\s*(?:file|javascript|data):/i.test(input.custom_css)) {
     errors.push(`${mode} custom_css cannot escape its style element, import stylesheets, or reference unsafe URLs`);
+  }
+  if (typeof input.custom_css === 'string'
+      && /@keyframes\b|(?:^|[;{\s])animation(?:-[a-z-]+)?\s*:|(?:^|[;{\s])transition(?:-[a-z-]+)?\s*:|scroll-behavior\s*:/i.test(input.custom_css)) {
+    errors.push(`${mode} custom_css cannot contain time-dependent animation or transition rules`);
   }
 }
 const EDITORIAL_COVER_MOTIFS = new Set(['paper-stack', 'drawer', 'window', 'lens', 'path', 'archive', 'layers']);
@@ -244,6 +290,8 @@ function hasPosterContent(body) {
       return Array.isArray(el.entries) && el.entries.some(entry => hasText(entry?.label) && hasText(entry?.text));
     }
     if (el.type === 'data_row') return hasText(el.key) && hasText(el.value);
+    if (el.type === 'media') return hasText(el.path) && hasText(el.alt);
+    if (el.type === 'process') return Array.isArray(el.steps) && el.steps.some(step => hasText(step?.title));
     if (['paragraph', 'heading', 'highlight'].includes(el.type)) {
       return hasText(el.text);
     }
@@ -251,7 +299,26 @@ function hasPosterContent(body) {
   });
 }
 
-function validate(input) {
+function totalStringLength(value, stopAfter = Number.POSITIVE_INFINITY) {
+  const stack = [value];
+  const seen = new WeakSet();
+  let total = 0;
+  while (stack.length) {
+    const item = stack.pop();
+    if (typeof item === 'string') {
+      total += item.length;
+      if (total > stopAfter) return total;
+    } else if (item && typeof item === 'object') {
+      if (seen.has(item)) continue;
+      seen.add(item);
+      const children = Array.isArray(item) ? item : Object.values(item);
+      for (const child of children) stack.push(child);
+    }
+  }
+  return total;
+}
+
+function validate(input, { checkLocalFiles = true } = {}) {
   const errors = [];
   const mode = input.mode;
 
@@ -297,6 +364,22 @@ function validate(input) {
   if (input.tone !== undefined && !EDITORIAL_TONES.has(input.tone)) {
     errors.push(`tone must be one of: ${[...EDITORIAL_TONES].join(', ')}`);
   }
+  if (input.logo !== undefined) {
+    if (typeof input.logo !== 'string' || input.logo.length > 1024 || !isSafeAbsoluteLocalPath(input.logo)) {
+      errors.push('logo must be a safe absolute local path of at most 1024 characters, not a network share or device path');
+    } else if (checkLocalFiles) {
+      try {
+        inspectLocalImage(input.logo, {
+          label: 'Logo',
+          maxBytes: MAX_LOGO_BYTES,
+          maxDimension: MAX_LOGO_DIMENSION,
+          maxPixels: MAX_LOGO_PIXELS,
+        });
+      } catch (error) {
+        errors.push(`logo must point to a bounded PNG, JPEG, or WebP image: ${error.message}`);
+      }
+    }
+  }
 
   if (STUDIO_MODES.has(mode)) {
     if (input.composition_required !== true) {
@@ -317,12 +400,36 @@ function validate(input) {
 
   // Mode-specific body/step validation
   if (mode === 'long' && Array.isArray(input.body)) {
+    const allowedLongFields = {
+      paragraph: new Set(['type', 'text', 'dropcap']),
+      heading: new Set(['type', 'text', 'level']),
+      highlight: new Set(['type', 'text', 'accent']),
+      blockquote: new Set(['type', 'text']),
+      layer_card: new Set(['type', 'label', 'text']),
+      section_break: new Set(['type']),
+    };
     input.body.forEach((el, i) => {
+      if (!el || typeof el !== 'object' || Array.isArray(el)) {
+        errors.push(`body[${i}] must be an object`);
+        return;
+      }
       if (!el.type) errors.push(`body[${i}]: missing "type"`);
       else if (!LONG_BODY_TYPES.has(el.type)) errors.push(`body[${i}]: unknown type "${el.type}". Allowed: ${[...LONG_BODY_TYPES].join(', ')}`);
+      else {
+        for (const field of Object.keys(el)) {
+          if (!allowedLongFields[el.type].has(field)) errors.push(`body[${i}]: unknown field "${field}" for ${el.type}`);
+        }
+      }
       if (el.type === 'heading' && el.level !== undefined && ![2, 3].includes(el.level)) {
         errors.push(`body[${i}]: heading level must be 2 or 3, got ${el.level}`);
       }
+      if (['paragraph', 'heading', 'highlight', 'blockquote', 'layer_card'].includes(el.type)
+          && (typeof el.text !== 'string' || !el.text.trim())) {
+        errors.push(`body[${i}]: ${el.type} requires non-empty "text"`);
+      }
+      if (el.type === 'paragraph' && el.dropcap !== undefined && typeof el.dropcap !== 'boolean') errors.push(`body[${i}]: paragraph dropcap must be boolean`);
+      if (el.type === 'highlight' && el.accent !== undefined && typeof el.accent !== 'boolean') errors.push(`body[${i}]: highlight accent must be boolean`);
+      if (el.type === 'layer_card' && el.label !== undefined && typeof el.label !== 'string') errors.push(`body[${i}]: layer_card label must be a string`);
     });
   }
 
@@ -345,32 +452,100 @@ function validate(input) {
   }
 
   if (mode === 'poster' && Array.isArray(input.cards)) {
+    if (totalStringLength(input, POSTER_MAX_TOTAL_TEXT) > POSTER_MAX_TOTAL_TEXT) errors.push(`poster visible and contract text must total at most ${POSTER_MAX_TOTAL_TEXT} characters`);
+    for (const [field, maximum] of [['title', 240], ['kicker', 160], ['subtitle', 500], ['source', 500], ['brand_name', 160]]) {
+      if (input[field] !== undefined && (typeof input[field] !== 'string' || input[field].length > maximum)) errors.push(`${field} must be a string of at most ${maximum} characters`);
+    }
     if (input.variant && !POSTER_VARIANTS.has(input.variant)) {
       errors.push(`variant must be one of: ${[...POSTER_VARIANTS].join(', ')}`);
     }
     if (input.cards.length === 0) errors.push('cards[] must have at least 1 card');
+    if (input.cards.length > POSTER_MAX_CARDS) errors.push(`poster supports at most ${POSTER_MAX_CARDS} cards per batch`);
     if (input.variant === 'reading-notes' && input.cards.length > 8) {
       errors.push('poster variant "reading-notes" supports at most 8 cards per batch');
     }
     input.cards.forEach((card, i) => {
+      if (!card || typeof card !== 'object' || Array.isArray(card)) {
+        errors.push(`cards[${i}] must be an object`);
+        return;
+      }
+      for (const key of Object.keys(card)) if (!['title', 'body'].includes(key)) errors.push(`cards[${i}]: unknown field "${key}"`);
       if (card.title !== undefined && (typeof card.title !== 'string' || card.title.trim() === '')) {
         errors.push(`cards[${i}].title must be a non-empty string when provided`);
       }
+      if (typeof card.title === 'string' && card.title.length > 200) errors.push(`cards[${i}].title must be at most 200 characters`);
       if (card.title !== undefined && input.variant !== 'reading-notes') {
         errors.push(`cards[${i}].title is only supported by poster variant "reading-notes"`);
       }
       if (!Array.isArray(card.body)) errors.push(`cards[${i}]: missing "body" array`);
       else {
+        if (card.body.length > POSTER_MAX_BODY_ELEMENTS) errors.push(`cards[${i}].body supports at most ${POSTER_MAX_BODY_ELEMENTS} elements`);
         if (!hasPosterContent(card.body)) {
           errors.push(`cards[${i}].body must contain actual visible content`);
         }
         card.body.forEach((el, j) => {
+          if (!el || typeof el !== 'object' || Array.isArray(el)) {
+            errors.push(`cards[${i}].body[${j}] must be an object`);
+            return;
+          }
           if (!el.type) errors.push(`cards[${i}].body[${j}]: missing "type"`);
           else if (!POSTER_BODY_TYPES.has(el.type)) errors.push(`cards[${i}].body[${j}]: unknown type "${el.type}". Allowed: ${[...POSTER_BODY_TYPES].join(', ')}`);
-          if (el.type === 'items' && Array.isArray(el.entries)) {
-            el.entries.forEach((e, k) => {
-              if (!e.label || !e.text) errors.push(`cards[${i}].body[${j}].entries[${k}]: items entries require "label" and "text"`);
+          if (el.type === 'items') {
+            const allowed = new Set(['type', 'entries']);
+            for (const key of Object.keys(el)) if (!allowed.has(key)) errors.push(`cards[${i}].body[${j}]: unknown items field "${key}"`);
+            if (!Array.isArray(el.entries) || el.entries.length < 1 || el.entries.length > 8) errors.push(`cards[${i}].body[${j}].entries must contain 1 to 8 entries`);
+            else el.entries.forEach((e, k) => {
+              if (!e || typeof e !== 'object' || Array.isArray(e)) { errors.push(`cards[${i}].body[${j}].entries[${k}] must be an object`); return; }
+              for (const key of Object.keys(e)) if (!['label', 'text'].includes(key)) errors.push(`cards[${i}].body[${j}].entries[${k}]: unknown field "${key}"`);
+              if (typeof e.label !== 'string' || !e.label.trim() || e.label.length > 80) errors.push(`cards[${i}].body[${j}].entries[${k}].label must be a non-empty string of at most 80 characters`);
+              if (typeof e.text !== 'string' || !e.text.trim() || e.text.length > 500) errors.push(`cards[${i}].body[${j}].entries[${k}].text must be a non-empty string of at most 500 characters`);
             });
+          }
+          if (['paragraph', 'heading', 'highlight'].includes(el.type)) {
+            const maximum = el.type === 'heading' ? 240 : (el.type === 'highlight' ? 600 : 1200);
+            if (typeof el.text !== 'string' || !el.text.trim() || el.text.length > maximum) errors.push(`cards[${i}].body[${j}].text must be a non-empty string of at most ${maximum} characters`);
+          }
+          if (el.type === 'data_row') {
+            const allowed = new Set(['type', 'key', 'value']);
+            for (const key of Object.keys(el)) if (!allowed.has(key)) errors.push(`cards[${i}].body[${j}]: unknown data_row field "${key}"`);
+            if (typeof el.key !== 'string' || !el.key.trim() || el.key.length > 80) errors.push(`cards[${i}].body[${j}].key must be a non-empty string of at most 80 characters`);
+            if (typeof el.value !== 'string' || !el.value.trim() || el.value.length > 240) errors.push(`cards[${i}].body[${j}].value must be a non-empty string of at most 240 characters`);
+          }
+          if (el.type === 'media') {
+            const allowed = new Set(['type', 'path', 'alt', 'caption', 'fit', 'position']);
+            for (const key of Object.keys(el)) if (!allowed.has(key)) errors.push(`cards[${i}].body[${j}]: unknown media field "${key}"`);
+            if (!isSafeAbsoluteLocalPath(el.path)) errors.push(`cards[${i}].body[${j}].path must be an absolute local path, not a network share or device path`);
+            if (typeof el.path === 'string' && el.path.length > 1024) errors.push(`cards[${i}].body[${j}].path must be at most 1024 characters`);
+            if (typeof el.path === 'string' && !/\.(?:png|jpe?g|webp)$/i.test(el.path)) errors.push(`cards[${i}].body[${j}].path must use PNG, JPEG, or WebP`);
+            if (checkLocalFiles && typeof el.path === 'string' && el.path.length <= 1024 && isSafeAbsoluteLocalPath(el.path)) {
+              try {
+                const stat = fs.statSync(el.path);
+                if (!stat.isFile()) errors.push(`cards[${i}].body[${j}].path must point to a file`);
+                if (stat.size > 32 * 1024 * 1024) errors.push(`cards[${i}].body[${j}].path must be at most 32 MiB`);
+              } catch {
+                errors.push(`cards[${i}].body[${j}].path must point to a readable local file`);
+              }
+            }
+            if (typeof el.alt !== 'string' || el.alt.trim() === '' || el.alt.length > 240) errors.push(`cards[${i}].body[${j}].alt must be a non-empty string of at most 240 characters`);
+            if (el.caption !== undefined && (typeof el.caption !== 'string' || el.caption.trim() === '' || el.caption.length > 500)) errors.push(`cards[${i}].body[${j}].caption must be a non-empty string of at most 500 characters when provided`);
+            if (el.fit !== undefined && !['cover', 'contain'].includes(el.fit)) errors.push(`cards[${i}].body[${j}].fit must be cover or contain`);
+            if (el.position !== undefined && !['center', 'top', 'bottom', 'left', 'right'].includes(el.position)) errors.push(`cards[${i}].body[${j}].position must be center, top, bottom, left, or right`);
+          }
+          if (el.type === 'process') {
+            const allowed = new Set(['type', 'steps']);
+            for (const key of Object.keys(el)) if (!allowed.has(key)) errors.push(`cards[${i}].body[${j}]: unknown process field "${key}"`);
+            if (!Array.isArray(el.steps) || el.steps.length < 2 || el.steps.length > 5) errors.push(`cards[${i}].body[${j}].steps must contain 2 to 5 entries`);
+            else el.steps.forEach((step, k) => {
+              if (!step || typeof step !== 'object' || Array.isArray(step)) { errors.push(`cards[${i}].body[${j}].steps[${k}] must be an object`); return; }
+              const stepFields = new Set(['label', 'title', 'text']);
+              for (const key of Object.keys(step)) if (!stepFields.has(key)) errors.push(`cards[${i}].body[${j}].steps[${k}]: unknown field "${key}"`);
+              if (typeof step.title !== 'string' || step.title.trim() === '' || step.title.length > 160) errors.push(`cards[${i}].body[${j}].steps[${k}].title must be a non-empty string of at most 160 characters`);
+              if (step.label !== undefined && (typeof step.label !== 'string' || step.label.trim() === '' || step.label.length > 24)) errors.push(`cards[${i}].body[${j}].steps[${k}].label must be a non-empty string of at most 24 characters when provided`);
+              if (step.text !== undefined && (typeof step.text !== 'string' || step.text.trim() === '' || step.text.length > 400)) errors.push(`cards[${i}].body[${j}].steps[${k}].text must be a non-empty string of at most 400 characters when provided`);
+            });
+          }
+          if (input.variant === 'reading-notes' && ['media', 'process'].includes(el.type)) {
+            errors.push(`cards[${i}].body[${j}]: ${el.type} is not supported by poster variant "reading-notes"`);
           }
           if (el.type === 'reading_unit') {
             if (input.variant !== 'reading-notes') {
@@ -379,9 +554,11 @@ function validate(input) {
             if (typeof el.quote !== 'string' || el.quote.trim() === '') {
               errors.push(`cards[${i}].body[${j}].quote must be a non-empty string`);
             }
+            if (typeof el.quote === 'string' && el.quote.length > 1200) errors.push(`cards[${i}].body[${j}].quote must be at most 1200 characters`);
             if (el.thought !== undefined && typeof el.thought !== 'string') {
               errors.push(`cards[${i}].body[${j}].thought must be a string when provided`);
             }
+            if (typeof el.thought === 'string' && el.thought.length > 1200) errors.push(`cards[${i}].body[${j}].thought must be at most 1200 characters`);
           }
         });
       }
@@ -440,6 +617,9 @@ function validate(input) {
     }
 
     if (!usesLegacyFamily) {
+      if (input.logo !== undefined) {
+        errors.push('article-diagram compression pack does not support logo; use a legacy family diagram when branded chrome is required');
+      }
       if (!input.formula || typeof input.formula !== 'string') {
         errors.push('article-diagram compression pack requires string "formula"');
       }

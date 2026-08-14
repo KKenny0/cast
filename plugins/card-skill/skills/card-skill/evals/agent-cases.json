@@ -54,7 +54,7 @@
     },
     {
       "id": "poster",
-      "request": "把下面三点做成一个纯排版社媒系列卡组，每点一张。Visual Job 使用三个 outputs，每个 poster contract 只含一张 card；每个 output 的 visual_plan.visual_metaphor 必须为 null，不承诺链条、轨道、缩略图或其他 poster renderer 无法呈现的图形。每个 contract 顶层的 title 必须是非空简短步骤名，且不要逐字重复正文；普通 poster 的 cards[] 不得包含 title。每张卡逐字保留对应步骤的标题句，并用同一 source unit 内的说明句形成正文。只输出 Visual Job JSON。",
+      "request": "把下面三点做成一个纯排版社媒系列卡组，每点一张。Visual Job 使用三个 outputs，每个 poster contract 只含一张 card；每个 artifact 的 visual_plan.visual_metaphor 必须为 null，不承诺链条、轨道、缩略图或其他 poster renderer 无法呈现的图形。每个 contract 顶层的 title 必须是非空简短步骤名，且不要逐字重复正文；普通 poster 的 cards[] 不得包含 title。每张卡逐字保留对应步骤的标题句，并用同一 source unit 内的说明句形成正文。只输出 Visual Job JSON。",
       "source_text": "一、先确认来源。记录出处、作者与上下文，让后续判断建立在可追溯的信息上。二、再选择视觉结构。根据内容关系选择层级、流程或比较结构，让形式服务于核心信息。三、最后检查真实 PNG。同时查看缩略图与全尺寸成品，确认层级、负载和风格都达到发布标准。",
       "publish_target": "social-series",
       "tier": "stable",
@@ -149,7 +149,7 @@
     },
     {
       "id": "reflective-sketchnote",
-      "request": "把下面从失败到顿悟的个人反思做成一张精简 sketchnote，只用三个主站点：①一次写完→卡住；②留下可检查的草稿；③写作开始向前。标题用“先留下”，除来源短句外不要扩写方法论。这个案例使用三阶段递进布局而非视觉隐喻，visual_plan.visual_metaphor 必须为 null，不承诺弧线、路径或其他必须另外兑现的图形。content_html 只使用顶部标题和一个 .arc，.arc 内正好三个 .station，不添加结语或重复总结；custom_css 固定 .page 高 1500px，顶部标题区约 300px，.arc 高 1120px、padding:40px 64px 64px、三行等分网格、gap 24px；每个 .station 使用 380px minmax(0,1fr) 两列、align-items:center、gap 32px、padding 28px 36px，让站点标题与正文横向配对并填满卡片；站点 h2 固定 40px 且 white-space:nowrap，三个固定短标题都必须保持单行。禁止 drop-cap、::first-letter 放大、手写 br、正文 nowrap、负定位和超过 8px 的阴影；正文使用正常 36px、行高 1.45、常规字重。只输出 Visual Job JSON。",
+      "request": "把下面从失败到顿悟的个人反思做成一张精简 sketchnote，只用三个主站点：①一次写完→卡住；②留下可检查的草稿；③写作开始向前。标题用“先留下”，除来源短句外不要扩写方法论。这个案例使用三阶段递进布局而非视觉隐喻，artifact 的 visual_plan.visual_metaphor 必须为 null，不承诺弧线、路径或其他必须另外兑现的图形。content_html 只使用顶部标题和一个 .arc，.arc 内正好三个 .station，不添加结语或重复总结；custom_css 固定 .page 高 1500px，顶部标题区约 300px，.arc 高 1120px、padding:40px 64px 64px、三行等分网格、gap 24px；每个 .station 使用 380px minmax(0,1fr) 两列、align-items:center、gap 32px、padding 28px 36px，让站点标题与正文横向配对并填满卡片；站点 h2 固定 40px 且 white-space:nowrap，三个固定短标题都必须保持单行。禁止 drop-cap、::first-letter 放大、手写 br、正文 nowrap、负定位和超过 8px 的阴影；正文使用正常 36px、行高 1.45、常规字重。只输出 Visual Job JSON。",
       "source_text": "我总想一次写完，结果每次都卡住。后来我只要求自己先留下一个可检查的草稿，写作终于开始向前。",
       "publish_target": "social-single",
       "tier": "studio",
@@ -199,9 +199,108 @@
       "required_terms": ["约束", "选择", "验证"]
     },
     {
+      "id": "open-source-cli-adaptive",
+      "visual_job_version": 3,
+      "request": "用 evidence-first 路由介绍这个开源 CLI。不要指定固定模板；只生成证据足以支持的卡片。必须使用一个 poster output 和三张 cards，artifact roles 依次为 problem、command、output。命令逐字保留，历史素材只进入 rejected evidence，不得出现在 cards 或 artifact 引用中。只输出 Visual Job JSON。",
+      "source_text": "项目类型：CLI。当前官方 README 说明输入是一个代码仓库。Quick start 命令：npx repo-packer@latest。当前输出是一个可供 AI 检查的文本包。历史素材：旧项目名 repopack 的输出截图，已经过期，不得作为当前证据。",
+      "publish_target": "social-series",
+      "tier": "stable",
+      "modes": ["poster"],
+      "outputs": [1, 1],
+      "source_units": [4, 5],
+      "artifact_outputs": [3, 3],
+      "required_artifact_roles": ["problem", "command", "output"],
+      "required_contract_fields": ["cards"],
+      "required_source_contract_mappings": [
+        { "source_terms": ["输入", "代码仓库"], "contract_terms": ["代码仓库"] },
+        { "source_terms": ["npx", "repo-packer"], "contract_terms": ["npx repo-packer@latest"] },
+        { "source_terms": ["输出", "文本包"], "contract_terms": ["文本包"] }
+      ],
+      "exclusive_source_contract_mappings": true,
+      "required_card_term_groups": [["代码仓库"], ["npx repo-packer@latest"], ["文本包"]],
+      "exclusive_card_term_groups": true,
+      "rejected_source_expectations": [
+        { "source_terms": ["repopack", "过期"], "strength": "unusable", "freshness": "stale" }
+      ],
+      "forbidden_terms": ["repopack"]
+    },
+    {
+      "id": "open-source-launch-adaptive",
+      "visual_job_version": 3,
+      "request": "把这组证据丰富的开源发布材料做成 launch 系列。使用一个 poster output、四张 cards，artifact roles 依次为 judgment、evidence、capability、case；每张绑定不同当前强证据，不生成额外 overview。只输出 Visual Job JSON。",
+      "source_text": "发布判断：Northstar 1.0 把可复核交付作为默认工作方式。当前 benchmark：在官方 40 项回归集中，36 项一次通过。当前能力：每次执行都会保存输入、步骤和哈希回执。当前案例：示例团队用回执重建了前一晚的发布过程。",
+      "publish_target": "social-series",
+      "tier": "stable",
+      "modes": ["poster"],
+      "outputs": [1, 1],
+      "source_units": [4, 4],
+      "artifact_outputs": [4, 4],
+      "required_artifact_roles": ["judgment", "evidence", "capability", "case"],
+      "required_contract_fields": ["cards"],
+      "required_card_term_groups": [["可复核"], ["40", "36"], ["输入", "哈希回执"], ["示例团队", "重建"]],
+      "exclusive_card_term_groups": true,
+      "required_source_contract_mappings": [
+        { "source_terms": ["发布判断", "可复核"], "contract_terms": ["可复核"] },
+        { "source_terms": ["benchmark", "40"], "contract_terms": ["40", "36"] },
+        { "source_terms": ["当前能力", "哈希回执"], "contract_terms": ["输入", "哈希回执"] },
+        { "source_terms": ["当前案例", "示例团队"], "contract_terms": ["示例团队", "重建"] }
+      ],
+      "exclusive_source_contract_mappings": true,
+      "required_terms": ["Northstar", "40", "哈希回执", "示例团队"]
+    },
+    {
+      "id": "open-source-library-adaptive",
+      "visual_job_version": 3,
+      "request": "用 documentary register 介绍这个开源 Library/API。使用一个 poster output 和三张 cards，artifact roles 依次为 contract、example、boundary；不要写 launch 金句，不要补兼容性或性能。只输出 Visual Job JSON。",
+      "source_text": "公开契约：parse(input) 接收 UTF-8 字符串并返回节点数组。最小示例：const nodes = parse(source)。集成边界：调用方负责读取文件和保存结果，库本身不访问网络。",
+      "publish_target": "social-series",
+      "tier": "stable",
+      "modes": ["poster"],
+      "outputs": [1, 1],
+      "source_units": [3, 3],
+      "source_unit_assignment": "one-to-one",
+      "artifact_outputs": [3, 3],
+      "required_artifact_roles": ["contract", "example", "boundary"],
+      "required_contract_fields": ["cards"],
+      "required_card_term_groups": [["parse(input)", "节点数组"], ["const nodes", "parse(source)"], ["调用方", "不访问网络"]],
+      "required_source_contract_mappings": [
+        { "source_terms": ["公开契约", "parse(input)"], "contract_terms": ["parse(input)", "节点数组"] },
+        { "source_terms": ["最小示例", "parse(source)"], "contract_terms": ["const nodes", "parse(source)"] },
+        { "source_terms": ["集成边界", "调用方"], "contract_terms": ["调用方", "不访问网络"] }
+      ],
+      "required_terms": ["UTF-8", "parse(source)", "不访问网络"],
+      "forbidden_terms": ["性能领先", "全面兼容", "重新定义"]
+    },
+    {
+      "id": "open-source-stale-evidence",
+      "visual_job_version": 3,
+      "request": "处理这个 UI 工具，只使用当前证据。使用一个 poster output 和两张 cards，artifact roles 依次为 interface、result；旧品牌截图必须标为 stale 或 unusable，不能被 artifact 引用或出现在可见卡片里。只输出 Visual Job JSON。",
+      "source_text": "当前产品名：ClearDesk。当前界面：任务页显示输入、运行状态和回执。当前结果：完成后可以下载带 SHA-256 的报告。旧素材：LegacyDesk 2023 仪表盘截图，品牌和界面都已经弃用。",
+      "publish_target": "social-series",
+      "tier": "stable",
+      "modes": ["poster"],
+      "outputs": [1, 1],
+      "source_units": [3, 4],
+      "artifact_outputs": [2, 2],
+      "required_artifact_roles": ["interface", "result"],
+      "required_contract_fields": ["cards"],
+      "required_card_term_groups": [["任务页", "运行状态"], ["SHA-256", "报告"]],
+      "exclusive_card_term_groups": true,
+      "required_source_contract_mappings": [
+        { "source_terms": ["当前界面", "任务页"], "contract_terms": ["任务页", "运行状态"] },
+        { "source_terms": ["当前结果", "SHA-256"], "contract_terms": ["SHA-256", "报告"] }
+      ],
+      "exclusive_source_contract_mappings": true,
+      "rejected_source_expectations": [
+        { "source_terms": ["LegacyDesk", "2023"], "strength": "unusable", "freshness": "stale" }
+      ],
+      "required_terms": ["ClearDesk", "任务页", "SHA-256"],
+      "forbidden_terms": ["LegacyDesk", "2023"]
+    },
+    {
       "id": "revise-text-heavy",
       "kind": "revision",
-      "request": "根据视觉批评减少次要文字并重新建立单一焦点。Visual Job 必须恰好一个 output，poster contract 必须恰好包含一张 cards[0]，不得用增加卡片分散文字；visual_plan.visual_metaphor 使用 null。",
+      "request": "根据视觉批评减少次要文字并重新建立单一焦点。Visual Job 必须恰好一个 output，poster contract 必须恰好包含一张 cards[0]，不得用增加卡片分散文字；artifact 的 visual_plan.visual_metaphor 使用 null。",
       "source_text": "真正重要的不是保存更多，而是让下一次任务能找到需要的那一条。",
       "publish_target": "social-series",
       "tier": "stable",

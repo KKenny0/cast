@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { chromium } from 'playwright';
+import crypto from 'crypto';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
@@ -9,7 +10,8 @@ import fileAccess from './lib/file-access.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
-const { createFileAccessPolicy } = fileAccess;
+const { MAX_CAPTURE_PIXELS, MAX_PNG_BYTES, createFileAccessPolicy, validateCaptureSpec } = fileAccess;
+const LOCKED_DOCUMENT_CSP = "default-src 'none'; script-src 'none'; object-src 'none'; frame-src 'none'; child-src 'none'; connect-src 'none'; img-src data: file:; font-src file:; style-src 'unsafe-inline' file:; media-src 'none'; base-uri 'none'; form-action 'none'";
 
 function parseArgs(argv) {
   const opts = {
@@ -24,6 +26,8 @@ function parseArgs(argv) {
     json: false,
     selfTest: false,
     allowedFiles: [],
+    sealedImages: false,
+    expectedImageSha256: [],
   };
 
   for (let i = 0; i < argv.length; i++) {
@@ -63,6 +67,15 @@ function parseArgs(argv) {
         if (!argv[i + 1]) throw new Error('--allow-file requires a path');
         opts.allowedFiles.push(argv[++i]);
         break;
+      case '--sealed-images':
+        opts.sealedImages = true;
+        break;
+      case '--expect-image-sha': {
+        const digest = argv[++i];
+        if (!/^[a-f0-9]{64}$/.test(digest || '')) throw new Error('--expect-image-sha requires a lowercase SHA-256 digest');
+        opts.expectedImageSha256.push(digest);
+        break;
+      }
       case '--help':
       case '-h':
         printHelp();
@@ -93,6 +106,8 @@ Options:
   --skip-png      Do not require a PNG file
   --json          Print JSON report
   --allow-file     Permit one explicit local asset path (repeatable)
+  --sealed-images  Reject every image-bearing URL not listed by --expect-image-sha
+  --expect-image-sha <sha256>  Permit one embedded data image digest (repeatable)
   --self-test     Verify safe placeholder fixes without launching a browser
 `);
 }
@@ -172,15 +187,18 @@ function runSelfTest() {
 }
 
 function readPngSize(pngPath) {
-  const buf = fs.readFileSync(pngPath);
+  const fd = fs.openSync(pngPath, 'r');
+  const buf = Buffer.alloc(24);
+  let count;
+  try { count = fs.readSync(fd, buf, 0, 24, 0); } finally { fs.closeSync(fd); }
   const signature = '89504e470d0a1a0a';
-  if (buf.length < 24 || buf.subarray(0, 8).toString('hex') !== signature) {
+  if (count < 24 || buf.subarray(0, 8).toString('hex') !== signature) {
     return null;
   }
   return {
     width: buf.readUInt32BE(16),
     height: buf.readUInt32BE(20),
-    bytes: buf.length,
+    bytes: fs.statSync(pngPath).size,
   };
 }
 
@@ -202,10 +220,18 @@ function checkPng(opts, issues) {
     issues.push(issue('error', 'png_empty', 'PNG file is empty or too small.', { pngPath, bytes: stat.size }));
     return;
   }
+  if (stat.size > MAX_PNG_BYTES) {
+    issues.push(issue('error', 'png_too_large', `PNG exceeds the ${MAX_PNG_BYTES} byte checker budget.`, { pngPath, bytes: stat.size }));
+    return;
+  }
 
   const size = readPngSize(pngPath);
   if (!size) {
     issues.push(issue('error', 'png_invalid', 'PNG file is not a valid PNG image.', { pngPath }));
+    return;
+  }
+  if (size.width * size.height > MAX_CAPTURE_PIXELS) {
+    issues.push(issue('error', 'png_pixel_budget', `PNG exceeds the ${MAX_CAPTURE_PIXELS} decoded-pixel checker budget.`, size));
     return;
   }
 
@@ -230,10 +256,13 @@ function checkPng(opts, issues) {
 
 async function inspectBitmap(opts, html, issues, sharedContext = null) {
   if (opts.skipPng || !opts.png || !fs.existsSync(opts.png)) return;
+  const size = readPngSize(opts.png);
+  if (!size || size.bytes > MAX_PNG_BYTES || size.width * size.height > MAX_CAPTURE_PIXELS) return;
   const browser = sharedContext ? null : await chromium.launch();
   try {
-    const context = sharedContext || await browser.newContext({ serviceWorkers: 'block' });
+    const context = sharedContext || await browser.newContext({ serviceWorkers: 'block', javaScriptEnabled: true });
     const page = await context.newPage();
+    page.setDefaultTimeout(15000);
     // A data URL keeps this bitmap-only audit independent of Chromium's
     // file-origin image policy while remaining fully offline.
     const pngDataUrl = `data:image/png;base64,${fs.readFileSync(opts.png).toString('base64')}`;
@@ -286,18 +315,30 @@ async function inspectPage(opts, html, issues) {
   const browser = await chromium.launch();
   try {
     const context = await browser.newContext({
-      viewport: { width: opts.width, height: opts.fullpage ? 5000 : opts.height },
+      viewport: { width: opts.width, height: opts.height },
       deviceScaleFactor: opts.dpr,
       serviceWorkers: 'block',
+      javaScriptEnabled: true,
     });
+    const targetUrl = fileUrl(opts.html);
+    const sealedCapture = process.env.CARD_SKILL_SEALED_CAPTURE === '1';
     const policy = createFileAccessPolicy({
       htmlPath: opts.html,
-      assetRoot: path.join(ROOT, 'assets'),
+      assetRoot: sealedCapture ? path.join(ROOT, 'assets', 'fonts') : path.join(ROOT, 'assets'),
       allowedFiles: opts.allowedFiles,
+      allowHtmlSiblings: !sealedCapture,
     });
     const blocked = [];
     await context.route('**/*', async route => {
       const url = route.request().url();
+      if (url === targetUrl && route.request().resourceType() === 'document') {
+        return route.fulfill({
+          status: 200,
+          contentType: 'text/html; charset=utf-8',
+          headers: { 'Content-Security-Policy': LOCKED_DOCUMENT_CSP },
+          body: html,
+        });
+      }
       const decision = policy.inspect(url);
       if (decision.allowed) return route.continue();
       let host = 'local-file';
@@ -308,15 +349,82 @@ async function inspectPage(opts, html, issues) {
       await route.abort('blockedbyclient');
     });
     const page = await context.newPage();
-    await page.goto(fileUrl(opts.html), { waitUntil: 'networkidle' });
+    page.setDefaultTimeout(15000);
+    page.setDefaultNavigationTimeout(30000);
+    await page.goto(targetUrl, { waitUntil: 'networkidle' });
+    await page.addStyleTag({ content: '*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important;caret-color:transparent!important}' });
+    await page.evaluate(() => {
+      document.getAnimations().forEach(animation => animation.cancel());
+      document.querySelectorAll('svg').forEach(svg => svg.pauseAnimations?.());
+    });
     await page.evaluate(() => document.fonts.ready);
-    await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    await page.waitForFunction(() => [...document.images].every(image => image.complete), null, { timeout: 15000 });
+    await page.waitForTimeout(50);
+    const domNodeCount = await page.locator('*').count();
+    if (domNodeCount > 10000) {
+      issues.push(issue('error', 'dom_node_budget', 'Checked HTML exceeds the 10,000-node inspection budget.', { domNodeCount }));
+      return;
+    }
+    if (opts.fullpage) {
+      const bodyHeight = await page.evaluate(() => document.documentElement.scrollHeight);
+      validateCaptureSpec({ width: opts.width, height: opts.height, dpr: opts.dpr, fullpage: true, fullpageHeight: bodyHeight });
+    }
 
-    const report = await page.evaluate(async ({ width, height, fullpage }) => {
+    const report = await page.evaluate(async ({ width, height, fullpage, sealedImages }) => {
       const viewportWidth = width;
       const viewportHeight = fullpage ? document.documentElement.scrollHeight : height;
       const doc = document.documentElement;
       const body = document.body;
+      const imageResourceUrls = new Set();
+
+      function addCssUrls(value) {
+        const source = String(value || '');
+        for (const match of source.matchAll(/url\(\s*["']?([^"')]+)["']?\s*\)/gi)) imageResourceUrls.add(match[1]);
+      }
+
+      function walkCssRules(rules) {
+        for (const rule of rules || []) {
+          const fontFace = rule.constructor?.name === 'CSSFontFaceRule';
+          if (rule.style) {
+            for (const property of rule.style) {
+              // Fonts have their own CSP and fonts-only route boundary. They
+              // are not image resources and must not enter the sealed image
+              // identity set.
+              if (fontFace && property.toLowerCase() === 'src') continue;
+              addCssUrls(rule.style.getPropertyValue(property));
+            }
+          }
+          for (const property of ['symbols', 'src', 'prefix', 'suffix']) {
+            if (fontFace && property === 'src') continue;
+            try { addCssUrls(rule[property]); } catch { /* unsupported CSSOM member */ }
+          }
+          try { walkCssRules(rule.cssRules); } catch { /* inaccessible nested stylesheet */ }
+        }
+      }
+
+      if (sealedImages) {
+        for (const sheet of document.styleSheets) {
+          try { walkCssRules(sheet.cssRules); } catch { /* file font imports are enforced by CSP and route policy */ }
+        }
+      }
+
+      for (const element of sealedImages ? document.querySelectorAll('*') : []) {
+        for (const attribute of ['src', 'srcset', 'poster', 'data']) {
+          const value = element.getAttribute(attribute);
+          if (value) imageResourceUrls.add(value);
+        }
+        if (['image', 'use', 'feimage', 'mpath'].includes(element.localName.toLowerCase())) {
+          for (const attribute of ['href', 'xlink:href']) {
+            const value = element.getAttribute(attribute);
+            if (value) imageResourceUrls.add(value);
+          }
+        }
+        if (element.localName === 'img' && element.currentSrc) imageResourceUrls.add(element.currentSrc);
+        for (const pseudo of [null, '::before', '::after']) {
+          const style = window.getComputedStyle(element, pseudo);
+          for (const property of style) addCssUrls(style.getPropertyValue(property));
+        }
+      }
 
       function isVisible(el) {
         const cs = window.getComputedStyle(el);
@@ -430,6 +538,8 @@ async function inspectPage(opts, html, issues) {
       const articleDiagramCaptionIssues = [];
       const articleDiagramBandHeaderOverlaps = [];
       const formulaCardMetrics = [];
+      const posterMediaMetrics = [];
+      const posterProcessMetrics = [];
       const meaningfulTags = new Set(['P', 'LI', 'TD', 'TH', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'SPAN', 'DIV', 'BLOCKQUOTE']);
       const ignoreBounds = /texture|noise|grain|background|ghost|watermark|bleed|decor/i;
       const headlinePattern = /title|headline|hero|cover|phrase|editorial|subtitle|caption|statement/i;
@@ -437,6 +547,7 @@ async function inspectPage(opts, html, issues) {
       const isArticleDiagram = Boolean(document.querySelector('[data-card-mode="article-diagram"]'));
       const expectsFormulaCard = Boolean(document.querySelector('[data-diagram-family="compression-pack"][data-compression-view="summary"]'));
       const isBigMode = Boolean(document.querySelector('[data-card-mode="big"]'));
+      const isPoster = Boolean(document.querySelector('[data-card-mode="poster"]'));
       const allowedPrimaryFonts = new Set([
         'dm sans',
         'dm serif display',
@@ -994,6 +1105,76 @@ async function inspectPage(opts, html, issues) {
         }
       }
 
+      if (isPoster) {
+        const card = document.querySelector('[data-card-mode="poster"]');
+        const cardRect = card?.getBoundingClientRect();
+        if (cardRect) {
+          const body = card.querySelector('.body-content');
+          const bodyRect = body?.getBoundingClientRect();
+          const visibleBodyChildren = body
+            ? [...body.children].filter(isVisible).map(element => element.getBoundingClientRect())
+            : [];
+          const lastBodyBottom = visibleBodyChildren.length
+            ? Math.max(...visibleBodyChildren.map(rect => rect.bottom))
+            : bodyRect?.top || 0;
+          const bodyFillRatio = bodyRect?.height
+            ? Number(((lastBodyBottom - bodyRect.top) / bodyRect.height).toFixed(3))
+            : 0;
+          const bottomGapRatio = bodyRect
+            ? Number((Math.max(0, bodyRect.bottom - lastBodyBottom) / cardRect.height).toFixed(3))
+            : 1;
+          for (const media of document.querySelectorAll('[data-poster-media="true"]')) {
+            const rect = media.getBoundingClientRect();
+            const image = media.querySelector('img');
+            const imageRect = image?.getBoundingClientRect();
+            const fit = image ? window.getComputedStyle(image).objectFit : '';
+            let paintedWidth = imageRect?.width || 0;
+            let paintedHeight = imageRect?.height || 0;
+            if (fit === 'contain' && image?.naturalWidth > 0 && image?.naturalHeight > 0 && imageRect?.width > 0 && imageRect?.height > 0) {
+              const naturalRatio = image.naturalWidth / image.naturalHeight;
+              const boxRatio = imageRect.width / imageRect.height;
+              if (naturalRatio > boxRatio) paintedHeight = imageRect.width / naturalRatio;
+              else paintedWidth = imageRect.height * naturalRatio;
+            }
+            const position = image ? window.getComputedStyle(image).objectPosition.toLowerCase() : '50% 50%';
+            const verticalAnchor = position.includes('top') ? 0 : (position.includes('bottom') ? 1 : 0.5);
+            const paintedTop = (imageRect?.top || 0) + Math.max(0, (imageRect?.height || 0) - paintedHeight) * verticalAnchor;
+            const paintedBottom = paintedTop + paintedHeight;
+            const visibleCaption = [...media.querySelectorAll('figcaption')].find(isVisible);
+            let next = visibleCaption || media.nextElementSibling;
+            while (next && !isVisible(next)) next = next.nextElementSibling;
+            const adjacentCopyGapRatio = next
+              ? Number((Math.max(0, next.getBoundingClientRect().top - paintedBottom) / cardRect.height).toFixed(3))
+              : 0;
+            posterMediaMetrics.push({
+              widthRatio: Number((rect.width / cardRect.width).toFixed(3)),
+              imageHeightRatio: Number(((imageRect?.height || 0) / cardRect.height).toFixed(3)),
+              paintedWidthRatio: Number((paintedWidth / cardRect.width).toFixed(3)),
+              paintedHeightRatio: Number((paintedHeight / cardRect.height).toFixed(3)),
+              paintedAreaRatio: Number(((paintedWidth * paintedHeight) / (cardRect.width * cardRect.height)).toFixed(3)),
+              naturalWidth: image?.naturalWidth || 0,
+              naturalHeight: image?.naturalHeight || 0,
+              bodyFillRatio,
+              bottomGapRatio,
+              mediaOnly: card.classList.contains('media-only-poster'),
+              hasAdjacentCopy: Boolean(next),
+              adjacentCopyGapRatio,
+            });
+          }
+          for (const process of document.querySelectorAll('[data-poster-process="true"]')) {
+            const rect = process.getBoundingClientRect();
+            posterProcessMetrics.push({
+              widthRatio: Number((rect.width / cardRect.width).toFixed(3)),
+              heightRatio: Number((rect.height / cardRect.height).toFixed(3)),
+              steps: process.querySelectorAll('.process-step').length,
+              bodyFillRatio,
+              bottomGapRatio,
+              processOnly: card.classList.contains('process-only-poster'),
+            });
+          }
+        }
+      }
+
       if (isBigMode) {
         const phrase = document.querySelector('[data-card-mode="big"] .phrase');
         if (phrase && isVisible(phrase)) {
@@ -1057,8 +1238,11 @@ async function inspectPage(opts, html, issues) {
         expectsFormulaCard,
         formulaCardMetrics: formulaCardMetrics.slice(0, 1),
         bigPhraseMetrics: bigPhraseMetrics.slice(0, 3),
+        posterMediaMetrics: posterMediaMetrics.slice(0, 4),
+        posterProcessMetrics: posterProcessMetrics.slice(0, 4),
+        imageResourceUrls: [...imageResourceUrls],
       };
-    }, { width: opts.width, height: opts.height, fullpage: opts.fullpage });
+    }, { width: opts.width, height: opts.height, fullpage: opts.fullpage, sealedImages: opts.sealedImages });
 
     if (report.scrollWidth > opts.width + 2) {
       issues.push(issue('error', 'horizontal_overflow', 'Page is wider than the capture viewport.', {
@@ -1144,6 +1328,40 @@ async function inspectPage(opts, html, issues) {
       issues.push(issue('error', 'article_diagram_band_header_overlap',
         'Article-diagram boundary band labels and descriptions must not overlap node cards. Move nodes below the band header or reduce density.',
         { elements: report.articleDiagramBandHeaderOverlaps }));
+    }
+
+    const invalidPosterMedia = report.posterMediaMetrics.filter(item => (
+      item.widthRatio < 0.78
+      || item.imageHeightRatio < 0.25
+      || item.imageHeightRatio > (item.mediaOnly ? 0.84 : 0.76)
+      || item.paintedWidthRatio < 0.5
+      || item.paintedHeightRatio < 0.16
+      || item.paintedAreaRatio < 0.1
+      || item.naturalWidth < 320
+      || item.naturalHeight < 180
+      || item.bodyFillRatio < (item.hasAdjacentCopy ? 0.68 : 0.72)
+      || (!item.hasAdjacentCopy && item.bottomGapRatio > 0.16)
+      || (item.hasAdjacentCopy && item.adjacentCopyGapRatio > 0.1)
+    ));
+    if (invalidPosterMedia.length > 0) {
+      issues.push(issue('error', 'poster_evidence_media_density',
+        'Poster evidence media must be a legible primary field, not a small asset floating inside a large container.',
+        { elements: invalidPosterMedia }));
+    }
+
+    const invalidPosterProcess = report.posterProcessMetrics.filter(item => (
+      item.widthRatio < 0.78
+      || item.heightRatio < 0.38
+      || item.heightRatio > (item.processOnly ? 0.84 : 0.65)
+      || item.steps < 2
+      || item.steps > 5
+      || item.bodyFillRatio < 0.72
+      || item.bottomGapRatio > 0.16
+    ));
+    if (invalidPosterProcess.length > 0) {
+      issues.push(issue('error', 'poster_process_density',
+        'Poster-native process evidence must fill the reading field with two to five legible steps.',
+        { elements: invalidPosterProcess }));
     }
 
     if (report.expectsFormulaCard && report.formulaCardMetrics.length !== 1) {
@@ -1312,6 +1530,28 @@ async function inspectPage(opts, html, issues) {
     if (blocked.length) {
       issues.push(issue('error', 'safety.asset_blocked', 'Capture permits only approved local files and data: resources.', { resources: blocked.slice(0, 10) }));
     }
+    if (opts.sealedImages) {
+      const actual = [];
+      const unsupported = [];
+      const documentResource = fileUrl(opts.html);
+      for (const resource of report.imageResourceUrls || []) {
+        if (resource.startsWith('#') || resource.split('#')[0] === documentResource) continue;
+        const match = /^data:image\/(?:png|jpeg|webp);base64,([A-Za-z0-9+/]+={0,2})$/i.exec(resource);
+        if (!match || match[1].length % 4 !== 0) { unsupported.push(resource.slice(0, 160)); continue; }
+        const bytes = Buffer.from(match[1], 'base64');
+        if (!bytes.length || bytes.toString('base64') !== match[1]) { unsupported.push(resource.slice(0, 160)); continue; }
+        actual.push(crypto.createHash('sha256').update(bytes).digest('hex'));
+      }
+      const expected = [...new Set(opts.expectedImageSha256)].sort();
+      const actualUnique = [...new Set(actual)].sort();
+      if (unsupported.length || JSON.stringify(actualUnique) !== JSON.stringify(expected)) {
+        issues.push(issue('error', 'safety.unsealed_image_resource', 'Checked HTML image resources must exactly match the sealed media and logo snapshots.', {
+          unsupported,
+          actual: actualUnique,
+          expected,
+        }));
+      }
+    }
   } finally {
     await browser.close();
   }
@@ -1349,6 +1589,7 @@ async function main() {
   opts.html = path.resolve(opts.html);
   if (!fs.existsSync(opts.html)) throw new Error(`HTML file not found: ${opts.html}`);
   if (opts.png) opts.png = path.resolve(opts.png);
+  validateCaptureSpec({ width: opts.width, height: opts.height, dpr: opts.dpr, fullpage: opts.fullpage });
 
   const fixed = opts.fix ? applySafeFixes(opts.html) : false;
   const issues = [];

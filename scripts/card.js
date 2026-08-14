@@ -33,6 +33,16 @@ const UPDATE_CHECK_SCRIPT = path.join(ROOT, 'scripts', 'check-update.mjs');
 const { beginRender } = require('./lib/update-state');
 const { publishArtifacts } = require('./lib/publish-artifacts');
 const { resolveDesignNameForInput } = require('./lib/designs');
+const {
+  MAX_POSTER_MEDIA_TOTAL_BYTES,
+  MAX_POSTER_MEDIA_TOTAL_PIXELS,
+  MAX_CARD_INPUT_JSON_BYTES,
+  MAX_LOGO_BYTES,
+  MAX_LOGO_DIMENSION,
+  MAX_LOGO_PIXELS,
+  accountUniqueImageSnapshot,
+  snapshotLocalImage,
+} = require('./lib/file-access');
 // ── Args ──
 
 const args = process.argv.slice(2);
@@ -114,14 +124,18 @@ const useStdin = args.includes('--stdin');
 
 if (inputFile) {
   try {
-    input = JSON.parse(fs.readFileSync(path.resolve(inputFile), 'utf-8'));
+    const resolvedInput = path.resolve(inputFile);
+    if (fs.statSync(resolvedInput).size > MAX_CARD_INPUT_JSON_BYTES) throw new Error('Card input JSON must be at most 2 MiB');
+    input = JSON.parse(fs.readFileSync(resolvedInput, 'utf-8'));
   } catch (e) {
     console.error(`Error reading input file: ${e.message}`);
     process.exit(1);
   }
 } else if (useStdin) {
   try {
-    input = JSON.parse(fs.readFileSync(0, 'utf-8'));
+    const stdin = fs.readFileSync(0, 'utf-8');
+    if (Buffer.byteLength(stdin) > MAX_CARD_INPUT_JSON_BYTES) throw new Error('Card stdin JSON must be at most 2 MiB');
+    input = JSON.parse(stdin);
   } catch (e) {
     console.error(`Error reading stdin: ${e.message}`);
     process.exit(1);
@@ -172,6 +186,92 @@ if (!renderer) {
   process.exit(1);
 }
 
+function stagePosterMedia(cardInput, tmpDir) {
+  if (cardInput.mode !== 'poster') return { input: cardInput, files: [], snapshotsByCard: [] };
+  const staged = JSON.parse(JSON.stringify(cardInput));
+  const files = [];
+  const snapshotsByCard = [];
+  let mediaIndex = 0;
+  const mediaBudget = { bytes: 0, pixels: 0 };
+  const budgetedSnapshots = new Set();
+  for (const [cardIndex, card] of (staged.cards || []).entries()) {
+    snapshotsByCard[cardIndex] = [];
+    for (const element of card.body || []) {
+      if (element?.type !== 'media') continue;
+      const extension = path.extname(element.path).toLowerCase();
+      const stagedPath = path.join(tmpDir, `media_${++mediaIndex}${extension}`);
+      const snapshot = snapshotLocalImage(element.path, stagedPath);
+      accountUniqueImageSnapshot(budgetedSnapshots, mediaBudget, snapshot);
+      if (mediaBudget.bytes > MAX_POSTER_MEDIA_TOTAL_BYTES || mediaBudget.pixels > MAX_POSTER_MEDIA_TOTAL_PIXELS) {
+        throw new Error('Poster media exceeds the 32 MiB or 40 million decoded-pixel aggregate budget');
+      }
+      element.path = stagedPath;
+      element.mime_type = snapshot.mime_type;
+      snapshotsByCard[cardIndex].push({
+        sha256: snapshot.sha256,
+        bytes: snapshot.bytes,
+        width: snapshot.width,
+        height: snapshot.height,
+        mime_type: snapshot.mime_type,
+      });
+    }
+  }
+  return { input: staged, files, snapshotsByCard };
+}
+
+function stageLogo(cardInput, tmpDir) {
+  if (!cardInput.logo) return { input: cardInput, snapshot: null };
+  const staged = JSON.parse(JSON.stringify(cardInput));
+  const extension = path.extname(staged.logo).toLowerCase();
+  const stagedPath = path.join(tmpDir, `logo${extension}`);
+  const snapshot = snapshotLocalImage(staged.logo, stagedPath, {
+    label: 'Logo',
+    maxBytes: MAX_LOGO_BYTES,
+    maxDimension: MAX_LOGO_DIMENSION,
+    maxPixels: MAX_LOGO_PIXELS,
+  });
+  return {
+    input: staged,
+    snapshot: {
+      path: stagedPath,
+      file_url: require('url').pathToFileURL(path.resolve(cardInput.logo)).href,
+      data_url: `data:${snapshot.mime_type};base64,${fs.readFileSync(stagedPath).toString('base64')}`,
+      sha256: snapshot.sha256,
+      bytes: snapshot.bytes,
+      width: snapshot.width,
+      height: snapshot.height,
+      mime_type: snapshot.mime_type,
+    },
+  };
+}
+
+let renderInput = input;
+let localAssetFiles = [];
+let posterMediaSnapshots = [];
+let logoSnapshot = null;
+const embeddedLogoHtml = new Set();
+const MAX_CHECKED_HTML_BYTES = 48 * 1024 * 1024;
+
+function embedStagedLogo(out) {
+  if (!logoSnapshot || embeddedLogoHtml.has(out.htmlPath)) return false;
+  const html = fs.readFileSync(out.htmlPath, 'utf8');
+  const activeHtml = html.replace(/<!--[\s\S]*?-->/g, '');
+  const activeReferencesLogo = activeHtml.includes(logoSnapshot.file_url)
+    || activeHtml.includes(logoSnapshot.file_url.replaceAll('&', '&amp;'));
+  if (!activeReferencesLogo) return false;
+  const logoReferences = new Set([logoSnapshot.file_url, logoSnapshot.file_url.replaceAll('&', '&amp;')]);
+  const referenceCount = [...logoReferences].reduce((sum, reference) => sum + html.split(reference).length - 1, 0);
+  const estimatedBytes = Buffer.byteLength(html, 'utf8')
+    + referenceCount * Math.max(0, Buffer.byteLength(logoSnapshot.data_url, 'utf8') - Buffer.byteLength(logoSnapshot.file_url, 'utf8'));
+  if (estimatedBytes > MAX_CHECKED_HTML_BYTES) throw new Error('Rendered HTML exceeds the 48 MiB checked-HTML budget after logo sealing');
+  const embedded = html
+    .replaceAll(logoSnapshot.file_url, logoSnapshot.data_url)
+    .replaceAll(logoSnapshot.file_url.replaceAll('&', '&amp;'), logoSnapshot.data_url);
+  fs.writeFileSync(out.htmlPath, embedded, 'utf8');
+  embeddedLogoHtml.add(out.htmlPath);
+  return true;
+}
+
 function runCapture(out, pngPath) {
   const args = [
     CAPTURE_SCRIPT,
@@ -182,7 +282,7 @@ function runCapture(out, pngPath) {
     String(DPR),
   ];
   if (out.fullpage) args.push('fullpage');
-  if (input.logo) args.push('--allow-file', path.resolve(input.logo));
+  for (const file of localAssetFiles) args.push('--allow-file', file);
   execFileSync(process.execPath, args, { stdio: 'pipe' });
 }
 
@@ -197,7 +297,7 @@ function runOutputCheck(out, pngPath, options = {}) {
   ];
 
   if (out.fullpage) args.push('--fullpage');
-  if (input.logo) args.push('--allow-file', path.resolve(input.logo));
+  for (const file of localAssetFiles) args.push('--allow-file', file);
   if (options.fix) args.push('--fix');
   if (options.skipPng) {
     args.push('--skip-png');
@@ -232,6 +332,7 @@ function runOutputCheck(out, pngPath, options = {}) {
 }
 
 function captureWithOutputCheck(out, pngPath) {
+  embedStagedLogo(out);
   runOutputCheck(out, pngPath, { fix: true, skipPng: true });
   runCapture(out, pngPath);
 
@@ -373,6 +474,7 @@ function renderArticleDiagramEntries(baseInput, tmpDir) {
         return {
           out,
           stagedPath: path.join(tmpDir, stagedName),
+          effectiveContract: attempt.input,
         };
       });
       for (const entry of entries) {
@@ -396,7 +498,7 @@ function pngMetadata(pngPath) {
   };
 }
 
-function artifactReport(out, stagedPath, finalPath, checker, index) {
+function artifactReport(out, stagedPath, finalPath, checker, index, effectiveContract) {
   let checkedHtml = null;
   if (checkedHtmlDirArg) {
     fs.mkdirSync(path.resolve(checkedHtmlDirArg), { recursive: true });
@@ -420,6 +522,14 @@ function artifactReport(out, stagedPath, finalPath, checker, index) {
       pass: checker.pass,
       issues: checker.issues,
     },
+    effective_contract: effectiveContract,
+    logo_snapshot: embeddedLogoHtml.has(out.htmlPath) ? {
+      sha256: logoSnapshot.sha256,
+      bytes: logoSnapshot.bytes,
+      width: logoSnapshot.width,
+      height: logoSnapshot.height,
+      mime_type: logoSnapshot.mime_type,
+    } : null,
   };
 }
 
@@ -445,10 +555,18 @@ let renderSucceeded = false;
 
 try {
   runTmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'card-skill-'));
+  if (input.mode === 'poster') {
+    const stagedMedia = stagePosterMedia(input, runTmpDir);
+    renderInput = stagedMedia.input;
+    posterMediaSnapshots = stagedMedia.snapshotsByCard;
+  }
+  const stagedLogo = stageLogo(renderInput, runTmpDir);
+  renderInput = stagedLogo.input;
+  logoSnapshot = stagedLogo.snapshot;
 
   // poster mode returns array; others return single object
   if (input.mode === 'poster') {
-    const outputs = renderer.render(input, runTmpDir);
+    const outputs = renderer.render(renderInput, runTmpDir);
     const pngPaths = [];
     const publishEntries = [];
     const artifactReports = [];
@@ -465,7 +583,9 @@ try {
       const checker = captureWithOutputCheck(out, stagedPath);
       pngPaths.push(pngPath);
       publishEntries.push({ stagedPath, finalPath: pngPath });
-      artifactReports.push(artifactReport(out, stagedPath, pngPath, checker, i + 1));
+      const report = artifactReport(out, stagedPath, pngPath, checker, i + 1, input);
+      report.media_snapshots = posterMediaSnapshots[i] || [];
+      artifactReports.push(report);
     });
 
     publishCardArtifacts(publishEntries, artifactReports, runTmpDir);
@@ -485,7 +605,7 @@ try {
       });
 
       const artifactReports = entries.map((entry, i) =>
-        artifactReport(entry.out, entry.stagedPath, pngPaths[i], entry.checker, i + 1));
+        artifactReport(entry.out, entry.stagedPath, pngPaths[i], entry.checker, i + 1, entry.effectiveContract));
       publishCardArtifacts(
         entries.map((entry, i) => ({ stagedPath: entry.stagedPath, finalPath: pngPaths[i] })),
         artifactReports,
@@ -501,7 +621,7 @@ try {
       const checker = captureWithOutputCheck(out, stagedPath);
       publishCardArtifacts(
         [{ stagedPath, finalPath: outputPath }],
-        [artifactReport(out, stagedPath, outputPath, checker, 1)],
+        [artifactReport(out, stagedPath, outputPath, checker, 1, input)],
         runTmpDir,
       );
       console.log(outputPath);

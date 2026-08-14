@@ -16,7 +16,7 @@
 
 ## What it is
 
-**card-skill** is an open-source content-to-image skill for coding agents such as Claude Code, Codex, OpenCode, and Pi. Give it an article, notes, an argument, a URL, or explicitly requested WeChat Reading data. It reads structure, picks a layout and Quiet Paper tone, and returns a quality-checked PNG.
+**card-skill** is an open-source content-to-image skill for coding agents such as Claude Code, Codex, OpenCode, and Pi. Give it an article, notes, an argument, a URL, open-source tool material, or explicitly requested WeChat Reading data. It inventories current evidence, picks an adaptive visual route and Quiet Paper tone, and returns quality-checked PNGs.
 
 It covers WeChat / blog covers, social card sets, whiteboards, in-article explanation diagrams (formula cards / relationship maps), infographics, comics, and sketchnotes. The complete package ships renderers, templates, fonts, schemas, and checkers. Capture and checks run locally by default; finished cards are not auto-uploaded.
 
@@ -185,15 +185,39 @@ Prefer the publishing task first, then map to an internal mode. You do not need 
 ## Key capabilities
 
 - **9 modes:** `editorial-image`, `article-diagram`, `poster`, `big`, `long`, `whiteboard`, `infograph`, `comic`, `sketchnote`
+- **Evidence-led poster fields:** current local PNG/JPEG/WebP evidence is sealed into a bounded private snapshot before browser capture, while two-to-five-step native processes occupy the layout directly—without nested-card chrome, source-path browser access, or renderer networking.
 - **Two delivery tiers:** Stable (deterministic CLI render) and Studio (full composition contract + human visual review)
 - **Shared look:** Quiet Paper—warm paper, restrained ink, hairline rules, small radii, almost no shadow
 - **Four default tones:** `reflective` / `sharp` / `warm` / `technical`; 26 designs remain explicit advanced overrides
 - **Default output:** DPR 2 PNG; a common 1080 CSS-wide canvas exports at about 2160px wide (height varies by mode and aspect)
 - **Quality gates:** pre/post capture checks for placeholders, overflow, crop, broken images, readability, title breaks, font stack, remote resources, and near-blank results
-- **Visual reasoning:** Visual Job v2 records a per-output plan, deterministic taxonomy choice, real-PNG critique, and at most one revision
+- **Evidence-first reasoning:** Visual Job v3 binds every PNG to current primary evidence, an artifact role, a deterministic taxonomy choice, real-PNG critique, and at most one revision
+- **Adaptive open-source routing:** launch, CLI, UI product, library/API, benchmark, and infrastructure sources produce only the 1–4 distinct cards their evidence supports
 - **Runtime:** Node.js 22+, Playwright Chromium; fonts ship with the package and are load-checked
 - **Privacy default:** PNG render and checks are local; version checks only read the GitHub Release API and do not upload articles, prompts, or images
 - **Optional source:** pairs with Tencent's official [WeChatReading Skill](https://github.com/Tencent/WeChatReading) only when the user explicitly asks for personal highlights or stats
+
+## Adaptive open-source showcase
+
+The owned `Relay Atlas` launch fixture and `Threadpack` CLI fixture deliberately take different routes. The launch has four independent evidence duties; the CLI stops at three task-flow cards. Both keep the Quiet Paper skeleton, while the evidence surfaces carry their own blue review-ledger and orange terminal cues.
+
+<table>
+<tr>
+<td width="25%"><img src="assets/open-source-tool/tool-launch-1.png" width="100%" alt="Relay Atlas launch judgment card"></td>
+<td width="25%"><img src="assets/open-source-tool/tool-launch-2.png" width="100%" alt="Relay Atlas evidence card"></td>
+<td width="25%"><img src="assets/open-source-tool/tool-launch-3.png" width="100%" alt="Relay Atlas capability process card"></td>
+<td width="25%"><img src="assets/open-source-tool/tool-launch-4.png" width="100%" alt="Relay Atlas case card"></td>
+</tr>
+</table>
+<table>
+<tr>
+<td width="33%"><img src="assets/open-source-tool/tool-cli-1.png" width="100%" alt="Threadpack CLI input card"></td>
+<td width="33%"><img src="assets/open-source-tool/tool-cli-2.png" width="100%" alt="Threadpack exact command card"></td>
+<td width="33%"><img src="assets/open-source-tool/tool-cli-3.png" width="100%" alt="Threadpack inspectable output card"></td>
+</tr>
+</table>
+
+All visible project data is fictional and repository-owned. See [the reproducible showcase](https://github.com/KKenny0/card-skill/tree/main/showcases/open-source-tool); K3, Repomix, and other third-party materials remain local acceptance inputs only.
 
 ## Why the output looks like paper, not a webpage screenshot
 
@@ -202,16 +226,17 @@ Every mode shares the Quiet Paper skeleton. Content mood and brand feel only cha
 - Mode, tone, and direction are chosen from structure, density, mood, and publishing job by default.
 - `editorial-image` first picks `reflective`, `sharp`, `warm`, or `technical`, then lands on a real Quiet Paper design.
 - `article-diagram` first filters compressible sections, then emits a formula card per section; pure setup, mood, or conclusion sections are skipped.
-- By default `brand_name`, `logo`, and `source` are empty; they appear only when the input provides them.
+- By default `brand_name`, `logo`, and `source` are empty; they appear only when the input provides them. A local PNG/JPEG/WebP logo is size- and pixel-bounded, snapshotted, and embedded before Chromium loads the card.
 
 ## From text to PNG
 
-1. Read a URL, pasted text, WeChat Reading payload, or local file.
-2. Split bounded source units and write one Visual Plan per intended output.
-3. Let the executable taxonomy validate mode; an explicit user mode remains an override.
-4. Render a candidate through the existing schema, renderer, Playwright, and `check-output` chain.
-5. Inspect the real PNG and write a hash-bound Visual Review. Revise the plan and render contract at most once when it scores below 8.0 or has a blocker.
-6. Atomically publish the passing PNG, receipt, and review, defaulting to `~/Downloads/`.
+1. Read a URL, pasted text, open-source project brief, WeChat Reading payload, or local file.
+2. Inventory bounded evidence, freshness, and media rights before choosing a card count.
+3. Give every intended PNG one evidence responsibility and Visual Plan; open-source series adapt from one to four non-repeating cards.
+4. Let the executable taxonomy validate mode; an explicit user mode remains an override.
+5. Render candidates through the existing schema, renderer, Playwright, and `check-output` chain.
+6. Inspect every real PNG and write a hash-bound Visual Review. Revise the plan and render contract at most once when it scores below 8.0 or has a blocker.
+7. Atomically publish the passing PNG, receipt, and review, defaulting to `~/Downloads/`.
 
 Unlike a one-shot chat image, card-skill uses structured input, controlled renderers, Playwright capture, and `check-output` so the result is a repeatable publish-ready PNG.
 
@@ -266,19 +291,20 @@ node scripts/card.js --input /path/to/input.json --output ~/Downloads/card.png
 
 Stable CLI modes: `big`, `long`, `whiteboard`, `poster`, `editorial-image`, `article-diagram`. Studio CLI modes: `infograph`, `comic`, `sketchnote`; they require a full `content_html` + `custom_css` composition contract and still need human visual review.
 
-Natural-language jobs use Visual Job v2. Render candidates first:
+Natural-language jobs use Visual Job v3. Every artifact names its evidence, role, filename, transformation, and Visual Plan. Render candidates first:
 
 ```bash
 node scripts/render-job.mjs --input visual-job.json --output-dir ./candidate --candidate --json
 ```
 
-Candidate rendering also seals the checked HTML and complete artifact set in an internal manifest. After the host Agent inspects every PNG and writes matching reviews, the publisher re-runs `check-output` and publishes the checked triples:
+Candidate rendering also preserves the checked HTML and complete artifact set in an internal manifest. After the host Agent inspects every PNG and writes matching reviews, record the approved candidate-directory digest outside that directory. The publisher requires that external approval digest, re-runs `check-output`, and publishes the checked triples:
 
 ```bash
-node scripts/publish-reviewed-job.mjs --candidate-dir ./candidate --output-dir ./output --json
+approved_sha=$(node scripts/hash-reviewed-candidate.mjs --candidate-dir ./candidate)
+node scripts/publish-reviewed-job.mjs --candidate-dir ./candidate --output-dir ./output --expected-candidate-sha256 "$approved_sha" --json
 ```
 
-Visual Job v1 and direct `card.js` remain compatible low-level paths. See [the architecture](docs/current-architecture.md), [Visual Job](references/visual-job.md), and [Visual Review](references/visual-review.md).
+Visual Job v1/v2 and direct `card.js` remain compatible low-level paths. See [the architecture](docs/current-architecture.md), [Visual Job](references/visual-job.md), [source boundaries](references/source-material.md), [open-source routing](references/source-open-source-tool.md), and [Visual Review](references/visual-review.md).
 
 For `editorial-image` article covers, a deterministic `cover_motif` places tension in the right-side motif. Complex covers, metaphors, and in-article images still prefer `content_html` + `custom_css`. `in-article` and `metaphor` no longer silently fall back to the default scaffold. Full skill behavior and input boundaries are in [`SKILL.md`](SKILL.md).
 
@@ -294,7 +320,7 @@ pngquant --quality=80-95 --force --output card.png card.png
 
 ### What is card-skill?
 
-card-skill is an open-source content-to-image skill for coding agents. It turns articles, notes, arguments, or explicitly authorized WeChat Reading data into quality-checked PNGs for covers, social cards, whiteboards, and in-article diagrams.
+card-skill is an open-source content-to-image skill for coding agents. It turns articles, notes, arguments, open-source tool evidence, or explicitly authorized WeChat Reading data into quality-checked PNGs for covers, social cards, whiteboards, and in-article diagrams.
 
 ### Do I need design skills or hand-written HTML?
 

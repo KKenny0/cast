@@ -1,0 +1,24 @@
+{
+  "product": "Threadpack",
+  "source_label": "card-skill owned CLI fixture",
+  "kicker": "CLI / DOCUMENTARY",
+  "title": "从仓库到一份可交给模型的上下文包",
+  "input_title": "先看清输入边界",
+  "input_files": [
+    { "path": "src/", "detail": "18 source files" },
+    { "path": "docs/", "detail": "6 guides" },
+    { "path": "tests/", "detail": "7 specs" }
+  ],
+  "command": "npx threadpack@latest ./workspace",
+  "controls": [
+    { "key": "INCLUDE", "value": "src/** · docs/**" },
+    { "key": "EXCLUDE", "value": "dist/** · *.lock" },
+    { "key": "OUTPUT", "value": "review-pack.md" }
+  ],
+  "output_title": "输出不是黑盒，而是一份可检查的文件",
+  "output_sections": [
+    { "name": "FILE MAP", "value": "31 entries" },
+    { "name": "CONTENTS", "value": "24 included" },
+    { "name": "SUMMARY", "value": "1 handoff" }
+  ]
+}
