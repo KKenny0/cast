@@ -371,8 +371,9 @@ function assertOpenSourceShowcase() {
   const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
   assert.equal(manifest.schema_version, 1, 'open-source showcase manifest version drifted');
   assert.deepEqual(Object.keys(manifest.fixture_sha256 || {}).sort(), ['cli', 'launch'], 'open-source showcase fixture hash keys drifted');
-  assert.equal(manifest.fixture_sha256.launch, sha256Bytes(fs.readFileSync(path.join(showcaseRoot, 'fixtures', 'launch-profile.json'))), 'launch fixture changed without rebuilding the showcase');
-  assert.equal(manifest.fixture_sha256.cli, sha256Bytes(fs.readFileSync(path.join(showcaseRoot, 'fixtures', 'cli-profile.json'))), 'CLI fixture changed without rebuilding the showcase');
+  const fixtureSha256 = file => sha256Bytes(Buffer.from(fs.readFileSync(file, 'utf8').replaceAll('\r\n', '\n')));
+  assert.equal(manifest.fixture_sha256.launch, fixtureSha256(path.join(showcaseRoot, 'fixtures', 'launch-profile.json')), 'launch fixture changed without rebuilding the showcase');
+  assert.equal(manifest.fixture_sha256.cli, fixtureSha256(path.join(showcaseRoot, 'fixtures', 'cli-profile.json')), 'CLI fixture changed without rebuilding the showcase');
   assert.deepEqual(manifest.images.map(item => item.basename).sort(), [...expected].sort(), 'open-source showcase manifest must map exactly seven adaptive cards');
   assert.equal(manifest.images.filter(item => item.output_id === 'launch-series').length, 4, 'launch showcase must contain four cards');
   assert.equal(manifest.images.filter(item => item.output_id === 'cli-series').length, 3, 'CLI showcase must contain three cards');

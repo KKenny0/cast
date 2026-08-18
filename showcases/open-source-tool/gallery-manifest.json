@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
   "fixture_sha256": {
-    "launch": "057a2d6d24ddf3f980034161f853ac2ceae1035676719adc2b6ec0d5ca721c41",
-    "cli": "1b71d5a64f8b9f7d92a44676381a8bc88d001f1cda7e94c60513be2db788fd45"
+    "launch": "8e424fa1fceebb249b161d242e4d43f10a01f5588eada3debfd93a8e454518f9",
+    "cli": "9efbe3e847e790c288395b5752f48c57c39b31fee39a511ff1e3b4e991abae10"
   },
   "images": [
     {

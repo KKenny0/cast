@@ -17,6 +17,7 @@ const { publishArtifacts } = require('../../scripts/lib/publish-artifacts');
 const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'card-skill-open-source-showcase-'));
 
 const sha256 = value => crypto.createHash('sha256').update(value).digest('hex');
+const fixtureSha256 = file => sha256(fs.readFileSync(file, 'utf8').replaceAll('\r\n', '\n'));
 const escapeHtml = value => String(value)
   .replaceAll('&', '&amp;')
   .replaceAll('<', '&lt;')
@@ -223,8 +224,8 @@ try {
   const manifest = {
     schema_version: 1,
     fixture_sha256: {
-      launch: sha256(fs.readFileSync(path.join(FIXTURES, 'launch-profile.json'))),
-      cli: sha256(fs.readFileSync(path.join(FIXTURES, 'cli-profile.json'))),
+      launch: fixtureSha256(path.join(FIXTURES, 'launch-profile.json')),
+      cli: fixtureSha256(path.join(FIXTURES, 'cli-profile.json')),
     },
     images,
   };
