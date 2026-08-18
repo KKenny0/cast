@@ -166,27 +166,27 @@ Design system: [auto / claude / stripe / linear / apple / ibm / ...]
 
 For long articles, do not summarize every section. Find the recurring pressure underneath the sections.
 
-## Design System Use
+## Kenny Style Color Layer
 
-Editorial image supports the same `design` field as other CLI-rendered modes, plus an `editorial_tone` field for automatic design selection.
+Editorial image uses the same Kenny Style visual grammar as every other mode. It supports `editorial_tone` for the automatic house palette and `design` only as an explicit compatibility palette.
 
-Use design systems as taste inflections, not as concept generators:
+Keep the boundary strict:
 
-- `design` controls canvas color, ink color, accent color, paper surface, border tone, and radius.
-- `design` is explicit and always wins when provided.
+- `design` controls only canvas, ink, accent, surface, and border colors.
+- `design` is explicit and always wins over tone colors when provided.
 - `editorial_tone` is used only when `design` is omitted. Allowed values: `reflective`, `sharp`, `warm`, `technical`.
-- `design` does not decide the visual metaphor, composition, object choice, or article stance.
-- If the user specifies a design system or brand feeling, honor it as a mood layer.
-- If the user does not specify one, set `editorial_tone` from the article's emotional temperature and topic, then let the CLI choose a real design from that tone pool.
+- Neither field may change typography, font weight, spacing, radius, dimensions, position, wrapping, density, shadow, metaphor, composition, object choice, or article stance.
+- If the user specifies a legacy design or brand feeling, honor only its restrained palette.
+- If the user does not specify one, set `editorial_tone` from the article's emotional temperature and let the CLI use the matching internal house palette.
 
-Good defaults:
+House palettes:
 
-- Reflective essays: `editorial_tone: "reflective"` → `claude`, `notion`, `apple`, or `ljg_chensi`
-- Sharp opinion pieces: `editorial_tone: "sharp"` → `linear`, `raycast`, `stripe`, or `ljg_ruili`
-- Warm human essays: `editorial_tone: "warm"` → `claude`, `clay`, `intercom`, `posthog`, or `ljg_wennuan`
-- Technical essays: `editorial_tone: "technical"` → `stripe`, `ibm`, `opencode`, `sentry`, `together_ai`, or `ljg_jishu`
+- Reflective essays: `editorial_tone: "reflective"`
+- Sharp opinion pieces: `editorial_tone: "sharp"`
+- Warm human essays: `editorial_tone: "warm"`
+- Technical essays: `editorial_tone: "technical"`
 
-Do not use descriptive buckets such as `editorial-warm`, `technical-data`, `quiet-minimal`, `dark-paper`, or `precision-dark` as `design` values. They are not renderer names. The chosen real design may be mentioned in the rendering brief, but it should not become visible text in the artwork.
+The four house palettes are internal and are not valid `design` values. Do not invent descriptive buckets such as `editorial-warm`, `technical-data`, or `quiet-minimal`. A palette name may appear in the rendering brief but must not become visible artwork text.
 
 ## Direction Proposal
 
@@ -227,7 +227,7 @@ For final rendering, use a custom composition when the brief has a real article 
 - `custom_css` for the actual composition, spacing, symbolic objects, and atmosphere
 - `visual_metaphor` and `art_direction` as hidden guidance, not necessarily visible text
 
-The default CLI renderer is an aspect-safe Quiet Paper scaffold, not a separate cover-template universe. Its Stable cover path pairs the title with one deterministic `cover_motif`; it is useful for simple covers and must still feel like a card-skill paper object: warm canvas, Xiangcui/DM editorial type, low-saturation ink, hairline surfaces, subtle grain, and almost no shadow. High-quality editorial images should use a custom composition when the selected direction exceeds that bounded vocabulary.
+The default CLI renderer is an aspect-safe Kenny Style scaffold with a Quiet Paper material base, not a separate cover-template universe. Its Stable cover path pairs the title with one deterministic `cover_motif`; it is useful for simple covers and must retain the house typography, fixed small-radius geometry, low-saturation ink, hairline surfaces, subtle grain, and almost no shadow. High-quality editorial images should use a custom composition when the selected direction exceeds that bounded vocabulary.
 
 The composition needs one dominant visible subject: an object, scene, gesture, spatial relationship, or concrete diagram metaphor. A stack of paper rectangles, loose lines, decorative frames, or empty negative space is not enough unless it has been transformed into a specific metaphor tied to the article. If hiding the title makes the image feel generic, rebuild the custom composition before capture.
 
@@ -249,7 +249,7 @@ Do not introduce free-floating font stacks such as `Inter`, `Arial`, `Helvetica`
 
 ## Editorial Visual System
 
-Editorial images may use custom layout, object metaphors, diagrams, and illustrated scenes, but they must still look like part of card-skill's Quiet Paper system.
+Editorial images may use custom layout, object metaphors, diagrams, and illustrated scenes, but they must still use Kenny Style. Quiet Paper is its material base, not a selectable identity.
 
 Use the shared design tokens as the visual source of truth:
 
@@ -257,7 +257,7 @@ Use the shared design tokens as the visual source of truth:
 - Ink and secondary text: `--ink`, `--ink-light` / `--ink-muted`
 - Accent marks: `--accent`
 - Borders and dividers: `--hairline`
-- Shape rhythm: `--radius`
+- Shape rhythm: fixed Kenny Style `--radius`; tone and design must not change it
 
 Visual weight rules:
 
@@ -287,13 +287,13 @@ Every visible custom-composition element must keep its own bounding box inside t
 - Prefer one primary visual idea. Avoid icon soup.
 - The image may be ambiguous, but not unrelated.
 - Do not print mode or destination labels into the artwork. Avoid labels such as `IN-ARTICLE IMAGE`, `EDITORIAL IMAGE`, `BLOG HERO`, `WECHAT COVER`, or `COVER IMAGE` unless they are part of the article's actual title or source material.
-- Preserve Quiet Paper: warm paper or deep card stock, restrained ink, small radius, little shadow, low-saturation accent.
+- Preserve Kenny Style: evidence-led composition, Quiet Paper material, restrained ink, fixed small radius, little shadow, and low-saturation accent.
 - Avoid stock-photo language: no smiling generic office people, floating dashboards, neon AI brains, glowing networks, or decorative abstract blobs.
 - If the article mentions real people, institutions, places, or events, do not invent factual visuals that imply unverified details.
 - For in-article mood illustrations, reduce contrast and text weight compared with cover images.
 - Leave crop-safe space around important visual elements.
 - Do not add a default colophon or footnote. Editorial images should feel like article artwork, not branded cards.
-- When this mode changes design-selection behavior, render and inspect at least five PNGs before delivery: one each for `reflective`, `sharp`, `warm`, `technical`, and one explicit `design` override.
+- When this mode changes palette-selection behavior, render and inspect at least five PNGs before delivery: one each for `reflective`, `sharp`, `warm`, `technical`, and one explicit `design` override. After normalizing colors and metadata, the four tone variants must keep identical markup and geometry.
 
 ## Diagram And Connector Discipline
 

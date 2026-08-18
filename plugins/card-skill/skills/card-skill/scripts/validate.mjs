@@ -12,7 +12,15 @@ const require = createRequire(import.meta.url);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
 const { validate, EDITORIAL_COVER_MOTIFS } = require('./lib/schema');
-const { EDITORIAL_TONE_DESIGNS, listDesigns, resolveEditorialDesignName } = require('./lib/designs');
+const {
+  KENNY_STYLE,
+  TONE_PALETTE_NAMES,
+  getDesign,
+  isValidDesignName,
+  listDesigns,
+  resolveEditorialDesignName,
+  resolveDesignNameForInput,
+} = require('./lib/designs');
 const { validateVisualJob, sha256Bytes } = require('./lib/visual-job');
 const { snapshotLocalImage } = require('./lib/file-access');
 const { candidateDirectorySha256 } = require('./lib/candidate-snapshot');
@@ -1254,22 +1262,44 @@ try {
   }
 
   const designNames = new Set(listDesigns().map(design => design.name));
-  for (const [tone, pool] of Object.entries(EDITORIAL_TONE_DESIGNS)) {
+  const normalizedToneHtml = [];
+  for (const [tone, paletteName] of Object.entries(TONE_PALETTE_NAMES)) {
     const toneInput = {
       mode: 'editorial-image',
-      title: `Tone selector ${tone}`,
+      title: 'Tone changes color only',
       editorial_tone: tone,
-      visual_metaphor: `${tone} paper mood`,
+      visual_metaphor: 'one invariant paper composition',
     };
     const selectedDesign = resolveEditorialDesignName(toneInput);
-    assert.ok(pool.includes(selectedDesign), `${tone} selected design outside its tone pool: ${selectedDesign}`);
-    assert.ok(designNames.has(selectedDesign), `${tone} selected an unknown design: ${selectedDesign}`);
+    assert.equal(selectedDesign, paletteName, `${tone} did not resolve to its Kenny Style palette`);
+    assert.ok(getDesign(selectedDesign), `${tone} selected an unknown internal palette: ${selectedDesign}`);
+    assert.equal(isValidDesignName(selectedDesign), false, `${tone} internal palette leaked into the public design surface`);
 
     const tonePath = path.join(tmpDir, `tone-${tone}.html`);
     renderers['editorial-image'].render(toneInput, tonePath);
     const toneHtml = stripComments(fs.readFileSync(tonePath, 'utf8'));
     assert.match(toneHtml, new RegExp(`data-editorial-tone="${tone}"`), `${tone} tone was not recorded in HTML`);
     assert.match(toneHtml, new RegExp(`data-card-design="${selectedDesign}"`), `${tone} selected design was not rendered`);
+    normalizedToneHtml.push(toneHtml
+      .replace(/data-editorial-tone="[^"]+"/g, 'data-editorial-tone="TONE"')
+      .replace(/data-card-design="[^"]+"/g, 'data-card-design="PALETTE"')
+      .replace(/#[0-9a-f]{3,8}\b/gi, '#COLOR'));
+  }
+  for (const normalizedHtml of normalizedToneHtml.slice(1)) {
+    assert.equal(normalizedHtml, normalizedToneHtml[0], 'tone changed non-color editorial markup or geometry');
+  }
+
+  for (const designName of designNames) {
+    assert.equal(getDesign(designName).radius, KENNY_STYLE.radius, `${designName} changed Kenny Style radius`);
+  }
+  for (const mode of ['big', 'long', 'whiteboard', 'poster', 'article-diagram', 'infograph', 'comic', 'sketchnote']) {
+    for (const tone of Object.keys(TONE_PALETTE_NAMES)) {
+      assert.equal(
+        resolveDesignNameForInput({ mode, tone }),
+        TONE_PALETTE_NAMES[tone],
+        `${mode}/${tone} escaped the Kenny Style tone palette`,
+      );
+    }
   }
 
   const explicitDesignInput = {

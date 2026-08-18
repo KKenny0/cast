@@ -1,6 +1,6 @@
 ---
 name: card-skill
-description: "Render text and evidence into polished, shareable PNG visuals. Use this skill whenever the user asks to turn words, notes, articles, quotes, arguments, stories, open-source repository or tool material, technical commands/workflows, explicit WeChat Reading highlights/thoughts, or WeChat Reading personal statistics into an 信息图/infographic, 海报/poster, 卡片/card, 大字报, whiteboard, visual summary, comic, sketchnote, social card grid, 开源工具介绍配图, 工具推荐卡片, GitHub 项目介绍插画, 小红书式竖版技术内容, 公众号头图, 博客封面, 正文配图, 正文解释图, 关系图, 流程图, 边界图, reading report, or non-summary editorial image for an essay. Trigger on phrases like 做成图, 渲染成图, 做张卡片, 卡片组, 处理这个开源工具, 技术工作流卡片, 做成漫画, 视觉笔记, 给文章配图, 微信读书划线做卡, article cover, blog hero, article diagram, process flow, and editorial image. Supports 9 modes: infographic, big-text poster, long-form reading card, whiteboard reasoning, multi-card poster, comic, sketchnote, editorial-image, and article-diagram. If the user mentions a restrained brand feel such as Apple, Stripe, Linear, Vercel, IBM, Notion, Claude, or similar, apply it as a visual style, not as a full brand redesign. Do not use for websites, UI components, Figma prototypes, logos/VI systems, chart-library plotting, photo editing, or plain file conversion."
+description: "Render text and evidence into polished, shareable PNG visuals with one consistent Kenny Style visual grammar. Use this skill whenever the user asks to turn words, notes, articles, quotes, arguments, stories, open-source repository or tool material, technical commands/workflows, explicit WeChat Reading highlights/thoughts, or WeChat Reading personal statistics into an 信息图/infographic, 海报/poster, 卡片/card, 大字报, whiteboard, visual summary, comic, sketchnote, social card grid, 开源工具介绍配图, 工具推荐卡片, GitHub 项目介绍插画, 小红书式竖版技术内容, 公众号头图, 博客封面, 正文配图, 正文解释图, 关系图, 流程图, 边界图, reading report, or non-summary editorial image for an essay. Trigger on phrases like 做成图, 渲染成图, 做张卡片, 卡片组, 处理这个开源工具, 技术工作流卡片, 做成漫画, 视觉笔记, 给文章配图, 微信读书划线做卡, article cover, blog hero, article diagram, process flow, and editorial image. Supports 9 output modes. Tone and explicit legacy design names affect color only; they never replace the house typography, geometry, spacing, material, or composition grammar. Do not use for websites, UI components, Figma prototypes, logos/VI systems, chart-library plotting, photo editing, or plain file conversion."
 user_invocable: true
 version: "0.10.0"
 ---
@@ -35,15 +35,15 @@ For one-off use without installing, run `npx skills use KKenny0/card-skill/plugi
 
 **Update check and automatic upgrade.** Before any card request, including Studio-tier requests and Codex direction preview, run `node scripts/check-update.mjs` once; if it prints a line, relay it to the user, then continue. After the current output is delivered, run `node scripts/check-update.mjs --auto-update`; Codex and generic `skills` installs are upgraded to the exact commit resolved from the latest stable Release, version-read back, and prepared for the next use, while Claude Code marketplace installs remain under Claude Code's native plugin updater. Direct `scripts/card.js` rendering performs the check defensively and launches the supported post-render upgrade in the background. State and locks are isolated per installation, so concurrent renders or a second installation cannot suppress or race the update. The check only reads GitHub's public Release and commit APIs; installation downloads through Codex, a pinned `skills` CLI, or Claude Code's marketplace and sends no card content. Failed Codex or `skills` installation/runtime preparation restores the previous copy. For Claude Code, update with `claude plugin marketplace update card-skill` followed by `claude plugin update card-skill@card-skill`. Set `CARD_SKILL_DISABLE_UPDATE_CHECK=1` to disable both checking and supported automatic upgrading, or `CARD_SKILL_DISABLE_AUTO_UPDATE=1` to keep the check while disabling supported automatic upgrades.
 
-将内容铸成可见的形态。内容进去，PNG 出来。模具决定形状。
+把来源里的证据，编辑成可发布、可复查、可复现的 PNG。内容决定关系，Kenny Style 决定表达纪律。
 
 另有长文作者配图入口：给公众号/博客文章做头图、封面图、正文氛围插图或正文解释图。封面和氛围图提炼文章的视觉立场、情绪和隐喻；正文解释图用于关系、流程、边界和权限，不把文章再摘要一遍。
 
 ## 默认原则
 
-默认直接产出可用 PNG，不要先让用户做选择题。除非用户明确要求“给我几个方向 / 换一批 / 先选风格”，否则自动选择最合适的 mode、四个 tone（`reflective` / `sharp` / `warm` / `technical`）和画面方向，并在验证通过后交付。26 个既有 design 仍是高级显式 override，用户指定时必须完全尊重。
+默认直接产出可用 PNG，不要先让用户做选择题。除非用户明确要求“给我几个方向 / 换一批 / 先选风格”，否则自动选择最合适的 mode、四个 tone（`reflective` / `sharp` / `warm` / `technical`）和画面方向，并在验证通过后交付。26 个既有 design 名仅作为显式兼容调色板；用户指定时尊重其颜色，但不引入另一套风格。
 
-所有 mode 默认共享同一套 Quiet Paper 气质：纸面底色、香萃字系、低饱和墨色、细分隔线、小圆角、极少阴影。`editorial-image` 和 `article-diagram` 可以有不同用途，但不能另起一套封面模板、流程图或 dashboard 视觉语言；品牌 design 只改变气质温度，不改变这套纸面纪律。
+所有 mode 共享唯一的 Kenny Style 视觉语法：先找独立证据与核心判断，再让关系、张力或动作成为画面主体；使用受控字系、明确层级、克制留白、细分隔线、固定小圆角和极少阴影。Quiet Paper 是其中的材料基底，不是另一个可选风格。tone 与显式 design 只改变 canvas、ink、accent、surface、hairline 等颜色 token；不得改变字体、字号、字重、间距、圆角、尺寸、位置、换行、隐喻或内容结构。
 
 优先从用户的发布任务理解需求，再映射到内部 mode；不要要求用户先学习 mode 名称：
 
@@ -85,8 +85,8 @@ For one-off use without installing, run `npx skills use KKenny0/card-skill/plugi
 
 | 参数 | 说明 | 默认值 |
 |------|------|--------|
-| `--design` | 指定设计系统（跳过自动匹配） | 空（自动选择） |
-| `editorial_tone` | `editorial-image` 自动设计选择：`reflective` / `sharp` / `warm` / `technical` | 空 |
+| `--design` | 指定兼容调色板；只改变颜色 token | 空（使用 mode 默认 tone） |
+| `editorial_tone` | `editorial-image` 配色：`reflective` / `sharp` / `warm` / `technical` | 空 |
 | `--dpr` | 设备像素比 | 2（2× 像素密度） |
 | `brand_name` | 可选署名/品牌文字；只在用户明确提供时渲染 | 空 |
 | `logo` | 可选署名头像/品牌 logo 的安全本地 PNG/JPEG/WebP 路径；只在用户明确提供时，经受限私有快照内嵌渲染 | 空 |
@@ -94,7 +94,7 @@ For one-off use without installing, run `npx skills use KKenny0/card-skill/plugi
 
 ## Codex 环境扩展（可选）
 
-在支持对话内交互卡片的 Codex 桌面环境中，可以在渲染前展示少量候选方向，让用户选择视觉隐喻、公式压缩或设计气质。这个入口只是决策面，不是第 10 个 mode，不改变最终 PNG 输出契约，也不替代 schema、renderer、Playwright 截图或 `check-output`。
+在支持对话内交互卡片的 Codex 桌面环境中，可以在渲染前展示少量候选方向，让用户选择视觉隐喻、公式压缩或配色气质。这个入口只是决策面，不是第 10 个 mode，不改变最终 PNG 输出契约，也不替代 schema、renderer、Playwright 截图或 `check-output`。
 
 完整规则见 `references/codex-inline-preview.md`。Codex CLI、IDE、其他 coding agent 或当前宿主不支持交互卡片时，沿用同一份候选契约输出文字列表；预览不可用不得阻塞原有直接出图流程。
 
@@ -167,11 +167,11 @@ article-diagram: `{ mode, title, formula, sentence, structure: {nodes: [{id, lab
 1. `references/source-material.md` — 来源、证据、新鲜度与素材权利边界
 2. `references/source-open-source-tool.md` — 仅当来源是开源工具 / GitHub 项目时读取
 3. `schemas/{mode}.json` — 目标 mode 的结构化输入约束
-4. `references/design-index.md` — 仅当用户未指定 `--design`、需要自动选择设计系统时读取
+4. `references/design-index.md` — 需要确认默认 tone 色板或用户显式指定 `--design` 时读取
 
 **AI / 手工 HTML 路径必读**：
-1. `references/taste.md` — 品味底线（反 AI 美学 + 纸质印刷感）
-2. `references/design-index.md` — Quiet Paper 下的 18 套品牌气质 + 8 种内容色调索引（26 总计）
+1. `references/taste.md` — Kenny Style 视觉语法与品味底线
+2. `references/design-index.md` — 四个 house tone 与 26 个显式兼容调色板
 3. 对应 mode 文件：
    - `references/mode-infograph.md` — 信息图内容理论（密度/结构/情绪三维分析、90/8/2 色彩规则、布局生成原则）
    - `references/mode-long.md` — 长文内容规则（金句检测、色调感知、段落预处理）
@@ -211,7 +211,7 @@ article-diagram: `{ mode, title, formula, sentence, structure: {nodes: [{id, lab
 主题标签：[2-5 个关键词]
 ```
 
-**内容预处理**（遵循 ljg-card 规范）：
+**内容预处理**（Kenny Style 编辑纪律）：
 - 金句检测：独立段落 <25 字含核心洞察的，标记为 highlight
 - 段落切分：按语义完整性分割，不以固定字数机械切
 - 数据清洗：确保数字真实感（`47.2%` 而非 `50%`，`+1 (312) 847-1928` 而非 `1234567`）
@@ -243,7 +243,7 @@ article-diagram: `{ mode, title, formula, sentence, structure: {nodes: [{id, lab
 
 `use=in-article` / `metaphor` 子场景（Studio）的正式配图必须设置 `composition_required: true`，并有一个具体主视觉对象或场景，例如桌面、抽屉、纸页、窗口、手势、路径、容器、仪表、地图、阴影关系等。不要只用纸片、线条、抽象框和留白来替代视觉隐喻；如果拿掉标题后画面与文章关系消失，就需要重做 `content_html` + `custom_css`。`use=cover` 子场景（Stable）必须为文章型封面选择 `cover_motif`：`drawer`、`window`、`lens`、`path`、`archive` 或 `layers`；`paper-stack` 只保留给刻意的通用旧封面。
 
-`editorial-image` 支持 `design` 和 `editorial_tone` 字段。`design` 是显式设计系统，优先级最高；`editorial_tone` 是自动选择入口，只能是 `reflective` / `sharp` / `warm` / `technical`。设计系统只控制气质层：纸面颜色、墨色、accent、边框和整体温度；不决定视觉隐喻、构图对象或文章立场。用户未指定 `design` 时，必须根据文章情绪给出 `editorial_tone`，让 CLI 落到真实存在的 Quiet Paper design。
+`editorial-image` 支持 `design` 和 `editorial_tone` 字段。`design` 是显式兼容调色板，优先级最高；`editorial_tone` 是默认配色入口，只能是 `reflective` / `sharp` / `warm` / `technical`。两者都只控制颜色 token，不决定视觉隐喻、构图对象、几何、排版或文章立场。用户未指定 `design` 时，根据文章情绪给出 `editorial_tone`，由 CLI 使用对应的 Kenny Style house palette。
 
 需要候选时，方向输出格式：
 
@@ -317,27 +317,18 @@ article-diagram: `{ mode, title, formula, sentence, structure: {nodes: [{id, lab
 - 主体结构是否占据画面主要面积，而不是被公式、标签或模板装饰抢走注意力？
 - 缩略图里是否还看得出主结构？
 
-### Step 2: 匹配设计系统
+### Step 2: 选择配色层
 
-**Comic mode 跳过此步**：comic mode 使用固定 Quiet Paper 单色调色板，设计系统的色彩 token 不生效。直接进入 Step 4，漫画风格由 `references/mode-comic.md` 的 5 种路线（大友克洋/井上雄彦/三浦建太郎/松本大洋/谷口治郎）决定，在 Step 4 渲染时根据内容气质选择。
+先由 mode 和内容结构确定构图，再选择 tone。tone 不参与布局决策：
 
-**editorial-image 跳过常规候选匹配**：先按 `references/mode-editorial-image.md` 确定视觉方向，再根据气质选择 Quiet Paper token。
+- 沉思 / reflective → `reflective`
+- 锐利 / sharp → `sharp`
+- 温暖 / warm → `warm`
+- 技术 / technical → `technical`
 
-**article-diagram 跳过常规视觉模板匹配**：先按 `references/mode-article-diagram.md` 生成 compression pack，再由 Editorial Equation 测量布局器选择语义分行、字号档和画布比例。设计系统只改变纸面气质，不改变压缩逻辑或阅读轴。
+四个 tone 是内部 house palette，不是 `design` 名。用户未指定 `design` 时，CLI 直接使用对应 tone palette；不得自动路由到 Apple、Stripe、`ljg-*` 等兼容名称。用户显式指定 `design` 时，只替换颜色 token，Kenny Style 的字体、几何、间距、圆角、密度、阴影、隐喻和内容结构保持不变。
 
-默认从 design-index.md 中直接选择 1 个最合适的品牌气质，不等待用户确认。先使用 Quiet Paper 审美骨架，再根据内容选择轻微偏向。
-
-**匹配逻辑**：
-
-1. **情绪→真实 design**：
-   - 沉思 / reflective → `claude` / `notion` / `apple` / `ljg_chensi`
-   - 锐利 / sharp → `linear` / `raycast` / `stripe` / `ljg_ruili`
-   - 温暖 / warm → `claude` / `clay` / `intercom` / `posthog` / `ljg_wennuan`
-   - 技术 / technical → `stripe` / `ibm` / `opencode` / `sentry` / `together_ai` / `ljg_jishu`
-   - 不要把 `editorial-warm` / `technical-data` / `quiet-minimal` 等分组词写入 `design`；它们不是可渲染 design 名。
-2. **主题关联**：内容领域与品牌领域有交集时加分（如 AI 内容→AI 品牌，金融→fintech）
-3. **密度适配**：稀→留白风格（apple, notion），密→data-dense 风格（stripe, ibm）
-4. **多样性边界**：候选之间应气质不同，但都必须保持 Quiet Paper：暖纸或深卡纸、低饱和 accent、小圆角、少阴影
+Comic 的画面路线仍由 `references/mode-comic.md` 决定，但 tone 也只能影响颜色。`editorial-image` 先确定视觉方向，再选 tone。`article-diagram` 先生成 compression pack，再选 tone；配色不得改变压缩逻辑或阅读轴。
 
 如果用户明确要求候选、换一批或选择风格，默认给 2-3 个候选，每个附一句话匹配理由；用户明确指定 2-5 个候选时服从指定数量。支持 Codex 对话预览时进入 Step 3.5；其他环境只进入 Step 3 的文字候选流程，两条路径不要重复执行。
 
@@ -354,7 +345,7 @@ article-diagram: `{ mode, title, formula, sentence, structure: {nodes: [{id, lab
 
 默认输出 2-3 个；用户明确指定 2-5 个时按指定数量输出。告知用户：选择编号（如“用 2”），或说“换一批”重新生成当前内容的方向。用户确认后进入 Step 4。
 
-普通出图请求不要停在这里；自动选择设计系统后直接进入 Step 4。
+普通出图请求不要停在这里；自动选择 tone 后直接进入 Step 4。
 
 ### Step 3.5: Codex 预览决策面（仅按需）
 
@@ -362,7 +353,7 @@ article-diagram: `{ mode, title, formula, sentence, structure: {nodes: [{id, lab
 
 1. 先形成 `Card Decision Brief`，只保留当前任务必要的内容锚点、发布任务、路由和默认 2-3 个候选；用户明确指定 2-5 个候选时服从指定数量。
 2. 每个候选必须带真实可渲染的 `render_contract`，不能只展示抽象风格名或一组装饰色。
-3. `editorial-image` 候选围绕视觉隐喻、用途、比例和合法 design / tone；凡方向依赖默认 scaffold 中不存在的具体物体、动作、场景或空间关系，`render_contract` 必须带 `composition_required: true`。`article-diagram` 候选围绕 `formula`、`sentence`、`structure` 和显式的 `render_plan`。
+3. `editorial-image` 候选围绕视觉隐喻、用途、比例和合法 tone；显式 design 只能作为调色板字段。凡方向依赖默认 scaffold 中不存在的具体物体、动作、场景或空间关系，`render_contract` 必须带 `composition_required: true`。`article-diagram` 候选围绕 `formula`、`sentence`、`structure` 和显式的 `render_plan`。
 4. 用户确认后，使用宿主的 follow-up 能力把选中的规范化契约送回同一对话，再进入 Step 4；不要从预览中直接调用 CLI，也不要把候选 HTML 当成最终 PNG。
 5. 如果宿主不支持预览、选择回传失败或预览无法渲染，退回文字候选列表或默认自动选择。预览失败不得跳过 schema、截图、`check-output` 或人工看图。
 
@@ -388,13 +379,12 @@ article-diagram: `{ mode, title, formula, sentence, structure: {nodes: [{id, lab
 
 0. 先兑现候选的可执行性契约：`use=cover` 的文章型方向必须把 `visual_metaphor` 落成一个 `cover_motif`；如果方向超出受控对象词表，或 `use=in-article` / `metaphor`，必须设置 `editorial-image.composition_required: true`，根据已选 `visual_metaphor` / `art_direction` 生成非空 `content_html` 与 `custom_css`，并保留该字段再交给 CLI。不要删除或改成 `false` 来绕过校验。只有刻意的通用旧封面才省略 `cover_motif` 并使用 paper-stack。
 
-1. 读取紧凑设计文件：`references/designs/{name}.md`
-   - `ljg-*` 色调无需读取文件，直接使用 design-index.md 中的 CSS 变量
-2. Read `references/taste.md`（纸质印刷感底线）
+1. Read `references/taste.md`（Kenny Style 视觉语法）
+2. 需要配色 token 时读取 `references/design-index.md`
 3. Read 对应模板文件
 4. 将设计 token 映射为模板 CSS 变量：
 
-| 模板变量 | 设计系统来源 |
+| 模板变量 | Kenny Style 配色来源 |
 |----------|-------------|
 | `--bg` | Quiet Paper canvas（暖纸 / 深卡纸，叠加极轻纸感） |
 | `--green`（结构色） | hairline / surface-2 色，低对比结构分隔 |
@@ -404,11 +394,11 @@ article-diagram: `{ mode, title, formula, sentence, structure: {nodes: [{id, lab
 
 字体不在此表——由 mode 固定决定，见 `references/taste.md` 第 2 节。
 
-**字号和排版遵循 Quiet Paper 全局纪律，不遵循单个品牌系统。** 品牌系统只提供低饱和 accent、surface 温度和轻微节奏偏向。字号规则保留移动端优先标准：正文 ≥36px，标注 ≥24px。元素比例按模式分级：big≥10:1, infograph≥6:1, comic≥8:1, sketchnote≥5:1, long/poster/whiteboard≥4:1（详见 `references/taste.md`）。
+**字号、排版、间距与几何遵循 Kenny Style，不随 tone 或 design 改变。** 配色层只提供 canvas、ink、accent、surface 与 hairline 颜色。字号规则保留移动端优先标准：正文 ≥36px，标注 ≥24px。元素比例按模式分级：big≥10:1, infograph≥6:1, comic≥8:1, sketchnote≥5:1, long/poster/whiteboard≥4:1（详见 `references/taste.md`）。
 
-**Quiet Paper 纸质印刷感**：所有输出应遵循 `references/taste.md` 第 0 节和第 6 节的纸质美学要求——暖色纸张或深色卡纸、墨感文字、降饱和度强调色、极细 hairline 边框、少卡片、少阴影，像完成的纸面而非网页截图。
+**Quiet Paper 材料基底**：所有输出应遵循 `references/taste.md` 的纸质美学要求——暖色纸张或深色卡纸、墨感文字、降饱和度强调色、极细 hairline 边框、少卡片、少阴影，像完成的纸面而非网页截图。
 
-5. 根据内容分析设计画面（密度/结构/锚点），原则同 ljg-card 信息图模式
+5. 根据证据职责与核心判断设计画面（密度 / 关系 / 张力 / 锚点），遵循 Kenny Style 编辑纪律
 6. 替换模板中的占位符（每个模板的占位符见模板文件顶部注释）
 7. 写入操作系统临时目录中的 `card_{name}.html`
 
@@ -465,9 +455,9 @@ node scripts/check-output.mjs --html <html_path> --width 1080 --height 800 --dpr
 预检通过后，保留人工审美自检：
 
 - [ ] 视觉形式从内容生长出来？换内容这布局还说得出吗？
-- [ ] 品牌气质可感知，但没有破坏 Quiet Paper 的统一骨架？
+- [ ] 去色后仍能认出同一套 Kenny Style 几何、排版与材料纪律？
 - [ ] 元素比例达到模式最低标准？（big≥10:1, infograph≥6:1, comic≥8:1, sketchnote≥5:1, 其他≥4:1）
-- [ ] 弹点色符合品牌类型规则？（标准色 ≤2 处，弱 accent ≤3 处视觉突出点）
+- [ ] 弹点色保持克制？（强 accent ≤2 处，弱 accent ≤3 处视觉突出点）
 - [ ] 正文 ≥36px，标注 ≥24px？
 - [ ] 多卡模式：每张卡只覆盖一个章节/话题？不同主题的内容没有被混在同一张卡上？
 - [ ] **批次一致性（多卡时）**：所有卡片的色彩变量、字号梯度、间距节奏是否严格匹配 Token 锁定表？相同语义层级（正文、标题、标注）的字号是否完全一致？
@@ -512,17 +502,17 @@ node scripts/check-output.mjs --html <html_path> --png <png_path> --width 1080 -
 
 ## Refinement
 
-- "换个设计系统" → 回到 Step 3
-- "调整配色" → 微调 CSS 变量，保持同一设计系统
-- "改布局" → 重新设计，同一设计系统
+- "换个色调 / design" → 只替换配色 token，不改几何与排版
+- "调整配色" → 微调 CSS 变量，保持 Kenny Style 视觉语法
+- "改布局" → 重新设计，但仍遵循 Kenny Style
 
-## 快捷模式（--design 指定）
+## 显式调色板（--design 指定）
 
-用户通过 `--design` 指定设计系统时，跳过自动匹配和按需候选，直接进入 Step 4。
+用户通过 `--design` 指定兼容调色板时，跳过 tone 自动配色并直接进入 Step 4；只能替换颜色 token。
 
-可用名称见 `references/design-index.md` 的目录名列。
+可用名称见 `references/design-index.md`。
 
-`editorial-image` 的自动路径使用 `editorial_tone`，不要把抽象分组名写进 `design`。如果用户没有指定 `--design`，根据文章情绪填入 `editorial_tone`，由 CLI 稳定选择真实 design。
+`editorial-image` 的自动路径使用 `editorial_tone`。如果用户没有指定 `--design`，根据文章情绪填入 `editorial_tone`，由 CLI 稳定选择内部 house palette；内部 tone palette 不是公开 `design` 值。
 
 ## 维护测试
 
@@ -544,7 +534,7 @@ $output = Join-Path $env:TEMP 'smoke_big.png'
 
 生成后实际查看 PNG，确认画面不是只满足文件存在；检查完成后删除该 smoke PNG。
 
-涉及 `editorial-image` 设计选择时，还必须实际渲染并检查一组 PNG：`reflective`、`sharp`、`warm`、`technical`、显式 `design` 各 1 张。确认视觉气质确实不同、仍保持 Quiet Paper、无明显裁切/溢出/坏换行/主体过小。
+涉及配色解析时，还必须实际渲染并检查一组 PNG：`reflective`、`sharp`、`warm`、`technical`、显式 `design` 各 1 张。四个 tone 应只有颜色与元数据差异；去色后的几何、字体、间距、圆角、换行、隐喻和内容结构必须一致，并且无裁切、溢出、坏换行或主体过小。
 
 涉及 `article-diagram` 时，至少实际渲染并检查一组 compression pack（默认公式卡），并回归 `concept-map`、`process-flow`、`boundary-model` 各 1 张 legacy fixture，确认缩略图里主关系清楚、节点和关系没有互相压住。
 

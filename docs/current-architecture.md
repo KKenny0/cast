@@ -46,7 +46,7 @@ PNG + receipt + review
 | Evidence | `source_units[].evidence` in Visual Job v3 | host Agent, runtime-validated |
 | Artifact plan | `outputs[].artifacts[]` in Visual Job v3 | host Agent, constrained by evidence and taxonomy |
 | CardSpec | `outputs[].render_contract` | mode schema and renderer |
-| Theme | `decision.tone`, contract `tone` / `editorial_tone`, optional exact `design` | design resolver |
+| Color layer | `decision.tone`, contract `tone` / `editorial_tone`, optional exact `design`; colors only | Kenny Style palette resolver |
 | Layout | artifact `visual_plan.layout_strategy`, then selected renderer | Agent intent + renderer implementation |
 | Renderer | `scripts/renderers/*` selected by `card.js` | deterministic Node runtime |
 | Validator | `scripts/lib/schema.js`, `scripts/lib/visual-job.js`, `scripts/lib/visual-review.js` | runtime contract boundary |

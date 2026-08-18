@@ -41,9 +41,9 @@
     },
     "design": {
       "type": "string",
-      "description": "Optional Quiet Paper design system name. Defaults to stripe."
+      "description": "Optional explicit compatibility palette name. Changes colors only; the default uses the technical house tone."
     },
-    "tone": { "type": "string", "enum": ["reflective", "sharp", "warm", "technical"], "description": "Default-selection tone. Ignored when design is explicit." },
+    "tone": { "type": "string", "enum": ["reflective", "sharp", "warm", "technical"], "description": "House color tone. Changes color tokens only and is ignored when design is explicit." },
     "title": {
       "type": "string",
       "description": "Short diagram title. It should name the relationship, not the output format. Use the source or requested language for visible text.",

@@ -9,10 +9,9 @@
     "mode": { "type": "string", "const": "big" },
     "design": {
       "type": "string",
-      "description": "Design system name. Defaults to 'vercel'. See scripts/lib/designs.js for full list.",
-      "default": "vercel"
+      "description": "Optional explicit compatibility palette name. Changes colors only; the default uses the sharp house tone."
     },
-    "tone": { "type": "string", "enum": ["reflective", "sharp", "warm", "technical"], "description": "Default-selection tone. Ignored when design is explicit." },
+    "tone": { "type": "string", "enum": ["reflective", "sharp", "warm", "technical"], "description": "House color tone. Changes color tokens only and is ignored when design is explicit." },
     "phrase": {
       "type": "string",
       "description": "Main body text. Use <br> for line breaks and <span class=\"accent\">word</span> to highlight words. Example: '<span class=\"accent\">Agent</span> 不是<br>加了循环'",

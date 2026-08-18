@@ -14,10 +14,9 @@
     },
     "design": {
       "type": "string",
-      "description": "Design system name. Defaults to 'stripe'. See scripts/lib/designs.js for full list.",
-      "default": "stripe"
+      "description": "Optional explicit compatibility palette name. Changes colors only; the default uses the reflective house tone."
     },
-    "tone": { "type": "string", "enum": ["reflective", "sharp", "warm", "technical"], "description": "Default-selection tone. Ignored when design is explicit." },
+    "tone": { "type": "string", "enum": ["reflective", "sharp", "warm", "technical"], "description": "House color tone. Changes color tokens only and is ignored when design is explicit." },
     "kicker": {
       "type": "string",
       "maxLength": 160,

@@ -7,156 +7,156 @@
       "output_basename": "comic.png",
       "mode": "comic",
       "tier": "studio",
-      "design": "linear",
+      "design": "tone_sharp",
       "tone": "sharp",
       "dpr": 2,
       "width": 2160,
-      "height": 2880,
+      "height": 1600,
       "render_contract_sha256": "df2cf5bad248f317dd5b99525ccac948619ffff99cc4edd2a9794d2422b3c6ab",
-      "png_sha256": "c1ca44a0698c929ff30428b5b960adbc5cb766f0ae013b6f74b604f958afe0ed"
+      "png_sha256": "f4c64ef2843108c5810ac62093f324c09f28fed655f0f7c662668d93cd2870f8"
     },
     {
       "fixture": "evals/gallery/creative/infograph.json",
       "output_basename": "infograph.png",
       "mode": "infograph",
       "tier": "studio",
-      "design": "stripe",
+      "design": "tone_technical",
       "tone": "technical",
       "dpr": 2,
       "width": 2160,
       "height": 1600,
       "render_contract_sha256": "ede426103c686d2a81e1d2d9157973652e1f75c2a2280eae0c5186afcf0839d8",
-      "png_sha256": "cc1ab1ed3c767a1cd8400e885dc35941ce268a4a0c038a555012e1a8286273ac"
+      "png_sha256": "5225471110602e8423b705fc6ed243ee774489152ec1c41d5e9f79d8615d0069"
     },
     {
       "fixture": "evals/gallery/creative/sketchnote.json",
       "output_basename": "sketchnote.png",
       "mode": "sketchnote",
       "tier": "studio",
-      "design": "clay",
+      "design": "tone_warm",
       "tone": "warm",
       "dpr": 2,
       "width": 2160,
       "height": 2832,
       "render_contract_sha256": "868caaa0d340ae45d3d0db942d9f2cdf216713e28a30292169152ce8ce32118a",
-      "png_sha256": "ec5fa6c45eb8068d0d2a8ffb1e782a27ae5a0f45e46cf80127e7a977a5a448ea"
+      "png_sha256": "e83d2b800deca60d5d5eb612ad08a390763e558556d6a75a0e2ade5d62bff0d6"
     },
     {
       "fixture": "evals/gallery/jobs/article-boundary-legacy.json",
       "output_basename": "article-boundary-legacy.png",
       "mode": "article-diagram",
       "tier": "stable",
-      "design": "stripe",
+      "design": "tone_technical",
       "tone": "technical",
       "dpr": 2,
       "width": 2160,
       "height": 1440,
       "render_contract_sha256": "f95c9ef8f1b55435813521ee5815cab0b31f7b498c9ea5f43ebe92bfbd2b8732",
-      "png_sha256": "ec78dcf16acef3064095b4d094d7528d0a1f336220e410445694043c825d22ac"
+      "png_sha256": "8dbda29522f0d9584b979b094824039f75cbf290f5e14711d99e6bc2ef2e90fd"
     },
     {
       "fixture": "evals/gallery/jobs/article-formula.json",
       "output_basename": "article-formula.png",
       "mode": "article-diagram",
       "tier": "stable",
-      "design": "stripe",
+      "design": "tone_technical",
       "tone": "technical",
       "dpr": 2,
       "width": 2160,
       "height": 1080,
       "render_contract_sha256": "3a424ca136a79354dc1f8a1915170af916a6ba6cd2d5f3db8b9eef71668e1147",
-      "png_sha256": "bfc61c023de90771ed8eec6484c838819a0b1be63aa8b7c82acfebfad57e4a94"
+      "png_sha256": "c97b8d76c855f2dabc63527e526d7389c7c88559cfadc5cb4946c11fbf50713a"
     },
     {
       "fixture": "evals/gallery/jobs/big.json",
       "output_basename": "big.png",
       "mode": "big",
       "tier": "stable",
-      "design": "linear",
+      "design": "tone_sharp",
       "tone": "sharp",
       "dpr": 2,
       "width": 2160,
       "height": 2880,
       "render_contract_sha256": "86627fe4f66bc4b8509c4557b48877a47f99f90f839b8d5572238bd1d32f6ccb",
-      "png_sha256": "50be2773fdfa0b93ef874807d85adf9ab56320ff7d97680fbf2277a9bc2d141b"
+      "png_sha256": "ec34c63422c8a4aff5283a53517edb2bff876b92b328d35238a199a9d6fde2b8"
     },
     {
       "fixture": "evals/gallery/jobs/editorial-wechat-cover.json",
       "output_basename": "editorial-wechat-cover.png",
       "mode": "editorial-image",
       "tier": "stable",
-      "design": "apple",
+      "design": "tone_reflective",
       "tone": "reflective",
       "dpr": 2,
       "width": 2160,
       "height": 920,
       "render_contract_sha256": "729cf840d73174198921d35a7a3ba820fd21360ef36dbf04d086020bf09a813d",
-      "png_sha256": "ef032b623d46e78520b0e3d26ed1c760ff3469c1a92a56fc5144e63988b08792"
+      "png_sha256": "ab06ae4616c01a8fc42fbbca823e5045ae34985bec926de1e18f4931deaf2be2"
     },
     {
       "fixture": "evals/gallery/jobs/long.json",
       "output_basename": "long.png",
       "mode": "long",
       "tier": "stable",
-      "design": "clay",
+      "design": "tone_warm",
       "tone": "warm",
       "dpr": 2,
       "width": 2160,
-      "height": 2242,
+      "height": 1600,
       "render_contract_sha256": "6e17e7dfe501e32016529b555520fc31bfc345ac1c2c06fa5513158c4acf5309",
-      "png_sha256": "ef7b790308d8090192f8c0da440b08dac22cd437386f5f225191db6b0ab2a3ba"
+      "png_sha256": "3a418cae1d415a4d9f3c3691bccc695d17c17af2ac2773b915135f6f8490d065"
     },
     {
       "fixture": "evals/gallery/jobs/poster.json",
       "output_basename": "poster.png",
       "mode": "poster",
       "tier": "stable",
-      "design": "clay",
+      "design": "tone_warm",
       "tone": "warm",
       "dpr": 2,
       "width": 2160,
       "height": 2880,
       "render_contract_sha256": "41b27f9abc57bd27d90660c6ee92a5a5fbc69308c292b6f22c64b4ff758362e2",
-      "png_sha256": "575baaa194dea25a9e924cb062479519e945e8946a3d99ffbecd172ffc7d0b7d"
+      "png_sha256": "c05ffe4b70d53aa84156cf5e7ae2af45ce9b5022157bb46c711458274ede02e2"
     },
     {
       "fixture": "evals/gallery/jobs/reading-notes.json",
       "output_basename": "reading-notes.png",
       "mode": "poster",
       "tier": "stable",
-      "design": "claude",
+      "design": "tone_reflective",
       "tone": "reflective",
       "dpr": 2,
       "width": 2160,
       "height": 2880,
       "render_contract_sha256": "925c5b330c495baa08873c5a11235e23a576a6e97044946b5c961f258f9f3b75",
-      "png_sha256": "a3f83c8efd1e855e73c5f24b3c95f365dfa230b8d4bb898bc396dc300613672c"
+      "png_sha256": "77439f24fec1b300cd999e009e324a7665b4e4f0614816c44b55e7c009854dc0"
     },
     {
       "fixture": "evals/gallery/jobs/reading-report.json",
       "output_basename": "reading-report.png",
       "mode": "poster",
       "tier": "stable",
-      "design": "clay",
+      "design": "tone_warm",
       "tone": "warm",
       "dpr": 2,
       "width": 2160,
       "height": 2880,
       "render_contract_sha256": "356cb16f25708e8d20f424c679ef1c6aae63406a44870af88254ad53599239e5",
-      "png_sha256": "c54622307cf1954b6a84e0a2790e9c814aec178e900dfce57d4eef990627ddf6"
+      "png_sha256": "483115f05e463af151dc723be62499756807d757b94a24a0180c2b89c1588cbc"
     },
     {
       "fixture": "evals/gallery/jobs/whiteboard.json",
       "output_basename": "whiteboard.png",
       "mode": "whiteboard",
       "tier": "stable",
-      "design": "stripe",
+      "design": "tone_technical",
       "tone": "technical",
       "dpr": 2,
       "width": 2160,
       "height": 1484,
       "render_contract_sha256": "18097005ab629f5d5e48dd054f3f496a0507c8e36257c4f5bbfdc69e85c1a979",
-      "png_sha256": "1b30bd1d7ef76849a1f813b39fbe4f548e4d3b1871c8ecc7839cf4fae56ae70d"
+      "png_sha256": "19d3ac0086699b84127fdb9415dc477ccc58dbe035cbbfd01fb67399ae6ab840"
     }
   ]
 }

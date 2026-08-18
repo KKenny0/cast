@@ -134,7 +134,7 @@
         "mode": { "enum": ["big", "long", "whiteboard", "poster", "editorial-image", "article-diagram", "infograph", "comic", "sketchnote", "mixed"] },
         "tier": { "enum": ["stable", "studio"] },
         "reason": { "type": "string", "minLength": 1, "maxLength": 500 },
-        "tone": { "enum": ["reflective", "sharp", "warm", "technical"] },
+        "tone": { "enum": ["reflective", "sharp", "warm", "technical"], "description": "Kenny Style house color tone. It changes palette tokens only, never typography, geometry, spacing, layout, metaphor, or content structure." },
         "selection_source": { "enum": ["taxonomy", "user-override"] },
         "selection_summary": { "type": "string", "maxLength": 500 },
         "visual_risks": { "type": "array", "maxItems": 10, "items": { "type": "string", "maxLength": 200 } }

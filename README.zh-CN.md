@@ -9,16 +9,16 @@
   <a href="#它是什么">它是什么</a> ·
   <a href="#如何安装-card-skill">安装</a> ·
   <a href="#复制即用的自然语言示例">示例</a> ·
-  <a href="#不同发布任务该选哪种图">选模具</a> ·
+  <a href="#不同发布任务该选哪种图">选形式</a> ·
   <a href="#faq">FAQ</a> ·
   <a href="#完整样张">样张</a>
 </p>
 
 ## 它是什么
 
-**card-skill** 是给 Claude Code、Codex、OpenCode、Pi 等 coding agent 使用的开源内容制图 skill。你输入文章、笔记、观点、URL，或明确指定的微信读书数据；它会理解内容结构，自动选择版式与 Quiet Paper 气质，输出经过检查的 PNG。
+**card-skill** 是给 Claude Code、Codex、OpenCode、Pi 等 coding agent 使用的开源证据制图 skill。你输入文章、笔记、观点、URL，或明确指定的微信读书数据；它会盘点当前证据、找到值得被看见的关系，并用统一的 Kenny Style 输出经过检查的 PNG。
 
-它覆盖公众号/博客头图、小红书与社媒卡片、白板推演、正文解释图（公式卡/关系图）、信息图、漫画与视觉手记等发布任务。渲染脚本、模板、字体、schema 和检查器都在完整安装包内；默认本地截图与质检，不自动上传文章或成品。
+它的三个旗舰任务是：来源证据系列、论证解释图、编辑封面。九种输出形式继续覆盖小红书与社媒卡片、白板推演、公式卡/关系图、长文卡、信息图、漫画与视觉手记。渲染脚本、模板、字体、schema 和检查器都在完整安装包内；默认本地截图与质检，不自动上传文章或成品。
 
 它不是网站生成器、UI 组件库、Logo/VI 系统、图表库或修图工具。
 
@@ -35,27 +35,11 @@
 
 ## 30 秒看懂它能做什么
 
-同一套安静的纸面骨架，可以承载不同的发布任务：封面负责制造张力，社媒卡片负责拆解观点，白板负责把推理关系画清楚。下面的样张全部取材于杰夫·霍金斯的《千脑智能》：同一本书的不同关系，应该长成不同的画面，而不是换个模板重述一遍。
+同一套 Kenny Style 视觉语法，可以承载不同的发布任务：封面负责制造张力，社媒卡片负责拆解观点，白板负责把推理关系画清楚。Quiet Paper 提供材料感，证据与关系决定画面。下面的样张全部取材于杰夫·霍金斯的《千脑智能》：同一本书的不同关系，应该长成不同的画面，而不是换个模板重述一遍。
 
-<table>
-<tr>
-<td width="33.33%" valign="top">
-<img src="assets/gallery/editorial-wechat-cover.png" width="100%" alt="《千脑智能》公众号头图：左侧标题区，右侧用抽屉隐喻承载核心张力"><br>
-<strong>公众号 / 博客头图</strong><br>
-<sub>editorial-image · 提炼张力与隐喻，不复述摘要</sub>
-</td>
-<td width="33.33%" valign="top">
-<img src="assets/gallery/poster.png" width="100%" alt="《千脑智能》社媒系列卡片：多卡拆解三条线索"><br>
-<strong>小红书 / 社媒卡片</strong><br>
-<sub>poster · 从一句观点到多卡拆解</sub>
-</td>
-<td width="33.33%" valign="top">
-<img src="assets/gallery/whiteboard.png" width="100%" alt="《千脑智能》白板推演：认识一个杯子的推理步骤"><br>
-<strong>白板推演</strong><br>
-<sub>whiteboard · 把问题、约束与路径画清楚</sub>
-</td>
-</tr>
-</table>
+<img src="assets/readme-showcase.png" width="100%" alt="一张 Kenny Style showcase，整合《千脑智能》的社媒 Poster、编辑封面与推理白板">
+
+<sub>一套视觉语法，三种发布任务：观点成为社媒 Poster，核心张力成为编辑封面，推理链成为白板。</sub>
 
 | 你要发布什么 | 默认 mode | 画面在解决什么 |
 |---|---|---|
@@ -184,11 +168,11 @@ Stable 适合出版场景、批量生产和品牌一致性。Studio 适合概念
 
 ## 关键能力
 
-- **9 种模具：** `editorial-image`、`article-diagram`、`poster`、`big`、`long`、`whiteboard`、`infograph`、`comic`、`sketchnote`
+- **一套视觉语法，9 种输出形式：** Kenny Style 贯穿 `editorial-image`、`article-diagram`、`poster`、`big`、`long`、`whiteboard`、`infograph`、`comic`、`sketchnote`
 - **证据主导的 Poster 区块：** 当前本地 PNG/JPEG/WebP 证据会在浏览器截图前封存为有资源上限的私有快照，2–5 步原生流程直接占据版面；不引入卡中卡外框、不让浏览器读取原始来源路径，renderer 也不联网。
 - **两层交付：** Stable（命令行确定性渲染）与 Studio（完整构图契约 + 人工视觉验收）
-- **统一气质：** Quiet Paper——温暖纸色、克制墨色、细分隔线、小圆角、极少阴影
-- **四个默认 tone：** `reflective` / `sharp` / `warm` / `technical`；26 个 design 仍可作为显式高级覆盖
+- **Kenny Style：** 证据主导的构图、受控字系、清晰层级、克制留白、固定小圆角，以及 Quiet Paper 材料感
+- **只改颜色的 tone：** `reflective` / `sharp` / `warm` / `technical`；26 个旧 design 名仅作为显式兼容调色板，不能改变布局与几何
 - **默认输出：** 默认 2 倍像素密度 PNG；以常见 1080 CSS 像素画布为例，导出宽度约 2160px（高度随 mode 与比例变化）
 - **质量门禁：** 截图前后检查占位符、溢出、裁切、坏图、可读性、标题换行、字体栈、远程资源与近乎空白结果
 - **证据优先推理：** Visual Job v3 把每张 PNG 绑定到当前强证据、artifact 职责、确定性 taxonomy 路由、真实 PNG 批评和最多一次修订
@@ -199,7 +183,7 @@ Stable 适合出版场景、批量生产和品牌一致性。Studio 适合概念
 
 ## 开源工具自适应 Showcase
 
-完全自有的 `Relay Atlas` launch fixture 与 `Threadpack` CLI fixture 会刻意走两条不同路线：前者有四项独立证据职责，后者在三张任务流卡片处结束。两组都保留 Quiet Paper 骨架，证据表面则分别使用蓝色审阅台账与橙色终端信号。
+完全自有的 `Relay Atlas` launch fixture 与 `Threadpack` CLI fixture 会刻意走两条不同路线：前者有四项独立证据职责，后者在三张任务流卡片处结束。两组都保留 Kenny Style 语法与 Quiet Paper 材料，证据表面则分别使用蓝色审阅台账与橙色终端信号。
 
 <table>
 <tr>
@@ -221,10 +205,10 @@ Stable 适合出版场景、批量生产和品牌一致性。Studio 适合概念
 
 ## 为什么输出像纸面，而不是网页截图
 
-所有模式共享同一套 Quiet Paper 骨架。内容色调和品牌气质只改变表面温度、强调色和节奏，不把作品变成品牌皮肤拼盘。
+所有模式共享 Kenny Style。Quiet Paper 是材料基底，内容证据决定构图。tone 与显式 design 名只改变颜色 token；字体、间距、圆角、尺寸、换行、隐喻和内容结构保持不变。
 
-- 默认根据内容结构、密度、情绪和发布用途自动选择 mode、tone 与画面方向。
-- `editorial-image` 会先判断 `reflective`、`sharp`、`warm` 或 `technical` 气质，再落到真实可渲染的 Quiet Paper design。
+- 默认根据证据、内容结构、密度和发布用途选择 mode 与画面方向，再根据情绪选择 tone。
+- `editorial-image` 会把 `reflective`、`sharp`、`warm` 或 `technical` 直接映射到内部 Kenny Style house palette；自动路由不会选择旧品牌 design。
 - `article-diagram` 会先筛出值得压缩的章节，再为每个章节生成公式卡；不适合压缩的铺垫、情绪和结论章节会被跳过。
 - 默认署名、头像和来源字段为空；只有输入明确提供时才使用 `brand_name`、`logo`、`source`。本地 PNG/JPEG/WebP Logo 会先经过字节与像素上限检查、私有快照和内嵌，再交给 Chromium。
 
@@ -447,7 +431,7 @@ npx skills add Tencent/WeChatReading -g
 
 真实案例会帮助判断下一步该优化哪种发布任务；经作者同意后，优秀案例也可能进入 gallery，并保留来源署名。
 
-你也可以通过 [Support](https://kkenny0.github.io/support/) 支持后续维护。支持会帮助继续维护字体、浏览器渲染、图片压缩、模具质量和跨 agent 兼容性。
+你也可以通过 [Support](https://kkenny0.github.io/support/) 支持后续维护。支持会帮助继续维护字体、浏览器渲染、图片压缩、输出形式质量和跨 agent 兼容性。
 
 ### 建议的 GitHub Topics
 

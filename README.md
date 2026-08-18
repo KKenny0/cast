@@ -16,9 +16,9 @@
 
 ## What it is
 
-**card-skill** is an open-source content-to-image skill for coding agents such as Claude Code, Codex, OpenCode, and Pi. Give it an article, notes, an argument, a URL, open-source tool material, or explicitly requested WeChat Reading data. It inventories current evidence, picks an adaptive visual route and Quiet Paper tone, and returns quality-checked PNGs.
+**card-skill** is an open-source evidence-to-image skill for coding agents such as Claude Code, Codex, OpenCode, and Pi. Give it an article, notes, an argument, a URL, open-source tool material, or explicitly requested WeChat Reading data. It inventories current evidence, finds the relation worth seeing, and returns quality-checked PNGs in one recognizable Kenny Style.
 
-It covers WeChat / blog covers, social card sets, whiteboards, in-article explanation diagrams (formula cards / relationship maps), infographics, comics, and sketchnotes. The complete package ships renderers, templates, fonts, schemas, and checkers. Capture and checks run locally by default; finished cards are not auto-uploaded.
+Its three flagship jobs are evidence-led source series, argument explanation, and editorial covers. Nine output modes cover the wider range: social cards, whiteboards, formula cards / relationship maps, long reading cards, infographics, comics, and sketchnotes. The complete package ships renderers, templates, fonts, schemas, and checkers. Capture and checks run locally by default; finished cards are not auto-uploaded.
 
 It is not a website builder, UI kit, logo system, chart library, or photo editor.
 
@@ -35,27 +35,11 @@ It is not a website builder, UI kit, logo system, chart library, or photo editor
 
 ## See it in 30 seconds
 
-One quiet paper system carries different publishing jobs: covers create tension, social cards unpack an idea, whiteboards make reasoning visible. The gallery below is all drawn from Jeff Hawkins' *A Thousand Brains*: different relations from the same book should become different pictures, not the same template restated.
+One Kenny Style grammar carries different publishing jobs: covers create tension, social cards unpack an idea, whiteboards make reasoning visible. Quiet Paper supplies the material feel; evidence and relations determine the picture. The gallery below is all drawn from Jeff Hawkins' *A Thousand Brains*: different relations from the same book should become different pictures, not the same template restated.
 
-<table>
-<tr>
-<td width="33.33%" valign="top">
-<img src="assets/gallery/editorial-wechat-cover.png" width="100%" alt="A Thousand Brains WeChat cover: title block on the left, drawer motif carrying core tension on the right"><br>
-<strong>WeChat / blog cover</strong><br>
-<sub>editorial-image · tension and metaphor, not a bullet summary</sub>
-</td>
-<td width="33.33%" valign="top">
-<img src="assets/gallery/poster.png" width="100%" alt="A Thousand Brains social card series unpacking three threads"><br>
-<strong>Social cards</strong><br>
-<sub>poster · one claim to multi-card breakdown</sub>
-</td>
-<td width="33.33%" valign="top">
-<img src="assets/gallery/whiteboard.png" width="100%" alt="A Thousand Brains whiteboard: reasoning steps for knowing a cup"><br>
-<strong>Whiteboard</strong><br>
-<sub>whiteboard · problem, constraints, and path</sub>
-</td>
-</tr>
-</table>
+<img src="assets/readme-showcase.png" width="100%" alt="One Kenny Style showcase combining an A Thousand Brains social poster, editorial cover, and reasoning whiteboard">
+
+<sub>One visual grammar, three publishing jobs: a claim becomes a social poster, core tension becomes an editorial cover, and a reasoning chain becomes a whiteboard.</sub>
 
 | Publishing job | Default mode | What the image solves |
 |---|---|---|
@@ -184,11 +168,11 @@ Prefer the publishing task first, then map to an internal mode. You do not need 
 
 ## Key capabilities
 
-- **9 modes:** `editorial-image`, `article-diagram`, `poster`, `big`, `long`, `whiteboard`, `infograph`, `comic`, `sketchnote`
+- **One house grammar, 9 output modes:** Kenny Style across `editorial-image`, `article-diagram`, `poster`, `big`, `long`, `whiteboard`, `infograph`, `comic`, `sketchnote`
 - **Evidence-led poster fields:** current local PNG/JPEG/WebP evidence is sealed into a bounded private snapshot before browser capture, while two-to-five-step native processes occupy the layout directly—without nested-card chrome, source-path browser access, or renderer networking.
 - **Two delivery tiers:** Stable (deterministic CLI render) and Studio (full composition contract + human visual review)
-- **Shared look:** Quiet Paper—warm paper, restrained ink, hairline rules, small radii, almost no shadow
-- **Four default tones:** `reflective` / `sharp` / `warm` / `technical`; 26 designs remain explicit advanced overrides
+- **Kenny Style:** evidence-led composition, controlled typography, clear hierarchy, restrained spacing, fixed small-radius geometry, and Quiet Paper material
+- **Color-only tones:** `reflective` / `sharp` / `warm` / `technical`; 26 legacy design names remain explicit compatibility palettes and cannot change layout or geometry
 - **Default output:** DPR 2 PNG; a common 1080 CSS-wide canvas exports at about 2160px wide (height varies by mode and aspect)
 - **Quality gates:** pre/post capture checks for placeholders, overflow, crop, broken images, readability, title breaks, font stack, remote resources, and near-blank results
 - **Evidence-first reasoning:** Visual Job v3 binds every PNG to current primary evidence, an artifact role, a deterministic taxonomy choice, real-PNG critique, and at most one revision
@@ -199,7 +183,7 @@ Prefer the publishing task first, then map to an internal mode. You do not need 
 
 ## Adaptive open-source showcase
 
-The owned `Relay Atlas` launch fixture and `Threadpack` CLI fixture deliberately take different routes. The launch has four independent evidence duties; the CLI stops at three task-flow cards. Both keep the Quiet Paper skeleton, while the evidence surfaces carry their own blue review-ledger and orange terminal cues.
+The owned `Relay Atlas` launch fixture and `Threadpack` CLI fixture deliberately take different routes. The launch has four independent evidence duties; the CLI stops at three task-flow cards. Both keep the Kenny Style grammar and Quiet Paper material, while their evidence surfaces carry blue review-ledger and orange terminal cues.
 
 <table>
 <tr>
@@ -221,10 +205,10 @@ All visible project data is fictional and repository-owned. See [the reproducibl
 
 ## Why the output looks like paper, not a webpage screenshot
 
-Every mode shares the Quiet Paper skeleton. Content mood and brand feel only change temperature, accent, and rhythm. They do not turn the work into a brand-skin collage.
+Every mode shares Kenny Style. Quiet Paper is the material base, while content evidence determines composition. Tone and explicit design names change color tokens only; typography, spacing, radius, dimensions, wrapping, metaphor, and content structure stay invariant.
 
-- Mode, tone, and direction are chosen from structure, density, mood, and publishing job by default.
-- `editorial-image` first picks `reflective`, `sharp`, `warm`, or `technical`, then lands on a real Quiet Paper design.
+- Mode and direction are chosen from evidence, structure, density, and publishing job; tone is chosen from mood.
+- `editorial-image` maps `reflective`, `sharp`, `warm`, or `technical` directly to an internal Kenny Style house palette. Automatic routing never picks a legacy brand design.
 - `article-diagram` first filters compressible sections, then emits a formula card per section; pure setup, mood, or conclusion sections are skipped.
 - By default `brand_name`, `logo`, and `source` are empty; they appear only when the input provides them. A local PNG/JPEG/WebP logo is size- and pixel-bounded, snapshotted, and embedded before Chromium loads the card.
 

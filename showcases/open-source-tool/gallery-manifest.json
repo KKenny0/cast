@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
   "fixture_sha256": {
-    "launch": "8e424fa1fceebb249b161d242e4d43f10a01f5588eada3debfd93a8e454518f9",
-    "cli": "9efbe3e847e790c288395b5752f48c57c39b31fee39a511ff1e3b4e991abae10"
+    "launch": "057a2d6d24ddf3f980034161f853ac2ceae1035676719adc2b6ec0d5ca721c41",
+    "cli": "1b71d5a64f8b9f7d92a44676381a8bc88d001f1cda7e94c60513be2db788fd45"
   },
   "images": [
     {
@@ -11,8 +11,8 @@
       "output_id": "launch-series",
       "width": 2160,
       "height": 2880,
-      "sha256": "4c43e493cb151d7d108f5a0cef7f846fb8aec9ebeb7e7559ba9f8b9a5a5b1585",
-      "bytes": 494703
+      "sha256": "77b05bbbe9303f32beb5a79a0c156885f8e366726028d32bca5a573d92340bec",
+      "bytes": 494685
     },
     {
       "basename": "tool-launch-2.png",
@@ -20,8 +20,8 @@
       "output_id": "launch-series",
       "width": 2160,
       "height": 2880,
-      "sha256": "bbd24aadf443bcc0457c0c84ba3e2bd65d9027dd5d7e49a432f891515a50d809",
-      "bytes": 418104
+      "sha256": "ea1cdf771d5072169b382ac04b1f2756224e25455b915e3a50af15efbe51668e",
+      "bytes": 418308
     },
     {
       "basename": "tool-launch-3.png",
@@ -29,8 +29,8 @@
       "output_id": "launch-series",
       "width": 2160,
       "height": 2880,
-      "sha256": "0b96d5310ae44b1b81f8fb3de726c7629b9e8ec5eb130df4c7836b91ba3c330a",
-      "bytes": 560614
+      "sha256": "f7383b693f49e2f7d8d40ab49040dc1475030d0ede290bd21a4f5d9f54780f0a",
+      "bytes": 560773
     },
     {
       "basename": "tool-launch-4.png",
@@ -47,8 +47,8 @@
       "output_id": "cli-series",
       "width": 2160,
       "height": 2880,
-      "sha256": "8b0ceafeec0f38bfcdc2d5960067860d11ac1a09a605afda8685593de12fda4c",
-      "bytes": 428774
+      "sha256": "c2867975e4d18884fb06dc3dd2f05eb8285ad755e47a35cc18574810b798d8bd",
+      "bytes": 429605
     },
     {
       "basename": "tool-cli-2.png",
@@ -56,8 +56,8 @@
       "output_id": "cli-series",
       "width": 2160,
       "height": 2880,
-      "sha256": "99baf977df2807ae85b8b6c866d7da03a906818e9d02cc4e4ca13045473f01ba",
-      "bytes": 438354
+      "sha256": "81363124147b2fc4cb181cbb55e87f09e99a1b938e450ba9cf807422d5810df9",
+      "bytes": 438145
     },
     {
       "basename": "tool-cli-3.png",

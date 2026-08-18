@@ -19,12 +19,12 @@
     },
     "design": {
       "type": "string",
-      "description": "Explicit design system name. Overrides editorial_tone. Controls mood tokens such as paper, ink, accent, surface, and radius; it does not decide the visual metaphor."
+      "description": "Explicit compatibility palette name. Overrides editorial_tone and changes color tokens only; Kenny Style still owns typography, geometry, radius, spacing, material, and composition."
     },
     "editorial_tone": {
       "type": "string",
       "enum": ["reflective", "sharp", "warm", "technical"],
-      "description": "Automatic editorial design selector used only when design is omitted. Maps the article mood to a real Quiet Paper design."
+      "description": "Automatic Kenny Style color tone used only when design is omitted. It changes color tokens only."
     },
     "title": {
       "type": "string",
@@ -68,7 +68,7 @@
     "custom_css": {
       "type": "string",
       "maxLength": 262144,
-      "description": "Trusted custom CSS composition layer. Use for visual expression beyond the default scaffold, including the dominant object, scene, gesture, or diagram metaphor. Visible text must use a controlled primary font: DM Sans, DM Serif Display, JetBrains Mono, XiangcuiDengcusong, or XiangcuiDazijiti; fallback fonts may follow the primary font. Custom CSS must stay inside the card-skill Quiet Paper system: token-derived paper surfaces, low-saturation accents, hairline borders, small radius, and little or no shadow."
+      "description": "Trusted custom CSS composition layer. Use for visual expression beyond the default scaffold, including the dominant object, scene, gesture, or diagram metaphor. Visible text must use a controlled primary font: DM Sans, DM Serif Display, JetBrains Mono, XiangcuiDengcusong, or XiangcuiDazijiti; fallback fonts may follow the primary font. Custom CSS must stay inside Kenny Style: token-derived Quiet Paper surfaces, low-saturation accents, hairline borders, fixed small-radius discipline, and little or no shadow."
     },
     "source": {
       "type": "string",

@@ -58,7 +58,7 @@ Codex 预览使用“轻量选择器 + 单一主预览 + 选中详情 + 单一�
 - 视觉隐喻：物、场景或动作；
 - 编辑用途：`cover`、`in-article` 或 `metaphor`；
 - 画布比例：`wechat-cover`、`blog-hero`、`body-3-2` 等；
-- 气质：真实可渲染的 `design` 或合法的 `editorial_tone`。
+- 配色气质：合法的 `editorial_tone`，或用户显式要求的兼容 `design` 调色板；两者都不能改变 Kenny Style 的构图与几何。
 
 候选不能只是换一组品牌名，也不能把文章重新摘要成 bullet points。每个方向都要能说明画面与文章张力的关系。
 

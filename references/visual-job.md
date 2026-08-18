@@ -118,7 +118,7 @@ Each artifact must claim an independent current primary unit. Runtime identity p
 
 `schemas/visual-job.json` documents the public shape. `scripts/lib/visual-job.js` is the runtime authority, and `scripts/lib/mode-selector.js` owns taxonomy. `decision.mode` is the single output mode or `mixed`; it must equal the aggregate of actual contracts. Stable and Studio outputs cannot be mixed in one job.
 
-Use `tone` for `reflective`, `sharp`, `warm`, or `technical`; these are not design names. An exact `design` remains an explicit override from `references/design-index.md`.
+Use `tone` for `reflective`, `sharp`, `warm`, or `technical`; these select internal Kenny Style color palettes and are not design names. An exact `design` remains an explicit compatibility palette from `references/design-index.md`. Tone and design may change colors only, never typography, geometry, spacing, layout, wrapping, metaphor, or content structure.
 
 For source-aware tasks, first read `references/source-material.md`. For open-source tools, also read `references/source-open-source-tool.md`. Visible copy must describe source meaning, never artifact labels such as `BLOG HERO`, mode names, or planning taxonomy unless those words occur in the source.
 

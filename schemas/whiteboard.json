@@ -9,10 +9,9 @@
     "mode": { "type": "string", "const": "whiteboard" },
     "design": {
       "type": "string",
-      "description": "Design system name. Defaults to 'stripe'.",
-      "default": "stripe"
+      "description": "Optional explicit compatibility palette name. Changes colors only; the default uses the technical house tone."
     },
-    "tone": { "type": "string", "enum": ["reflective", "sharp", "warm", "technical"], "description": "Default-selection tone. Ignored when design is explicit." },
+    "tone": { "type": "string", "enum": ["reflective", "sharp", "warm", "technical"], "description": "House color tone. Changes color tokens only and is ignored when design is explicit." },
     "subtitle": {
       "type": "string",
       "description": "Subtitle / kicker line. Example: '推理链：从 API 调用到自主决策'",
